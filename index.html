@@ -1070,6 +1070,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <div class="seg" id="btMode">
         <button data-v="py" aria-pressed="true">평당가 순위 (대장 vs 중간)</button>
         <button data-v="hh" aria-pressed="false">세대수 (나홀로 vs 대단지)</button>
+        <button data-v="sz" aria-pressed="false">평형 (소형 vs 중형 vs 대형)</button>
       </div>
     </div>
     <div class="readme" id="btHint" style="margin-top:0;margin-bottom:14px"><b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.</div>
@@ -1102,6 +1103,9 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div class="ins" id="btIns"></div>
     <div id="btDetail"></div>
     <div class="readme">
+      <b>평형 기준은 이렇게 나눕니다</b> — <b>소형</b> 55㎡ 미만(14평·18평대), <b>중형</b> 55~95㎡(59·84),
+      <b>대형</b> 95㎡ 이상. 같은 단지라도 평형이 다르면 <b>따로 집계</b>하므로, 한 단지가 소형·중형에 동시에 들어갈 수 있습니다.
+      이 모드에서는 위쪽 평형 선택이 무시되고 전체 거래를 봅니다.<br><br>
       <b>세대수 기준은 이렇게 나눕니다</b> — 300세대 미만 <b>나홀로</b>, 300~999세대 <b>중형</b>, 1000세대 이상 <b>대단지</b>.
       중형까지 세 단계를 모두 표시하므로 <b>"300세대만 넘으면 되는지, 1000세대를 넘어야 하는지"</b>를 구분할 수 있습니다.
       세대수는 K-apt(공동주택관리정보시스템)에서 단지별로 조회합니다. 등록되지 않았거나 단지명이 매칭되지 않으면 빠지는데,
@@ -2321,7 +2325,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v36.0';
+var VERSION = 'v37.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -6243,7 +6247,15 @@ function btMonths(yearsAgo, n) {
   }
   return o;
 }
-var BTMODE = 'py';   /* py = 평당가 순위 · hh = 세대수 */
+var BTMODE = 'py';   /* py = 평당가 순위 · hh = 세대수 · sz = 평형 */
+function szClass(ar) { return ar < 55 ? 'sm' : (ar < 95 ? 'md' : 'lg'); }
+function szLabel(k) { return k === 'sm' ? '소형(55㎡ 미만)' : k === 'md' ? '중형(59·84㎡)' : '대형(95㎡ 이상)'; }
+function sizeSplit(list) {
+  return { sm: list.filter(function (g) { return g.sz === 'sm'; }),
+    md: list.filter(function (g) { return g.sz === 'md'; }),
+    lg: list.filter(function (g) { return g.sz === 'lg'; }) };
+}
+function avgAr(a2) { return a2.length ? a2.reduce(function (s, x) { return s + (x.ar || 0); }, 0) / a2.length : null; }
 function btFetch(code, yearsAgo, mode) {
   var now = btMonths(0, 4), past = btMonths(yearsAgo, 4);
   var tasks = [];
@@ -6254,7 +6266,16 @@ function btFetch(code, yearsAgo, mode) {
     res.forEach(function (x) {
       if (!x || !x.d || !x.d.items) return;
       x.d.items.forEach(function (t) {
-        if (t.canceled || !areaPass(t.area, mode)) return;
+        if (t.canceled) return;
+        if (BTMODE === 'sz') {
+          if (t.area < 20 || t.area > 200) return;
+          var kz = normName(t.apt) + '|' + szClass(t.area);
+          var gz = G[kz] || (G[kz] = { apt: deent(t.apt), sz: szClass(t.area), ars: [], now: [], past: [] });
+          gz.ars.push(t.area);
+          gz[x.t].push(t.amount / t.area * PY);
+          return;
+        }
+        if (!areaPass(t.area, mode)) return;
         var k = normName(t.apt);
         var g = G[k] || (G[k] = { apt: deent(t.apt), now: [], past: [] });
         g[x.t].push(t.amount / t.area * PY);
@@ -6265,7 +6286,8 @@ function btFetch(code, yearsAgo, mode) {
       var g = G[k];
       if (g.now.length < 2 || g.past.length < 2) return;
       var p0 = median(g.past), p1 = median(g.now);
-      list.push({ apt: g.apt, p0: p0, p1: p1, gr: (p1 / p0 - 1) * 100, n0: g.past.length, n1: g.now.length });
+      list.push({ apt: g.apt, p0: p0, p1: p1, gr: (p1 / p0 - 1) * 100, n0: g.past.length, n1: g.now.length,
+        sz: g.sz || null, ar: g.ars ? median(g.ars) : null });
     });
     list.sort(function (u, v) { return v.p0 - u.p0; });   /* 과거 시점 평당가 기준 정렬 */
     if (BTMODE !== 'hh') return list;
@@ -6313,8 +6335,18 @@ function drawBT() {
       A.name + ' ' + la.length + '곳 / ' + B.name + ' ' + lb.length + '곳) 평형을 전체로 바꾸거나 기간을 줄여보세요.';
     return;
   }
-  var cases, ta, tb2, ha, hb;
-  if (BTMODE === 'hh') {
+  var cases, ta, tb2, ha, hb, za, zb;
+  if (BTMODE === 'sz') {
+    za = sizeSplit(la); zb = sizeSplit(lb);
+    cases = [
+      { k: A.name + ' 소형', g: za.sm, c: 'var(--m1)' },
+      { k: A.name + ' 중형', g: za.md, c: 'var(--m3)' },
+      { k: A.name + ' 대형', g: za.lg, c: 'var(--m4)' },
+      { k: B.name + ' 소형', g: zb.sm, c: 'var(--ember)' },
+      { k: B.name + ' 중형', g: zb.md, c: 'var(--frost)' },
+      { k: B.name + ' 대형', g: zb.lg, c: 'var(--taupe)' }
+    ];
+  } else if (BTMODE === 'hh') {
     ha = hhSplit(la); hb = hhSplit(lb);
     if (ha.known < 4 || hb.known < 4) {
       el('btStat').textContent = '세대수를 확인한 단지가 부족합니다 (' + A.name + ' ' + ha.known + '/' + ha.total +
@@ -6345,7 +6377,9 @@ function drawBT() {
     var tr = document.createElement('tr');
     tr.innerHTML = '<td class="nm"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' +
       x.c + ';margin-right:8px;vertical-align:-1px"></span>' + esc(x.k) + '</td>' +
-      '<td>' + x.g.length + '곳' + (BTMODE === 'hh' && avgHH(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n0(avgHH(x.g)) + '세대</div>' : '') + '</td>' +
+      '<td>' + x.g.length + '곳' +
+        (BTMODE === 'hh' && avgHH(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n0(avgHH(x.g)) + '세대</div>' : '') +
+        (BTMODE === 'sz' && avgAr(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n1(avgAr(x.g)) + '㎡</div>' : '') + '</td>' +
       '<td>' + (p0 == null ? '—' : n0(p0) + '만') + '</td>' +
       '<td>' + (p1 == null ? '—' : n0(p1) + '만') + '</td>' +
       '<td style="font-weight:700;color:' + (a >= 100 ? 'var(--good)' : a >= 70 ? 'var(--ember)' : 'var(--slate)') + '">' +
@@ -6356,8 +6390,8 @@ function drawBT() {
   });
 
   /* 예산 매칭 비교 — 과거 가격이 비슷했던 쌍 */
-  var midA = BTMODE === 'hh' ? ha.solo : ta.mid;
-  var topB = BTMODE === 'hh' ? hb.big : tb2.top;
+  var midA = BTMODE === 'sz' ? za.sm : (BTMODE === 'hh' ? ha.solo : ta.mid);
+  var topB = BTMODE === 'sz' ? zb.md : (BTMODE === 'hh' ? hb.big : tb2.top);
   var pa = avgP0(midA), pb = avgP0(topB);
   var ga = avgGr(midA), gb = avgGr(topB);
   var lineC = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
@@ -6374,7 +6408,23 @@ function drawBT() {
   });
 
   var L = [];
-  if (BTMODE === 'hh') {
+  if (BTMODE === 'sz') {
+    L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 소형 ' +
+      fmtPct(avgGr(za.sm)) + ' / 중형 ' + fmtPct(avgGr(za.md)) + ' / 대형 ' + fmtPct(avgGr(za.lg)) + ' · ' +
+      '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 소형 ' +
+      fmtPct(avgGr(zb.sm)) + ' / 중형 ' + fmtPct(avgGr(zb.md)) + ' / 대형 ' + fmtPct(avgGr(zb.lg)) + '.');
+    [[A.name, za], [B.name, zb]].forEach(function (pair) {
+      var z = pair[1];
+      if (avgGr(z.sm) == null || avgGr(z.md) == null) return;
+      var d1 = avgGr(z.md) - avgGr(z.sm), d2 = (avgGr(z.lg) != null) ? avgGr(z.lg) - avgGr(z.md) : null;
+      L.push('<b>' + esc(pair[0]) + ' 평형별 계단</b> — 소형 ' + fmtPct(avgGr(z.sm)) + ' → 중형 ' + fmtPct(avgGr(z.md)) +
+        (avgGr(z.lg) != null ? ' → 대형 ' + fmtPct(avgGr(z.lg)) : '') + '. ' +
+        (d1 > 0 ? '중형이 소형보다 <span class="up">' + n1(d1) + '%p</span> 앞섰고, ' : '소형이 중형보다 <span class="up">' + n1(-d1) + '%p</span> 앞섰고, ') +
+        (d2 == null ? '대형은 표본이 없습니다.'
+          : (d2 > 0 ? '대형은 중형보다 <span class="up">' + n1(d2) + '%p</span> 더 올랐습니다.'
+            : '대형은 중형보다 <span class="dn">' + n1(-d2) + '%p</span> 뒤졌습니다.')));
+    });
+  } else if (BTMODE === 'hh') {
     L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 나홀로 ' +
       fmtPct(avgGr(ha.solo)) + ' / 대단지 ' + fmtPct(avgGr(ha.big)) + ' · ' +
       '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 나홀로 ' +
@@ -6399,19 +6449,28 @@ function drawBT() {
       fmtPct(avgGr(tb2.top)) + ' / 중간 ' + fmtPct(avgGr(tb2.mid)) + '.');
   }
   if (pa != null && pb != null && ga != null && gb != null) {
-    L.push('<b>핵심 비교</b> — ' + esc(A.name) + (BTMODE === 'hh' ? ' 나홀로는 ' : ' 중간 물건은 ') + yr + '년 전 평당 ' + n0(pa) + '만, ' +
-      esc(B.name) + (BTMODE === 'hh' ? ' 대단지는 ' : ' 대장은 ') + n0(pb) + '만이었습니다. ' +
+    L.push('<b>핵심 비교</b> — ' + esc(A.name) + (BTMODE === 'sz' ? ' 소형은 ' : BTMODE === 'hh' ? ' 나홀로는 ' : ' 중간 물건은 ') + yr + '년 전 평당 ' + n0(pa) + '만, ' +
+      esc(B.name) + (BTMODE === 'sz' ? ' 중형은 ' : BTMODE === 'hh' ? ' 대단지는 ' : ' 대장은 ') + n0(pb) + '만이었습니다. ' +
       (Math.abs(pa - pb) / Math.max(pa, pb) < 0.25
         ? '<span class="hl">당시 가격대가 비슷해 직접 비교가 가능합니다.</span>'
         : '<span class="dn">당시 가격 차이가 ' + n0(Math.abs(pa - pb)) + '만(' +
           Math.round(Math.abs(pa - pb) / Math.max(pa, pb) * 100) + '%)이라 같은 예산 비교로 보기 어렵습니다.</span>'));
-    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + (BTMODE === 'hh' ? ' 나홀로 ' : ' 중간 ') + fmtPct(ga) + '</b> vs <b>' +
-      esc(B.name) + (BTMODE === 'hh' ? ' 대단지 ' : ' 대장 ') + fmtPct(gb) + '</b> — ' +
-      (ga > gb ? '<span class="up">' + (BTMODE === 'hh' ? '최상급지 나홀로가' : '상급지 중간 물건이') + ' 앞섰습니다</span>' :
-       gb > ga ? '<span class="up">' + (BTMODE === 'hh' ? '상급지 대단지가' : '중급지 대장이') + ' 앞섰습니다</span>' : '차이가 없었습니다') +
+    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + (BTMODE === 'sz' ? ' 소형 ' : BTMODE === 'hh' ? ' 나홀로 ' : ' 중간 ') + fmtPct(ga) + '</b> vs <b>' +
+      esc(B.name) + (BTMODE === 'sz' ? ' 중형 ' : BTMODE === 'hh' ? ' 대단지 ' : ' 대장 ') + fmtPct(gb) + '</b> — ' +
+      (ga > gb ? '<span class="up">' + (BTMODE === 'sz' ? '상급지 소형이' : BTMODE === 'hh' ? '최상급지 나홀로가' : '상급지 중간 물건이') + ' 앞섰습니다</span>' :
+       gb > ga ? '<span class="up">' + (BTMODE === 'sz' ? '중급지 중형이' : BTMODE === 'hh' ? '상급지 대단지가' : '중급지 대장이') + ' 앞섰습니다</span>' : '차이가 없었습니다') +
       ' (' + n1(Math.abs(ga - gb)) + '%p).');
   }
-  if (BTMODE === 'hh') {
+  if (BTMODE === 'sz') {
+    var sa = (avgGr(za.md) != null && avgGr(za.sm) != null) ? avgGr(za.md) - avgGr(za.sm) : null;
+    var sb = (avgGr(zb.md) != null && avgGr(zb.sm) != null) ? avgGr(zb.md) - avgGr(zb.sm) : null;
+    if (sa != null || sb != null) L.push('같은 지역 안에서 <b>중형 − 소형</b> 차이는 ' +
+      (sa != null ? esc(A.name) + ' ' + (sa > 0 ? '+' : '') + n1(sa) + '%p' : '') +
+      (sb != null ? (sa != null ? ', ' : '') + esc(B.name) + ' ' + (sb > 0 ? '+' : '') + n1(sb) + '%p' : '') +
+      '입니다. 양수면 <b>같은 동네에서도 큰 평형이 더 올랐다</b>는 뜻입니다.');
+    L.push('<b>표본 주의</b> — 같은 단지의 다른 평형이 각각 한 줄로 잡히므로 단지 수가 평형 모드에서 더 많이 나옵니다. ' +
+      '대형은 거래가 드물어 표본이 적은 경우가 흔합니다.');
+  } else if (BTMODE === 'hh') {
     var da = (avgGr(ha.big) != null && avgGr(ha.solo) != null) ? avgGr(ha.big) - avgGr(ha.solo) : null;
     var db = (avgGr(hb.big) != null && avgGr(hb.solo) != null) ? avgGr(hb.big) - avgGr(hb.solo) : null;
     if (da != null || db != null) L.push('같은 지역 안에서 <b>대단지 − 나홀로</b> 차이는 ' +
@@ -6438,11 +6497,15 @@ function drawBT() {
       '<div class="tblwrap"><table><thead><tr><th>단지</th><th>등급</th><th>' + yr + '년 전 평당</th><th>현재 평당</th><th>상승률</th></tr></thead><tbody>';
     var t = tierSplit(list);
     list.forEach(function (x) {
-      var tag = BTMODE === 'hh'
-        ? (!x.hh ? '미상' : x.hh >= 1000 ? '대단지' : x.hh < 300 ? '나홀로' : '중형')
-        : (t.top.indexOf(x) >= 0 ? '대장' : (t.mid.indexOf(x) >= 0 ? '중간' : (t.low.indexOf(x) >= 0 ? '하위' : '—')));
-      h += '<tr><td class="nm">' + esc(x.apt) + (BTMODE === 'hh' && x.hh ? ' <span style="font-size:11px;color:var(--slate)">' + n0(x.hh) + '세대</span>' : '') +
-        '</td><td><span class="b ' + (tag === '대장' || tag === '대단지' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
+      var tag = BTMODE === 'sz'
+        ? (x.sz === 'sm' ? '소형' : x.sz === 'md' ? '중형' : '대형')
+        : (BTMODE === 'hh'
+          ? (!x.hh ? '미상' : x.hh >= 1000 ? '대단지' : x.hh < 300 ? '나홀로' : '중형')
+          : (t.top.indexOf(x) >= 0 ? '대장' : (t.mid.indexOf(x) >= 0 ? '중간' : (t.low.indexOf(x) >= 0 ? '하위' : '—'))));
+      h += '<tr><td class="nm">' + esc(x.apt) +
+        (BTMODE === 'hh' && x.hh ? ' <span style="font-size:11px;color:var(--slate)">' + n0(x.hh) + '세대</span>' : '') +
+        (BTMODE === 'sz' && x.ar ? ' <span style="font-size:11px;color:var(--slate)">' + n1(x.ar) + '㎡</span>' : '') +
+        '</td><td><span class="b ' + (tag === '대장' || tag === '대단지' || tag === '대형' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
         '<td>' + n0(x.p0) + '만</td><td>' + n0(x.p1) + '만</td>' +
         '<td style="font-weight:700;color:' + (x.gr >= 100 ? 'var(--good)' : '#16202B') + '">' + fmtPct(x.gr) + '</td></tr>';
     });
@@ -6454,7 +6517,11 @@ function drawBT() {
 function imgBT() {
   if (!BT) return;
   var A = BT.A, B = BT.B, yr = BT.yr, cases;
-  if (BTMODE === 'hh') {
+  if (BTMODE === 'sz') {
+    var z1 = sizeSplit(BT.la), z2 = sizeSplit(BT.lb);
+    cases = [[A.name + ' 소형', z1.sm], [A.name + ' 중형', z1.md], [A.name + ' 대형', z1.lg],
+             [B.name + ' 소형', z2.sm], [B.name + ' 중형', z2.md], [B.name + ' 대형', z2.lg]];
+  } else if (BTMODE === 'hh') {
     var ha2 = hhSplit(BT.la), hb2 = hhSplit(BT.lb);
     cases = [[A.name + ' 나홀로', ha2.solo], [A.name + ' 중형', ha2.mid], [A.name + ' 대단지', ha2.big],
              [B.name + ' 나홀로', hb2.solo], [B.name + ' 중형', hb2.mid], [B.name + ' 대단지', hb2.big]];
@@ -6464,7 +6531,7 @@ function imgBT() {
              [B.name + ' 대장', tb3.top], [B.name + ' 중간', tb3.mid]];
   }
   exportPNG({
-    title: BTMODE === 'hh' ? '나홀로 vs 대단지' : '상급지 중간 vs 중급지 대장',
+    title: BTMODE === 'sz' ? '평형별 비교' : BTMODE === 'hh' ? '나홀로 vs 대단지' : '상급지 중간 vs 중급지 대장',
     sub: A.name + ' ↔ ' + B.name + ' · 최근 ' + yr + '년 · ' + (BT.mode === 'all' ? '전체 평형' : BT.mode + '㎡대'),
     stats: cases.map(function (x) {
       var g = avgGr(x[1]);
@@ -7162,7 +7229,9 @@ function init() {
     var b = e.target.closest('button'); if (!b) return;
     BTMODE = b.dataset.v;
     el('btMode').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-    el('btHint').innerHTML = BTMODE === 'hh'
+    el('btHint').innerHTML = BTMODE === 'sz'
+      ? '<b>평형 기준</b> — <b>소형</b> 55㎡ 미만(14·18평), <b>중형</b> 55~95㎡(59·84), <b>대형</b> 95㎡ 이상. 위 평형 선택은 무시하고 전체 거래를 봅니다.'
+      : BTMODE === 'hh'
       ? '<b>세대수 기준</b> — 300세대 미만을 <b>나홀로</b>, 1000세대 이상을 <b>대단지</b>로 나눕니다. K-apt에서 세대수를 조회하므로 시간이 조금 더 걸립니다.'
       : '<b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.';
     if (BT) runBT();
