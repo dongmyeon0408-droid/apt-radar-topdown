@@ -819,8 +819,19 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <h2>입주물량 · 수급</h2>
     <p class="hint">가격은 수요와 공급으로도 움직입니다. 향후 <b>2년치 입주 예정 물량</b>을 연간 추정 수요와 나란히 놓고,
       미분양까지 함께 봅니다.</p>
-    <div class="inline" style="margin-bottom:12px">
-      <div class="seg" id="supSido"></div>
+    <div class="grid g3" style="margin-bottom:12px">
+      <div class="field"><label>지역</label><select id="supSel"></select></div>
+      <div class="field"><label>표시 기간</label>
+        <div class="inline" style="padding-top:6px">
+          <div class="seg" id="supYears">
+            <button data-v="10" aria-pressed="false">10년</button>
+            <button data-v="20" aria-pressed="true">20년</button>
+            <button data-v="30" aria-pressed="false">30년</button>
+            <button data-v="41" aria-pressed="false">전체</button>
+          </div>
+        </div></div>
+      <div class="field"><label>생활권 반경</label>
+        <div class="inline" style="padding-top:6px"></div></div>
     </div>
     <div class="inline" style="margin-bottom:16px">
       <div class="seg" id="supR">
@@ -839,8 +850,11 @@ tr.txrow>td{padding:0;background:var(--lift)}
 
   <div class="card">
     <span class="eb">YEARLY</span>
-    <h2>연도별 입주물량 vs 수요</h2>
-    <p class="hint">막대가 입주물량, 호박색 선이 연간 추정 수요입니다. 막대가 선 위로 올라간 해는 <b>공급 우위</b>입니다.</p>
+    <h2>공급 · 수요 · 매매가격</h2>
+    <p class="hint"><b>파란 막대는 준공 실적</b>(2010~2026, 국토부 · 아파트만),
+      <b>호박색 막대는 입주 예정</b>(2026~2027, 부동산원), 붉은 점선은 연간 추정 수요,
+      <b>검은 선은 매매가격지수</b>(우축, 1986~)입니다.
+      물량이 쏟아진 시기와 가격이 눌린 시기가 겹치는지 한 화면에서 봅니다.</p>
     <div class="chartbox" style="height:320px"><canvas id="cSup1"></canvas></div>
   </div>
 
@@ -872,6 +886,13 @@ tr.txrow>td{padding:0;background:var(--lift)}
       매매가도 함께 밀리는 경우가 많아, 갭이 벌어지고 <b>역전세 위험</b>이 커집니다.<br>
       반대로 실거주로 들어가려는 사람에게는 <b>가장 싸게 잡을 수 있는 구간</b>이기도 합니다.
       전세를 끼고 사려면 물량이 지나간 뒤를, 실거주로 들어가려면 물량이 쏟아지는 때를 노리는 게 일반적입니다.<br><br>
+      <b>두 가지 출처를 이어 붙였습니다</b><br>
+      <b>과거(2010~2026)</b> — 국토교통부 통계누리 <b>주택건설 준공실적</b> 중 아파트만. 사용검사(준공) 기준입니다.
+      2026년은 6월까지의 잠정치라 막대를 흐리게 표시합니다.<br>
+      <b>미래(2026~2027)</b> — 한국부동산원 <b>입주예정물량</b>. 사업 일정 변경으로 바뀔 수 있는 예측치입니다.<br>
+      준공과 입주는 사용승인·실제 거주 기준이라 몇 달 시차가 있지만 연 단위로는 거의 같이 움직입니다.
+      두 막대의 색이 다른 이유가 이것입니다 — <b>이어진 하나의 시계열이 아니라 성격이 다른 두 자료</b>입니다.
+      과거 준공은 <b>시·도 단위</b>까지만 제공되고, 미래 입주예정은 시·군·구까지 있습니다.<br><br>
       <b>데이터 한계</b> — 입주예정물량은 30세대 이상 공동주택 <b>예측치</b>입니다(2025.12 기준).
       사업 일정 변경으로 바뀔 수 있고, 특히 2년 뒤 물량은 오차가 큽니다.
       수요량은 <b>인구 × 0.5%</b> 가정치로 공식 통계가 아닙니다.<br>
@@ -1906,7 +1927,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v28.1';
+var VERSION = 'v30.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -4651,7 +4672,30 @@ function imgQuad() {
 
 /* ══════════ 수급 (입주물량 · 수요 · 미분양) ══════════ */
 var SUPOK = (typeof SUP !== 'undefined');
-var SUP_SIDO = '경기', chartS1 = null, chartS2 = null, LASTS = null;
+var SUP_SIDO = '전국', SUP_YEARS = 20, chartS1 = null, chartS2 = null, LASTS = null;
+/** 전국 집계 (시도 합산) */
+function supNation() {
+  var mon = {}, pop = { p: 0, h: 0 }, uns = 0;
+  Object.keys(SUP.sido).forEach(function (sd) {
+    Object.keys(SUP.sido[sd]).forEach(function (k) { mon[k] = (mon[k] || 0) + SUP.sido[sd][k]; });
+  });
+  Object.keys(SUP.popSido).forEach(function (sd) {
+    if (sd === '전국') return;
+    pop.p += SUP.popSido[sd].p; pop.h += SUP.popSido[sd].h;
+  });
+  if (SUP.popSido['전국']) pop = SUP.popSido['전국'];
+  Object.keys(SUP.unsoldSido).forEach(function (sd) {
+    if (sd === '전국' || sd === '수도권' || sd === '지방') return;
+    uns += SUP.unsoldSido[sd];
+  });
+  if (SUP.unsoldSido['전국'] != null) uns = SUP.unsoldSido['전국'];
+  return { mon: mon, pop: pop, uns: uns };
+}
+/** 해당 시도의 KB 매매가격지수 (연말 기준) */
+function priceIndexOf(sd) {
+  var r = KIR.filter(function (x) { return x.name === sd; })[0];
+  return r ? r.s : null;
+}
 var DEMAND_RATE = 0.005;  /* 연간 주택 수요 = 인구 × 0.5% (업계 관행 가정) */
 function supYms(n) {
   var o = [], d = new Date();
@@ -4669,9 +4713,10 @@ function supSum(map, yms) {
 function renderSup() {
   if (!SUPOK) { el('supKpi').innerHTML = '<div class="empty">supply-data.js를 불러오지 못했습니다.</div>'; return; }
   var sd = SUP_SIDO;
-  var pop = SUP.popSido[sd], unsold = SUP.unsoldSido[sd];
+  var nat = sd === '전국' ? supNation() : null;
+  var pop = nat ? nat.pop : SUP.popSido[sd], unsold = nat ? nat.uns : SUP.unsoldSido[sd];
   var demand = pop ? pop.p * DEMAND_RATE : null;   /* 연간 수요 세대 */
-  var mon = SUP.sido[sd] || {};
+  var mon = nat ? nat.mon : (SUP.sido[sd] || {});
   var yms = Object.keys(mon).sort();
   var y12 = supSum(mon, supYms(12)), y24 = supSum(mon, supYms(24));
 
@@ -4695,20 +4740,43 @@ function renderSup() {
   var lineC = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
   var ice = getComputedStyle(document.documentElement).getPropertyValue('--m4').trim();
   var ember = getComputedStyle(document.documentElement).getPropertyValue('--ember').trim();
+  /* x축 — 가격 지수가 있는 과거 + 입주물량이 있는 미래 */
+  var supMaxY = years.length ? +years[years.length - 1] : new Date().getFullYear();
+  var endY = supMaxY;
+  var startY = endY - SUP_YEARS + 1;
+  var xs = [];
+  for (var yy = startY; yy <= endY; yy++) xs.push(String(yy));
+  var doneY = (SUP.done && SUP.done[sd]) ? SUP.done[sd] : null;
+  var partialY = SUP.donePartial || null;
+  var pIdx = priceIndexOf(sd);
+  var priceLine = xs.map(function (y) {
+    if (!pIdx) return null;
+    var i = KIY.indexOf(+y);
+    return i >= 0 && pIdx[i] != null ? +pIdx[i].toFixed(1) : null;
+  });
+  var ink2 = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
   if (chartS1) chartS1.destroy();
   chartS1 = new Chart(el('cSup1').getContext('2d'), {
     type: 'bar',
-    data: { labels: years, datasets: [
-      { label: '입주물량', data: years.map(function (y) { return byYear[y]; }),
-        backgroundColor: ice, borderRadius: 5, order: 2 },
-      { label: '연간 추정 수요', data: years.map(function () { return demand ? Math.round(demand) : null; }),
-        type: 'line', borderColor: ember, borderWidth: 2.6, pointRadius: 3,
-        pointBackgroundColor: ember, tension: 0, order: 1 } ] },
+    data: { labels: xs, datasets: [
+      { label: '준공 실적 (아파트, 호)', data: xs.map(function (y) { return doneY && doneY[y] ? doneY[y] : null; }),
+        backgroundColor: xs.map(function (y) { return y === partialY ? ice + '66' : ice; }),
+        borderRadius: 4, order: 4, yAxisID: 'y' },
+      { label: '입주 예정 (세대)', data: xs.map(function (y) { return byYear[y] || null; }),
+        backgroundColor: ember, borderRadius: 4, order: 3, yAxisID: 'y' },
+      { label: '연간 추정 수요', data: xs.map(function () { return demand ? Math.round(demand) : null; }),
+        type: 'line', borderColor: '#B24A32', borderWidth: 2.2, pointRadius: 0, borderDash: [6, 4],
+        tension: 0, order: 2, yAxisID: 'y' },
+      { label: '매매가격지수 (우축)', data: priceLine, type: 'line', borderColor: ink2, borderWidth: 2.6,
+        pointRadius: 0, tension: .2, order: 1, yAxisID: 'y2' } ] },
     options: { responsive: true, maintainAspectRatio: false, animation: false,
       interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { display: true, labels: { boxWidth: 14, usePointStyle: true, font: { size: 13 } } } },
-      scales: { x: { grid: { display: false }, ticks: { font: { size: 12 } } },
-        y: { grid: { color: lineC }, ticks: { font: { size: 11 }, callback: function (v) { return n0(v); } } } } }
+      plugins: { legend: { display: true, labels: { boxWidth: 14, usePointStyle: true, font: { size: 12.5 } } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 22 } },
+        y: { position: 'left', grid: { color: lineC }, title: { display: true, text: '공급 (호·세대)', font: { size: 11 } },
+          ticks: { font: { size: 11 }, callback: function (v) { return n0(v); } } },
+        y2: { position: 'right', grid: { display: false }, title: { display: true, text: '매매가격지수', font: { size: 11 } },
+          ticks: { font: { size: 11 } } } } }
   });
 
   /* 차트 2 — 월별 */
@@ -4727,7 +4795,7 @@ function renderSup() {
   /* 시군구 표 */
   var tb = el('tSup').tBodies[0]; tb.innerHTML = '';
   var y12k = supYms(12), y24k = supYms(24);
-  var list = allRegions().filter(function (r) { return r.sido === sd; })
+  var list = allRegions().filter(function (r) { return sd === '전국' ? !!SUP.sgg[r.code] : r.sido === sd; })
     .map(function (r) {
       var m = SUP.sgg[r.code], pp = SUP.pop[r.code], un = SUP.unsold[r.code];
       var a = supSum(m, y12k), b = supSum(m, y24k);
@@ -4796,6 +4864,30 @@ function renderSup() {
   if (top3.length) L.push('물량이 몰리는 곳은 ' + top3.map(function (x) {
     return esc(x.r.name) + '(' + n0(x.b) + '세대)'; }).join(' · ') + ' 입니다. ' +
     '<b>입주 직전 6개월은 전세가 밀리는 구간</b>이라 갭투자 진입 시점으로는 유리하지만, 역전세 위험도 같이 커집니다.');
+  if (doneY) {
+    var ys = Object.keys(doneY).filter(function (y) { return y !== partialY; }).sort();
+    if (ys.length >= 5) {
+      var vals = ys.map(function (y) { return doneY[y]; });
+      var mxI = vals.indexOf(Math.max.apply(null, vals)), mnI = vals.indexOf(Math.min.apply(null, vals));
+      var avgD = vals.reduce(function (u, v) { return u + v; }, 0) / vals.length;
+      L.push('<b>준공 사이클</b> — ' + ys[0] + '~' + ys[ys.length - 1] + ' 아파트 준공 실적은 연평균 ' +
+        n0(avgD) + '호입니다. 가장 많았던 해는 <span class="hl">' + ys[mxI] + '년 ' + n0(vals[mxI]) +
+        '호</span>, 가장 적었던 해는 <span class="hl">' + ys[mnI] + '년 ' + n0(vals[mnI]) + '호</span>.' +
+        (demand ? ' 연간 추정 수요 ' + n0(demand) + '세대 대비 평균 ' + (avgD / demand).toFixed(2) + '배로 공급돼 왔습니다.' : ''));
+      var last3 = ys.slice(-3).map(function (y) { return doneY[y]; });
+      var l3 = last3.reduce(function (u, v) { return u + v; }, 0) / last3.length;
+      L.push('최근 3년 평균은 ' + n0(l3) + '호로 장기 평균 대비 <span class="' + (l3 > avgD ? 'dn' : 'up') + '">' +
+        fmtPct((l3 / avgD - 1) * 100) + '</span>입니다. ' +
+        (l3 < avgD ? '공급이 줄어드는 국면이라 2~3년 뒤 물량 부족이 나타날 수 있습니다.'
+          : '공급이 늘어난 국면이라 입주 시기 전세 압박을 함께 봐야 합니다.'));
+    }
+  }
+  if (pIdx) {
+    var li = KIY.length - 1, p5 = KIY.indexOf(KIY[li] - 5);
+    if (p5 >= 0 && pIdx[li] && pIdx[p5]) L.push('같은 화면의 <b>검은 선이 매매가격지수</b>입니다. ' +
+      esc(sd) + ' 최근 5년 <span class="hl">' + fmtPct((pIdx[li] / pIdx[p5] - 1) * 100) + '</span> 움직였습니다. ' +
+      '입주물량 막대와 겹쳐 보면 <b>물량이 쏟아진 시기와 가격이 눌린 시기가 맞물리는지</b> 확인할 수 있습니다.');
+  }
   L.push('수요량은 <b>인구 × 0.5% 가정치</b>입니다. 공식 통계가 아니라 업계에서 쓰는 추정식이며, 세대분화 속도가 빠른 지역에서는 과소 추정됩니다.');
   el('supIns').innerHTML = '<h4>수급 읽기</h4><ul><li>' + L.join('</li><li>') + '</li></ul>';
 }
@@ -4898,7 +4990,7 @@ function scoreItem(it, c) {
   var g10 = chg10(r);
   var s2 = g10 == null ? 55
     : (g10 >= 100 ? 100 : (g10 >= 70 ? 55 + (g10 - 70) / 30 * 45 : clamp(15 + g10 / 70 * 40, 10, 55)));
-  ax.push({ k: '장기 성과', w: .12, s: s2,
+  ax.push({ k: '장기 성과', w: .09, s: s2,
     d: g10 == null ? '10년 데이터 없음' : '10년 ' + fmtPct(g10) + ' · 연복리 ' +
       n1((Math.pow(1 + g10 / 100, .1) - 1) * 100) + '% · ' + (g10 >= 100 ? '통과' : g10 >= 70 ? '경계' : '미달') });
 
@@ -4916,7 +5008,7 @@ function scoreItem(it, c) {
   var sr = saI ? saI.ratio : null, ur = saI ? saI.unsR : null;
   var s4 = sr == null ? 55 : clamp(40 + (1.2 - sr) * 45, 20, 100);
   if (sr != null && ur != null) s4 = clamp(s4 - ur * 45, 20, 100);
-  ax.push({ k: '수급', w: .20, s: s4,
+  ax.push({ k: '수급', w: .18, s: s4,
     d: sr == null ? '수급 데이터 없음'
       : '생활권 ' + SUP_R + 'km 배율 ' + sr.toFixed(2) + '배 (' + saI.n + '곳)' +
         (ur != null ? ' · 준공후 미분양 ' + ur.toFixed(2) + '%' : '') });
@@ -5149,7 +5241,7 @@ function scoreRegion(r, c) {
   var g10 = chg10(r);
   var s2 = g10 == null ? 55
     : (g10 >= 100 ? 100 : (g10 >= 70 ? 55 + (g10 - 70) / 30 * 45 : clamp(15 + g10 / 70 * 40, 10, 55)));
-  ax.push({ k: '장기 성과', w: .15, s: s2,
+  ax.push({ k: '장기 성과', w: .10, s: s2,
     d: g10 == null ? '데이터 없음' : '10년 ' + fmtPct(g10) + ' · 연복리 ' +
       n1((Math.pow(1 + g10 / 100, .1) - 1) * 100) + '% · ' + (g10 >= 100 ? '통과' : g10 >= 70 ? '경계' : '미달') });
   /* 수급 15% — 하한 20점 (탈락 사유가 아니라 조정 요소) */
@@ -5157,7 +5249,7 @@ function scoreRegion(r, c) {
   var sr = sa ? sa.ratio : null, ur = sa ? sa.unsR : null;
   var s4 = sr == null ? 55 : clamp(40 + (1.2 - sr) * 45, 20, 100);
   if (sr != null && ur != null) s4 = clamp(s4 - ur * 45, 20, 100);
-  ax.push({ k: '수급', w: .15, s: s4,
+  ax.push({ k: '수급', w: .25, s: s4,
     d: sr == null ? '수급 데이터 없음' : '생활권 ' + SUP_R + 'km 배율 ' + sr.toFixed(2) + '배 (' + sa.n + '곳)' +
       (ur != null ? ' · 미분양 ' + ur.toFixed(2) + '%' : '') });
   /* 진입 타이밍 15% — 무주택은 전세가율 밴드, 유주택은 갈아타기 배율 밴드 */
@@ -5611,7 +5703,7 @@ function imgRec() {
         x.g10 == null ? '—' : (x.g10 > 0 ? '+' : '') + n1(x.g10) + '%'];
     }),
     max: 22,
-    note: '급지 40% · 전세 뒷받침 25% · 수급 20% · 장기성과 15% 가중 · 자금은 필터로만 적용 · 투자 자문 아님',
+    note: '급지 40% · 전세 뒷받침 25% · 수급 25% · 장기성과 10% 가중 · 자금은 필터로만 적용 · 투자 자문 아님',
     file: 'recommend'
   });
 }
@@ -5866,10 +5958,10 @@ function axisInfo(t0) {
       ev: a[3].k === '갈아타기 타이밍'
         ? '백테스트 — 배율 하단을 고른 경우 3년 뒤 이득 22.1% vs 상단 13.9% (64개월 중 92% 우세)'
         : '전세가율 수준 IC +0.129 · 밴드(백분위) +0.028보다 4배 강해 수준 65% + 밴드 35%로 섞음' },
-    { n: '수급', w: '20%', s: a[2].s, v: a[2].d,
+    { n: '수급', w: '25%', s: a[2].s, v: a[2].d,
       why: '입주물량이 수요를 넘으면 전세가 먼저 밀리고, 갭이 벌어지며 역전세 위험이 커집니다.',
-      ev: '행정구역이 아니라 반경 ' + SUP_R + 'km 생활권으로 합산 — 옆 동네 물량도 내 전세를 누릅니다' },
-    { n: '장기 성과', w: '15%', s: a[1].s, v: a[1].d,
+      ev: '시도 16곳 검증 — 당해 공급이 많을수록 이듬해 전세 IC −0.325, 매매 −0.255 (급지 통제 후)' },
+    { n: '장기 성과', w: '10%', s: a[1].s, v: a[1].d,
       why: '10년에 두 배(연복리 7.2%)를 넘었는지만 봅니다. 더 올랐다고 가점하지 않습니다.',
       ev: '급지를 통제하면 5년 상승률 IC −0.259 (89% 음수) — 최근 많이 오른 곳이 이후 덜 올랐기 때문' }
   ];
@@ -6082,7 +6174,7 @@ function drawOne(pg, no, total, c, top3) {
     x.fillStyle = C.ink; x.font = '600 22px ' + RF;
     x.fillText('탑다운 — 전국 서열 → 내 자본이 닿는 구간 → 그 안의 최상단 → 조건 통과 단지', PAD, H - FOOT + 52);
     x.fillStyle = C.sub; x.font = '450 19px ' + RF;
-    x.fillText('급지 40% · 전세 뒷받침 25% · 수급 20% · 장기성과 15% 가중', PAD, H - FOOT + 88);
+    x.fillText('급지 40% · 전세 뒷받침 25% · 수급 25% · 장기성과 10% 가중', PAD, H - FOOT + 88);
     x.fillText('생성 ' + d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() +
       ' · KB ' + ymL(KB.asof) + ' · 국토부 실거래 기준', PAD, H - FOOT + 120);
     x.fillText('공개 통계를 계산한 정보 제공용이며 투자 자문이 아닙니다', PAD, H - FOOT + 152);
@@ -6580,19 +6672,17 @@ function init() {
     if (!SUPOK) return;
     var order = ['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '세종',
                  '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
-    var hh = '';
-    order.forEach(function (s) {
-      if (!SUP.sido[s]) return;
-      hh += '<button data-v="' + s + '" aria-pressed="' + (s === '경기') + '">' + s + '</button>';
-    });
-    el('supSido').innerHTML = hh;
-    el('supSido').addEventListener('click', function (e) {
+    var hh = '<option value="전국">전국</option>';
+    order.forEach(function (s) { if (SUP.sido[s]) hh += '<option value="' + s + '">' + s + '</option>'; });
+    el('supSel').innerHTML = hh;
+    el('imgSup').addEventListener('click', imgSup);
+    el('supSel').addEventListener('change', function () { SUP_SIDO = el('supSel').value; renderSup(); });
+    el('supYears').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
-      SUP_SIDO = b.dataset.v;
-      el('supSido').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      SUP_YEARS = +b.dataset.v;
+      el('supYears').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
       renderSup();
     });
-    el('imgSup').addEventListener('click', imgSup);
     el('supR').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       SUP_R = +b.dataset.v;
