@@ -857,6 +857,24 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div class="ins" id="supIns"></div>
   </div>
 
+  <div class="card" id="unsBox" hidden>
+    <span class="eb">UNSOLD</span>
+    <h2>미분양 추이</h2>
+    <p class="hint">안 팔리고 남은 물량입니다. 최근 11년치를 월별로 보여줍니다.
+      입주물량이 <b>전세</b>를 먼저 누른다면, 미분양은 <b>매매</b>를 먼저 누릅니다.</p>
+    <div class="chartbox" style="height:260px"><canvas id="cUns"></canvas></div>
+    <div class="ins" id="unsIns"></div>
+    <div class="readme">
+      <b>출처</b> — 국토교통부 통계누리 미분양주택현황보고, 시·군·구 월별 (2015.07~2026.06).
+      전국·시도 합계는 그 지역 시군구를 모두 더한 값입니다.<br><br>
+      <b>왜 매매에 먼저 오나</b> — 미분양은 <b>이미 지어졌거나 짓고 있는데 안 팔린 물건</b>입니다.
+      분양가보다 싸게라도 팔려는 물량이 쌓이면 기존 아파트 매도자도 호가를 낮춰야 합니다.
+      반면 입주물량은 <b>세입자를 구해야 하는 물건</b>이라 전세부터 밀립니다.<br><br>
+      <b>준공후 미분양은 더 나쁩니다</b> — 다 지어놓고도 안 팔린 것이라 가장 악성인 재고입니다.
+      점수 계산에는 이 값을 씁니다.
+    </div>
+  </div>
+
   <div class="card">
     <span class="eb">YEARLY</span>
     <h2>공급 · 수요 · 매매가격</h2>
@@ -1105,231 +1123,268 @@ tr.txrow>td{padding:0;background:var(--lift)}
 <section class="pane" id="pi" hidden>
   <div class="card">
     <span class="eb">FAQ</span>
-    <h2>투자 FAQ · 데이터로 확인한 것들</h2>
-    <p class="hint">부동산에는 확신에 찬 말이 많습니다. 서로 모순되는데도 다 그럴듯하게 들립니다.
-      이 탭은 그 말들을 <b>실제 데이터로 검증한 결과</b>만 모았습니다. 의견이 아니라 측정값입니다.</p>
+    <h2>데이터로 확인한 것들</h2>
+    <p class="hint">부동산에는 확신에 찬 말이 많습니다. 서로 반대인데도 다 그럴듯하게 들립니다.
+      여기 있는 건 <b>실제 과거 데이터로 직접 확인한 것</b>만입니다. 제 의견이 아니라 계산 결과입니다.</p>
     <div class="readme" style="margin-top:0">
-      <b>검증할 때 두 가지를 통제했습니다</b><br>
-      <b>① 시장 국면</b> — 2021년처럼 다 오른 해에는 아무거나 사도 수익이 납니다. 그래서
-      <b>같은 시점에서 선택지끼리만</b> 비교했습니다.<br>
-      <b>② 순환논리</b> — "지금 비싼 걸 골랐더니 많이 올랐더라"는 당연한 결과입니다. 그래서
-      <b>과거 시점의 정보만으로</b> 골랐습니다.
+      <b>계산할 때 두 가지를 조심했습니다</b><br>
+      <b>① 오르는 해에는 뭘 사도 오릅니다.</b> 2021년처럼 다 오른 해를 섞으면 아무 전략이나 좋아 보입니다.
+      그래서 <b>같은 시점에 있던 선택지끼리만</b> 비교했습니다.<br>
+      <b>② 결과를 보고 고르면 안 됩니다.</b> "지금 비싼 걸 골랐더니 많이 올랐네"는 당연합니다.
+      그래서 <b>그 당시에 알 수 있었던 정보만으로</b> 골랐습니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q1</span>
     <h3>비싼 동네가 정말 더 오르나요?</h3>
-    <div class="ans">네. 예외가 거의 없었습니다.</div>
-    <p>2016년 7월 평당가로 시군구 107곳을 10분위로 나눈 뒤 10년을 측정했습니다.
-      <b>지금 비싼 곳이 아니라 그때 비쌌던 곳</b>으로 나눴기 때문에 순환논리가 아닙니다.</p>
+    <div class="ans">네. 거의 예외가 없었습니다.</div>
+    <p>10년 전(2016년) 가격으로 전국 시·군·구를 <b>비싼 순서대로 10칸</b>으로 나눴습니다.
+      지금 비싼 곳이 아니라 <b>그때 비쌌던 곳</b>으로 나눴기 때문에, 결과를 보고 고른 게 아닙니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>2016년 분위</th><th>당시 평당가</th><th>10년 상승률</th></tr></thead>
+      <thead><tr><th>10년 전 가격대</th><th>당시 평당가</th><th>10년 뒤</th></tr></thead>
       <tbody>
-        <tr class="pick"><td class="nm">1분위</td><td>2,783만</td><td><b>+208.6%</b></td></tr>
-        <tr><td class="nm">2분위</td><td>1,908만</td><td>+178.7%</td></tr>
-        <tr><td class="nm">3분위</td><td>1,507만</td><td>+143.9%</td></tr>
-        <tr><td class="nm">4분위</td><td>1,355만</td><td>+117.1%</td></tr>
-        <tr><td class="nm">5분위</td><td>1,183만</td><td>+86.5%</td></tr>
-        <tr><td class="nm">6분위</td><td>1,074만</td><td>+56.7%</td></tr>
-        <tr><td class="nm">10분위</td><td>724만</td><td>+52.5%</td></tr>
+        <tr class="pick"><td class="nm">가장 비싼 10%</td><td>2,783만</td><td><b>3.1배</b></td></tr>
+        <tr><td class="nm">그 다음 10%</td><td>1,908만</td><td>2.8배</td></tr>
+        <tr><td class="nm">상위 30%까지</td><td>1,507만</td><td>2.4배</td></tr>
+        <tr><td class="nm">중간쯤</td><td>1,183만</td><td>1.9배</td></tr>
+        <tr class="self"><td class="nm">가장 싼 10%</td><td>724만</td><td><b>1.5배</b></td></tr>
       </tbody></table></div>
-    <p><b>상위 1~3분위 +177% / 중위 4~6분위 +87% / 하위 7~10분위 +60%.</b>
-      6·7분위만 한 번 뒤집힐 뿐 거의 완벽하게 단조 정렬됩니다.
-      이것이 이 도구가 <b>급지에 40% 비중</b>을 두는 이유입니다.</p>
+    <p><b>비쌀수록 많이 올랐습니다.</b> 10칸 중 딱 한 번만 순서가 뒤집혔을 뿐, 나머지는 정확히 비싼 순서대로였습니다.
+      가장 비싼 곳은 3.1배가 됐고 가장 싼 곳은 1.5배에 그쳤습니다.</p>
+    <p>그래서 이 도구는 <b>동네 순위에 가장 큰 비중(40%)</b>을 둡니다.</p>
   </div>
 
   <div class="card faq">
     <span class="eb">Q2</span>
     <h3>최근 많이 오른 곳이 계속 오르나요?</h3>
     <div class="ans bad">아니요. 오히려 반대였습니다.</div>
-    <p>급지를 3등분해 <b>같은 급 안에서</b> 비교하면, 최근 많이 오른 곳이 이후 덜 올랐습니다.
-      64개월치 순위상관(IC) 측정 결과입니다.</p>
+    <p><b>비슷한 가격대끼리만</b> 모아놓고 비교했습니다. 그랬더니 최근 많이 오른 곳이 이후에는 덜 올랐습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>지표</th><th>급지 통제 전</th><th>급지 통제 후</th><th>일관성</th></tr></thead>
+      <thead><tr><th>비교한 시점</th><th>결과</th></tr></thead>
       <tbody>
-        <tr class="self"><td class="nm">5년 상승률</td><td>−0.082</td><td><b>−0.259</b></td><td><b>89% 음수</b></td></tr>
-        <tr><td class="nm">전세가율 수준</td><td>+0.042</td><td><b>+0.129</b></td><td>69%</td></tr>
-        <tr><td class="nm">전세가율 밴드</td><td>+0.028</td><td>—</td><td>55%</td></tr>
-        <tr><td class="nm">급지(평당가)</td><td>+0.118</td><td>—</td><td>53%</td></tr>
+        <tr class="self"><td class="nm">64번 측정</td><td><b>57번(10번 중 9번)</b>이 "많이 오른 곳이 이후 덜 올랐다"</td></tr>
       </tbody></table></div>
-    <p>10년 단위로 봐도 같습니다. 2016년 시점 <b>직전 10년 성과 상위 25%는 이후 10년 +6.2%</b>,
-      하위 25%는 <b>+74.5%</b>였습니다. 2006~2016 지방 강세 → 2016~2026 수도권 강세로 사이클이 뒤집힌 겁니다.</p>
+    <p>10년 단위로 봐도 같습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>2016년 시점</th><th>이후 10년</th></tr></thead>
+      <tbody>
+        <tr class="self"><td class="nm">직전 10년 많이 오른 곳 (부산 해운대 등)</td><td><b>+6.2%</b></td></tr>
+        <tr class="pick"><td class="nm">직전 10년 덜 오른 곳 (수원 권선 등)</td><td><b>+74.5%</b></td></tr>
+      </tbody></table></div>
     <div class="readme">
-      <b>"싸니까 오르겠지"는 틀렸고, "같은 급인데 뒤처졌으니 따라오겠지"는 맞았습니다.</b>
-      급지 자체는 갭 메우기가 일어나지 않습니다 — 오히려 벌어졌습니다.<br><br>
-      그래서 이 도구는 <b>10년 100%를 통과선으로만</b> 씁니다. 150%든 250%든 똑같이 100점이고,
-      더 올랐다고 가점하지 않습니다. 장기 성과 비중을 10%로 낮춘 이유입니다.
+      <b>단, 두 가지를 구분해야 합니다.</b><br>
+      <b>"싸니까 오르겠지"는 틀렸습니다.</b> 싼 동네가 비싼 동네를 따라잡지 못했습니다. 오히려 벌어졌습니다(Q1).<br>
+      <b>"같은 급인데 뒤처졌으니 따라오겠지"는 맞았습니다.</b> 비슷한 가격대 안에서는 뒤처진 곳이 따라왔습니다.<br><br>
+      그래서 이 도구는 <b>10년에 두 배(100%)를 넘었는지만</b> 봅니다.
+      150%든 250%든 똑같이 통과 처리하고, 더 올랐다고 점수를 더 주지 않습니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q3</span>
-    <h3>최상급지 나홀로 vs 상급지 대단지, 뭐가 낫나요?</h3>
-    <div class="ans">대체로 대단지. 다만 급지 차이가 크면 뒤집힙니다.</div>
-    <p>실거래와 K-apt 세대수로 네 쌍을 검증했습니다. 300세대 미만을 나홀로, 1,000세대 이상을 대단지로 나눴습니다.</p>
+    <h3>좋은 동네 작은 아파트 vs 그 아래 동네 대단지</h3>
+    <div class="ans">대체로 대단지. 단, 동네 차이가 크면 뒤집힙니다.</div>
+    <p>실거래와 세대수를 받아 네 쌍을 확인했습니다. <b>300세대 미만을 나홀로</b>, <b>1,000세대 이상을 대단지</b>로 봤습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>지역</th><th>나홀로</th><th>대단지</th><th>격차</th></tr></thead>
+      <thead><tr><th>지역</th><th>나홀로</th><th>대단지</th><th>차이</th></tr></thead>
       <tbody>
-        <tr><td class="nm">서울 용산구</td><td>+168.6%</td><td>+251.4%</td><td><b>+82.8%p</b></td></tr>
-        <tr><td class="nm">서울 동작구</td><td>+186.8%</td><td>+287.1%</td><td><b>+100.3%p</b></td></tr>
-        <tr><td class="nm">서울 광진구</td><td>+187.9%</td><td>+230.2%</td><td>+42.3%p</td></tr>
-        <tr><td class="nm">서울 강남구</td><td>+135.7%</td><td>+196.2%</td><td>+60.5%p</td></tr>
-        <tr><td class="nm">서울 성동구</td><td>+211.5%</td><td>+233.7%</td><td>+22.2%p</td></tr>
-        <tr><td class="nm">성남 분당구</td><td>+145.7%</td><td>+250.1%</td><td><b>+104.4%p</b></td></tr>
-        <tr><td class="nm">광명시</td><td>+73.6%</td><td>+121.1%</td><td>+47.5%p</td></tr>
+        <tr><td class="nm">성남 분당구</td><td>2.5배</td><td>3.5배</td><td><b>대단지가 104%p 더</b></td></tr>
+        <tr><td class="nm">서울 동작구</td><td>2.9배</td><td>3.9배</td><td><b>100%p 더</b></td></tr>
+        <tr><td class="nm">서울 용산구</td><td>2.7배</td><td>3.5배</td><td>83%p 더</td></tr>
+        <tr><td class="nm">서울 강남구</td><td>2.4배</td><td>3.0배</td><td>61%p 더</td></tr>
+        <tr><td class="nm">광명시</td><td>1.7배</td><td>2.2배</td><td>48%p 더</td></tr>
+        <tr><td class="nm">서울 광진구</td><td>2.9배</td><td>3.3배</td><td>42%p 더</td></tr>
+        <tr><td class="nm">서울 성동구</td><td>3.1배</td><td>3.3배</td><td>22%p 더</td></tr>
       </tbody></table></div>
-    <p><b>7곳 전부 대단지가 앞섰습니다.</b> 평균 격차는 <b>+65.7%p</b>입니다.
-      환금성·관리비 규모의 경제·커뮤니티 프리미엄이 값에 반영된다는 선행연구와 일치합니다.</p>
-    <p>그럼 <b>같은 예산</b>으로 상급지 나홀로와 하급지 대단지 중 무엇을 살까요? 당시 평당가가 비슷했던 쌍만 비교했습니다.</p>
+    <p><b>7곳 전부 대단지가 앞섰습니다.</b> 한 곳도 예외가 없었습니다.</p>
+    <p>그럼 <b>같은 돈</b>으로 좋은 동네 나홀로와 그 아래 동네 대단지 중 뭘 살까요?
+      10년 전 가격이 비슷했던 쌍만 골라 비교했습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>비교</th><th>당시 평당가</th><th>10년 성과</th><th>승자</th></tr></thead>
+      <thead><tr><th>비교</th><th>10년 전 평당가</th><th>10년 뒤</th><th>이긴 쪽</th></tr></thead>
       <tbody>
-        <tr class="pick"><td class="nm">용산 나홀로 vs 동작 대단지</td><td>2,151 vs 2,111</td><td>+168.6% vs <b>+287.1%</b></td><td>대단지 (118.5%p)</td></tr>
-        <tr class="pick"><td class="nm">강남 나홀로 vs 성동 대단지</td><td>3,099 vs 2,726</td><td>+135.7% vs <b>+233.7%</b></td><td>대단지 (98.0%p)</td></tr>
-        <tr><td class="nm">분당 나홀로 vs 광명 대단지</td><td>1,659 vs 1,953</td><td><b>+145.7%</b> vs +121.1%</td><td>나홀로 (24.6%p)</td></tr>
+        <tr class="pick"><td class="nm">용산 나홀로 vs 동작 대단지</td><td>2,151 vs 2,111만</td><td>2.7배 vs <b>3.9배</b></td><td>대단지</td></tr>
+        <tr class="pick"><td class="nm">강남 나홀로 vs 성동 대단지</td><td>3,099 vs 2,726만</td><td>2.4배 vs <b>3.3배</b></td><td>대단지</td></tr>
+        <tr><td class="nm">분당 나홀로 vs 광명 대단지</td><td>1,659 vs 1,953만</td><td><b>2.5배</b> vs 2.2배</td><td>나홀로</td></tr>
       </tbody></table></div>
     <div class="readme">
-      <b>3쌍 중 2쌍에서 대단지가 이겼습니다.</b> 대단지 프리미엄(+65.7%p)이 급지 한 단계 차이는 뒤집을 만큼 크다는 뜻입니다.<br><br>
-      <b>진 한 쌍이 오히려 규칙을 알려줍니다.</b> 분당 나홀로가 광명 대단지를 이긴 건 두 지역의 급지 격차가 컸기 때문입니다.
-      광명은 대단지조차 +121.1%로 부진했습니다. <b>급지 격차가 여러 단계면 급지가 이기고, 한 단계면 규모가 이깁니다.</b>
+      <b>3쌍 중 2쌍에서 대단지가 이겼습니다.</b><br><br>
+      <b>진 한 쌍이 오히려 답을 알려줍니다.</b> 분당이 이긴 건 광명과 동네 차이가 컸기 때문입니다.
+      광명은 대단지조차 2.2배에 그쳤습니다.<br><br>
+      <b>정리하면</b> — 동네 차이가 <b>한 단계</b>면 대단지가 이기고, <b>여러 단계</b>면 좋은 동네가 이깁니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q4</span>
     <h3>강남은 뭘 사도 오르지 않나요?</h3>
-    <div class="ans bad">아니요. 이게 가장 뜻밖의 결과였습니다.</div>
+    <div class="ans bad">아니요. 이게 가장 뜻밖이었습니다.</div>
     <div class="tblwrap"><table>
-      <thead><tr><th>단지</th><th>10년 상승률</th><th>연복리</th></tr></thead>
+      <thead><tr><th>아파트</th><th>10년 뒤</th></tr></thead>
       <tbody>
-        <tr class="self"><td class="nm">강남구 나홀로 (11곳, 평균 199세대)</td><td><b>+135.7%</b></td><td>9.0%</td></tr>
-        <tr class="pick"><td class="nm">성동구 나홀로 (3곳, 평균 219세대)</td><td><b>+211.5%</b></td><td>12.0%</td></tr>
-        <tr class="pick"><td class="nm">동작구 대단지 (평균 1,696세대)</td><td><b>+287.1%</b></td><td>14.5%</td></tr>
-        <tr><td class="nm">광진구 대단지 (평균 1,381세대)</td><td>+230.2%</td><td>12.7%</td></tr>
+        <tr class="self"><td class="nm">강남구 <b>나홀로</b> (11곳, 평균 199세대)</td><td><b>2.4배</b></td></tr>
+        <tr class="pick"><td class="nm">성동구 <b>나홀로</b> (평균 219세대)</td><td><b>3.1배</b></td></tr>
+        <tr class="pick"><td class="nm">동작구 <b>대단지</b> (평균 1,696세대)</td><td><b>3.9배</b></td></tr>
+        <tr><td class="nm">강남구 대단지 (평균 2,003세대)</td><td>3.0배</td></tr>
       </tbody></table></div>
-    <p><b>강남 나홀로(+135.7%)가 성동 나홀로(+211.5%)보다 낮았습니다.</b>
-      동작·광진 대단지에도 크게 밀렸습니다. 표본이 11곳으로 적지 않은데도 그렇습니다.</p>
+    <p><b>강남 나홀로가 성동 나홀로보다 덜 올랐습니다.</b> 동작·광진 대단지에는 크게 밀렸습니다.
+      표본이 11곳으로 적지도 않은데 그랬습니다.</p>
+    <p>강남 대단지는 3.0배로 제 역할을 했습니다. <b>문제는 아파트였지 동네가 아니었습니다.</b></p>
     <div class="readme">
-      <b>"강남이면 무조건"이라는 통념은 단지를 안 가릴 때만 성립합니다.</b>
-      강남 대단지는 +196.2%로 제 역할을 했지만, 나홀로는 한 급 아래 동네의 대단지만도 못했습니다.<br><br>
-      급지는 <b>지역을 고르는 기준</b>이지 <b>단지를 안 골라도 된다는 면허</b>가 아닙니다.
-      이 도구가 지역 다음에 반드시 단지 단계를 거치게 만든 이유입니다.
+      좋은 동네를 고르는 것과 좋은 아파트를 고르는 것은 <b>다른 일</b>입니다.
+      동네만 보고 아무거나 사면 한 급 아래 동네의 대단지만도 못할 수 있습니다.<br><br>
+      <b>광명 나홀로는 1.7배</b>로 10년에 두 배도 못 됐습니다. <b>싼 동네 + 작은 단지</b>가 가장 나쁜 조합이었습니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q5</span>
     <h3>돈이 부족한데 지금 살까요, 모아서 좋은 데 갈까요?</h3>
-    <div class="ans">지금 4분위 이하면 모으세요. 3분위 이내면 지금 사세요.</div>
-    <p>월 300만원씩 24개월 저축 후 매수하는 전략과 지금 바로 매수하는 전략을
-      <b>같은 시점에 종료</b>하도록 맞춰 100개월 구간에서 비교했습니다.</p>
+    <div class="ans">지금 갈 수 있는 곳이 <b>평당 2,300만원 아래</b>면 모으세요.</div>
+    <p>월 300만원씩 2년 모아서 사는 것과 지금 바로 사는 것을, <b>끝나는 시점을 똑같이 맞춰</b> 비교했습니다.
+      전국 시·군·구의 현재 가격대는 이렇습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>현금 (46㎡)</th><th>지금 사면</th><th>지금 매수</th><th>2년 후 매수</th><th>지금 승률</th></tr></thead>
+      <thead><tr><th>가격대</th><th>평당가</th><th>예시</th><th>판단</th></tr></thead>
       <tbody>
-        <tr class="self"><td class="nm">0.5억</td><td><b>6.3분위</b></td><td>0.56억</td><td><b>1.16억</b></td><td><b>27%</b></td></tr>
-        <tr><td class="nm">0.8억</td><td>2.8분위</td><td>1.52억</td><td>1.44억</td><td>46%</td></tr>
-        <tr class="pick"><td class="nm">1.0억</td><td>2.0분위</td><td><b>1.99억</b></td><td>1.68억</td><td>66%</td></tr>
-        <tr class="pick"><td class="nm">2.0억</td><td>1.0분위</td><td><b>4.00억</b></td><td>2.61억</td><td><b>95%</b></td></tr>
+        <tr class="pick"><td class="nm">상위 30% 안</td><td>3,200만 이상</td><td>서울 대부분·분당·과천</td><td><b>지금 사세요</b></td></tr>
+        <tr><td class="nm">상위 30~40%</td><td>2,350~3,200만</td><td>서울 강북·노원, 용인 기흥</td><td>경계선</td></tr>
+        <tr class="self"><td class="nm">상위 40% 아래</td><td>2,350만 미만</td><td>고양 덕양, 시흥, 지방 대부분</td><td><b>모으세요</b></td></tr>
       </tbody></table></div>
-    <p><b>하급지는 두 번 손해입니다.</b> 자산 자체가 작고 상승률도 낮습니다.
-      7,200만원을 더 모으면 6.3분위 → 2.3분위로 <b>네 계단</b>을 뛰는데, 보유 기간 2년을 잃는 손해보다 훨씬 컸습니다.
-      반대로 이미 2분위면 더 모아도 <b>한 계단</b>이 전부라 기다릴 이유가 없습니다.</p>
+    <p>실제 계산 결과입니다. 5년 뒤 늘어난 순자산으로 비교했습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>현금 (24평 기준)</th><th>지금 갈 수 있는 곳</th><th>지금 사면</th><th>2년 모아 사면</th></tr></thead>
+      <tbody>
+        <tr class="self"><td class="nm">0.5억</td><td>평당 1,800만대</td><td>0.56억</td><td><b>1.16억</b></td></tr>
+        <tr><td class="nm">0.8억</td><td>평당 4,300만대</td><td>1.52억</td><td>1.44억</td></tr>
+        <tr class="pick"><td class="nm">1.0억</td><td>평당 6,300만대</td><td><b>1.99억</b></td><td>1.68억</td></tr>
+        <tr class="pick"><td class="nm">2.0억</td><td>평당 1억 이상</td><td><b>4.00억</b></td><td>2.61억</td></tr>
+      </tbody></table></div>
+    <p><b>싼 동네는 두 번 손해입니다.</b> 산 물건 자체가 작은데 오르는 폭까지 작습니다.
+      7,200만원을 더 모으면 평당 1,800만대에서 <b>5,000만대로 껑충 뜁니다.</b>
+      2년 늦게 사는 손해보다 이게 훨씬 컸습니다.</p>
+    <p>반대로 이미 평당 6,000만대에 갈 수 있다면, 더 모아도 한 계단 오르는 게 전부라 기다릴 이유가 없습니다.</p>
     <div class="readme">
-      <b>기다린다면 짧게.</b> 12개월 대기가 가장 효율적이었습니다(대기 승률 87%). 24개월 73%, 36개월 66%로
-      오래 기다릴수록 보유 기간이 짧아져 상승을 못 누립니다.<br><br>
-      <b>단서 둘.</b> 대기 전략은 손실 확률이 더 높습니다(17% vs 0%) — 보유 기간이 짧아 하락장에 걸리면 회복할 시간이 없습니다.
-      그리고 <b>2년치 주거비가 계산에 없습니다</b>. 월세로 산다면 저축의 3분의 1이 사라지니,
-      <b>전세로 살면서 모으는 경우</b>에만 위 숫자가 유효합니다.
+      <b>기다린다면 짧게.</b> 1년이 가장 효율적이었습니다. 2년·3년으로 길어질수록 오히려 손해였습니다 —
+      좋은 데 가긴 하는데 <b>가지고 있는 기간이 짧아져</b> 오르는 걸 못 누립니다.<br><br>
+      <b>꼭 알아두실 것 둘.</b> 기다리는 전략은 <b>손해 볼 확률이 더 높습니다</b>(17% vs 0%).
+      3년만 들고 있으니 하락장에 걸리면 회복할 시간이 없습니다.<br>
+      그리고 <b>2년치 사는 비용이 계산에 없습니다</b>. 월세로 살면 모은 돈의 3분의 1이 날아가니,
+      <b>전세로 살면서 모으는 경우</b>에만 위 숫자가 맞습니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q6</span>
-    <h3>갈아타기는 좋은 타이밍을 기다려야 하나요?</h3>
-    <div class="ans">고를 때는 쓰고, 기다릴 때는 쓰지 마세요.</div>
-    <p>상급지 갈아타기 20만 건을 검증했습니다. 배율(목표지역 ÷ 내 지역)의 10년 밴드 위치로 나눴습니다.</p>
+    <h3>갈아타기는 좋은 때를 기다려야 하나요?</h3>
+    <div class="ans">고를 때는 보세요. 미루는 이유로는 쓰지 마세요.</div>
+    <p>갈아타기 20만 건을 확인했습니다. <b>가고 싶은 동네가 내 동네보다 몇 배 비싼지</b>를 기준으로 나눴습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>구간</th><th>배율 밴드</th><th>3년 뒤 이득</th></tr></thead>
+      <thead><tr><th>갈아탄 시점</th><th>3년 뒤 이득</th></tr></thead>
       <tbody>
-        <tr class="pick"><td class="nm">Q1</td><td>23%</td><td><b>+22.1%</b></td></tr>
-        <tr><td class="nm">Q2</td><td>66%</td><td>+15.2%</td></tr>
-        <tr><td class="nm">Q3</td><td>90%</td><td>+15.3%</td></tr>
-        <tr class="self"><td class="nm">Q4</td><td>99%</td><td>+13.9%</td></tr>
+        <tr class="pick"><td class="nm">격차가 <b>역대급으로 좁을 때</b></td><td><b>+22.1%</b></td></tr>
+        <tr><td class="nm">보통일 때</td><td>+15%</td></tr>
+        <tr class="self"><td class="nm">격차가 <b>역대급으로 벌어졌을 때</b></td><td>+13.9%</td></tr>
       </tbody></table></div>
-    <p>64개월 중 <b>59개월(92%)</b>에서 밴드 하단이 앞섰습니다. 여러 상급지 후보 중에서는 <b>배율 낮은 곳을 고르는 게 확실히 유리</b>합니다.</p>
+    <p>64번 중 <b>59번(10번 중 9번)</b>에서 격차가 좁을 때 간 쪽이 앞섰습니다.
+      여러 후보가 있다면 <b>격차가 좁은 곳을 고르는 게 확실히 유리</b>합니다.</p>
     <div class="readme">
-      <b>그런데 "지금은 비싸니 나중에"는 대부분 실패했습니다.</b>
-      배율이 상단(70% 이상)일 때 기다린 경우, 24개월 안에 하단까지 내려온 비율은 <b>24%</b>뿐이었습니다.
-      나머지 76%는 안 내려왔고, 기다리는 동안 추가금이 평균 <b>13.9%p 더 늘었습니다</b>.<br><br>
-      <b>배율은 "어느 상급지로 갈지 고르는 기준"이지 "갈아타기를 미루는 근거"가 아닙니다.</b>
-      전부 높으면 기다리기보다 한 급 낮춰서라도 지금 올라가는 편이 나았습니다.
+      <b>그런데 "지금은 비싸니 나중에"는 대부분 실패했습니다.</b><br>
+      격차가 벌어진 상태에서 기다린 경우, <b>2년 안에 좁아진 건 4번 중 1번</b>뿐이었습니다.
+      나머지는 안 좁아졌고, 기다리는 동안 <b>더 얹어야 할 돈이 평균 14% 늘었습니다.</b><br><br>
+      <b>격차는 "어디로 갈지" 고를 때 쓰는 것이지, "언제 갈지" 미루는 근거가 아닙니다.</b>
+      전부 벌어져 있으면 기다리기보다 한 급 낮춰서라도 지금 올라가는 편이 나았습니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q7</span>
-    <h3>입주물량이 정말 가격을 누르나요?</h3>
-    <div class="ans">누릅니다. 단, 지역 단위로 봐야 보입니다.</div>
-    <p>국토부 준공실적(2010~2025)과 KB 지수로 시도 16~17곳을 같은 해 안에서 비교했습니다.</p>
+    <h3>새 아파트가 많이 들어오면 값이 눌리나요?</h3>
+    <div class="ans">누릅니다. 그런데 <b>전세</b>부터입니다.</div>
+    <p>2010~2025년 실제로 다 지어진 아파트 물량과 가격을 시·도별로 맞춰봤습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>시차</th><th>대상</th><th>IC</th><th>음수 비율</th></tr></thead>
+      <thead><tr><th>언제</th><th>무엇이</th><th>결과</th></tr></thead>
       <tbody>
-        <tr class="pick"><td class="nm">당해</td><td><b>전세</b></td><td><b>−0.404</b></td><td><b>86%</b></td></tr>
-        <tr><td class="nm">당해</td><td>매매</td><td>−0.337</td><td>79%</td></tr>
-        <tr><td class="nm">+1년</td><td>매매</td><td>−0.196</td><td>71%</td></tr>
-        <tr class="self"><td class="nm">+2년</td><td>매매</td><td>−0.035</td><td>54%</td></tr>
+        <tr class="pick"><td class="nm">입주하는 그 해</td><td><b>전세</b></td><td><b>10번 중 9번 눌렸다</b></td></tr>
+        <tr><td class="nm">입주하는 그 해</td><td>매매</td><td>10번 중 8번</td></tr>
+        <tr><td class="nm">1년 뒤</td><td>매매</td><td>10번 중 7번</td></tr>
+        <tr class="self"><td class="nm">2년 뒤</td><td>매매</td><td><b>거의 관계 없음</b></td></tr>
       </tbody></table></div>
-    <p>세 가지가 확인됐습니다. <b>① 공급 효과는 준공 당해에 가장 크고 2년이면 사라집니다.</b>
-      <b>② 매매보다 전세에 더 강하게 옵니다</b> — 물량이 전세를 먼저 누른다는 통설이 데이터로 확인됩니다.
-      <b>③ 급지를 통제해도 살아남습니다</b>(전세 −0.325, 매매 −0.255).</p>
+    <p><b>입주하는 그 해가 가장 셉니다.</b> 2년이 지나면 영향이 거의 사라집니다.
+      그리고 <b>매매보다 전세가 먼저, 더 세게</b> 눌립니다 — "물량 들어오면 전세부터 빠진다"는 말이 맞았습니다.</p>
     <div class="readme">
-      <b>전국으로만 보면 안 보입니다.</b> 같은 자료로 전국 단위 상관을 재면 <b>−0.027</b>로 거의 0입니다.
-      서울 물량이 늘고 지방이 줄면 전국은 그대로이기 때문입니다.
-      이 도구가 수급을 <b>반경 15km 생활권</b>으로 묶는 이유이고, 수급 비중을 25%로 올린 근거입니다.
+      <b>전국 숫자로만 보면 아무 관계가 없어 보입니다.</b>
+      서울에 많이 짓고 지방에 덜 지으면 전국 합계는 그대로라 <b>서로 상쇄되기 때문</b>입니다.
+      그래서 이 도구는 물량을 <b>내 동네 반경 15km</b>로 묶어 봅니다.
     </div>
   </div>
 
   <div class="card faq">
     <span class="eb">Q8</span>
-    <h3>같은 돈이면 비싼 자산을 사는 게 유리하지 않나요?</h3>
-    <div class="ans">평균은 그렇습니다. 대신 하방이 뚫립니다.</div>
-    <p>현금 1.5억으로 3년 보유했다고 가정하고 124개월 구간에서 비교했습니다.
-      측정 기준은 <b>순자산 증가액 = 자산 규모 × 상승률</b>입니다.</p>
+    <h3>미분양은 어떤가요? 입주물량과 다른가요?</h3>
+    <div class="ans">다릅니다. 미분양은 <b>매매</b>를 먼저 누릅니다.</div>
+    <p>2015~2026년 시·군·구 92곳의 월별 미분양을 가격과 맞춰봤습니다.</p>
     <div class="tblwrap"><table>
-      <thead><tr><th>전략</th><th>평균</th><th>중위</th><th>최악</th><th>손실 확률</th></tr></thead>
+      <thead><tr><th></th><th>매매</th><th>전세</th><th>영향이 사라지는 때</th></tr></thead>
       <tbody>
-        <tr class="pick"><td class="nm">급지 최상단</td><td>1.69억</td><td>1.72억</td><td>+0.60억</td><td><b>0%</b></td></tr>
-        <tr class="self"><td class="nm">자산 규모 최대</td><td><b>2.16억</b></td><td><b>2.28억</b></td><td><b>−0.83억</b></td><td><b>11%</b></td></tr>
+        <tr class="self"><td class="nm"><b>미분양</b></td><td><b>10번 중 8번</b></td><td>10번 중 8번(약함)</td><td><b>2년 뒤에도 남음</b></td></tr>
+        <tr class="pick"><td class="nm"><b>입주물량</b></td><td>10번 중 8번</td><td><b>10번 중 9번(강함)</b></td><td>2년이면 사라짐</td></tr>
       </tbody></table></div>
-    <p>자산 규모를 키우면 평균이 <b>28% 더</b> 벌립니다(124개월 중 57% 우세).
-      그런데 급지 최상단 전략은 <b>124개월 내내 단 한 번도 손실이 없었고</b>, 자산 최대 전략은 <b>11%가 손실</b>이었습니다.</p>
+    <p>둘 다 값을 누르지만 <b>누르는 곳과 지속 기간이 다릅니다.</b>
+      비싼 동네든 싼 동네든 똑같이 작동하는 것도 확인했습니다.</p>
     <div class="readme">
-      <b>자산을 키우는 건 결국 레버리지를 키우는 것</b>이라 오를 때도 배수, 빠질 때도 배수입니다.
-      실제로 그 전략이 고른 곳은 대구 달서구·광주 남구·안성시처럼 <b>전세가율이 높아 레버리지가 큰 하급지</b>였습니다.<br><br>
-      그래서 이 도구는 점수 축에 넣지 않고 <b>정렬 옵션</b>으로만 두었습니다.
-      손실 확률 0%를 11%로 바꾸는 선택은 도구가 대신할 게 아니라 <b>알고 고를 문제</b>라고 봤습니다.
+      <b>왜 다를까요</b><br>
+      <b>미분양</b>은 이미 지었거나 짓고 있는데 <b>안 팔린 물건</b>입니다. 분양가보다 싸게라도 팔려는 물량이 쌓이면
+      기존 아파트 파는 사람도 호가를 낮춰야 합니다. 그래서 <b>매매</b>에 먼저 옵니다.<br>
+      <b>입주물량</b>은 <b>세입자를 구해야 하는 물건</b>입니다. 한꺼번에 전세 매물이 쏟아지니 <b>전세</b>부터 밀립니다.<br><br>
+      <b>미분양이 더 오래 갑니다.</b> 입주물량은 2년이면 영향이 사라지는데, 미분양은 <b>2년 뒤에도 남았습니다</b>.
+      안 팔린 재고가 그만큼 오래 시장을 누른다는 뜻입니다.<br><br>
+      두 지표를 <b>같이 봐야 합니다.</b> 전세를 끼고 살 거면 입주물량을, 대출로 사서 살 거면 미분양을 더 무겁게 보세요.
+      입주 물량 탭에서 둘 다 확인할 수 있습니다.
+    </div>
+  </div>
+
+  <div class="card faq">
+    <span class="eb">Q9</span>
+    <h3>같은 돈이면 비싼 집을 사는 게 유리하지 않나요?</h3>
+    <div class="ans">평균은 그렇습니다. 대신 잃을 때도 큽니다.</div>
+    <p>현금 1.5억으로 3년 들고 있었다고 가정하고 계산했습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>고르는 방식</th><th>평균 수익</th><th>가장 나빴을 때</th><th>손해 볼 확률</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">좋은 동네 우선</td><td>1.69억</td><td>+0.60억</td><td><b>0%</b></td></tr>
+        <tr class="self"><td class="nm">비싼 집 우선</td><td><b>2.16억</b></td><td><b>−0.83억</b></td><td><b>11%</b></td></tr>
+      </tbody></table></div>
+    <p>비싼 집을 사면 평균은 <b>28% 더</b> 벌었습니다. 그런데 좋은 동네 전략은 <b>10년 넘는 기간 내내 한 번도 손해가 없었고</b>,
+      비싼 집 전략은 <b>10번 중 1번 이상 손해</b>였습니다.</p>
+    <div class="readme">
+      <b>비싼 집을 사는 건 결국 빚을 더 쓰는 것</b>입니다. 오를 때도 몇 배, 빠질 때도 몇 배입니다.<br><br>
+      실제로 이 전략이 고른 곳은 대구 달서구·광주 남구·안성시처럼 <b>전세가 비싸서 적은 돈으로 들어갈 수 있는 싼 동네</b>였습니다.
+      좋은 동네가 아니었습니다.<br><br>
+      그래서 이 도구는 점수에 넣지 않고 <b>정렬 버튼</b>으로만 두었습니다.
+      손해 확률을 0%에서 11%로 바꾸는 선택은 도구가 대신할 게 아니라 <b>알고 고를 문제</b>라고 봤습니다.
     </div>
   </div>
 
   <div class="card">
     <span class="eb">SUMMARY</span>
-    <h2>여덟 개를 한 문장으로</h2>
+    <h2>아홉 개를 한 문장으로</h2>
     <div class="verdict">
-      <b>최대한 높은 급지로 가되, 최근 얼마나 올랐는지는 이유로 삼지 마라.<br>
-      그 안에서는 대단지를 골라라. 급지를 못 맞출 만큼 자본이 부족하면, 급하게 사기보다 1년을 모아 한 급 올려라.</b>
+      <b>갈 수 있는 가장 좋은 동네로 가되, 최근 많이 올랐다는 건 이유로 삼지 마라.<br>
+      그 동네 안에서는 큰 단지를 골라라.<br>
+      좋은 동네에 못 갈 만큼 돈이 부족하면, 급하게 사기보다 1년 모아 한 급 올려라.</b>
     </div>
     <div class="readme">
-      <b>공통 한계 — 반드시 같이 읽으세요</b><br>
-      <b>① 표본 독립성</b> — 64~124개월이지만 3~5년씩 겹치는 구간이라 <b>실질 독립 표본은 5~6개</b>입니다.
-      통계적 검정력이 높지 않습니다.<br>
-      <b>② 한 사이클</b> — 2013~2026 한 구간만 봤고 대부분 상승장이었습니다. 다음 사이클에서 같은 결과가 나온다는 보장은 없습니다.<br>
-      <b>③ 신축 누락</b> — 과거·현재 모두 거래가 있어야 비교되므로 그 사이 준공된 신축은 빠집니다.
-      신축은 대개 새 대장이 되므로 <b>대단지 성과가 오히려 과소평가</b>됐을 수 있습니다.<br>
-      <b>④ 표본조사</b> — KB 통계는 지역 평균이지 특정 단지 시세가 아닙니다. 표본 개편으로 절대값에 단절이 있어
-      <b>지역 간 상대 비교</b>로 읽어야 합니다.<br>
-      <b>⑤ 호재 미반영</b> — 신규 노선·재건축 단계·학군 변화는 정형 데이터가 없어 계산에 들어가지 않습니다.<br><br>
-      이 결과들은 <b>확률의 문제</b>이지 보장이 아닙니다. 같은 전략을 써도 개별 사례는 다르게 나옵니다.
+      <b>믿을 수 있는 정도 — 꼭 같이 읽으세요</b><br>
+      <b>① 기간이 겹칩니다.</b> 64~124번 측정했다지만 3~5년씩 겹치는 구간이라
+      <b>실제로 독립된 사례는 5~6개뿐</b>입니다. 통계로서 아주 강하다고는 못 합니다.<br>
+      <b>② 오르는 시장만 봤습니다.</b> 2013~2026년 한 구간이고 대부분 오르는 시기였습니다.
+      다음 사이클에도 같은 결과가 나온다는 보장은 없습니다.<br>
+      <b>③ 새 아파트가 빠졌습니다.</b> 10년 전과 지금 둘 다 거래가 있어야 비교되니, 그 사이 지어진 신축은 빠집니다.
+      신축은 대개 그 동네 1등이 되므로 <b>대단지 성적이 오히려 낮게 잡혔을</b> 수 있습니다.<br>
+      <b>④ 동네 평균입니다.</b> KB 통계는 그 동네 평균이지 특정 아파트 시세가 아닙니다.
+      <b>동네끼리 비교</b>하는 용도로만 보세요.<br>
+      <b>⑤ 호재는 안 들어갑니다.</b> 새 노선, 재건축 진행 단계, 학군 변화는 숫자로 된 자료가 없어 계산에 못 넣었습니다.<br><br>
+      이건 <b>확률의 문제</b>이지 보장이 아닙니다. 같은 방식으로 골라도 개별 사례는 다르게 나옵니다.
     </div>
     <div class="disc" style="margin-top:16px;border:0;padding-top:0">
       공개 통계를 계산한 정보 제공용이며 투자 자문이 아닙니다. 모든 판단과 그 결과에 대한 책임은 이용자 본인에게 있습니다.
@@ -2188,7 +2243,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v34.0';
+var VERSION = 'v35.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -4997,8 +5052,72 @@ function imgQuad() {
 
 /* ══════════ 수급 (입주물량 · 수요 · 미분양) ══════════ */
 var SUPOK = (typeof SUP !== 'undefined');
+/** 미분양 시계열 — 최신값·12개월 전·추세 */
+function unsSeriesOf(name) {
+  if (!SUP.unsSeries) return null;
+  var arr = SUP.unsSeries[name];
+  if (!arr) return null;
+  var ms = SUP.unsMonths, last = null, li = -1;
+  for (var i = arr.length - 1; i >= 0; i--) { if (arr[i] != null) { last = arr[i]; li = i; break; } }
+  if (last == null) return null;
+  var prev = null;
+  for (var j = li - 12; j >= 0 && j > li - 18; j--) { if (arr[j] != null) { prev = arr[j]; break; } }
+  return { arr: arr, months: ms, last: last, at: ms[li], prev: prev,
+    chg: prev ? (last / prev - 1) * 100 : null };
+}
 var SUP_SIDO = '전국', SUP_YEARS = 20, chartS1 = null, chartS2 = null, LASTS = null;
 /** 전국 집계 (시도 합산) */
+var chartU = null;
+function drawUnsChart(sd) {
+  var us;
+  if (sd === '전국') {
+    /* 전국은 시도 합산 */
+    var sum = null, ms0 = SUP.unsMonths;
+    Object.keys(SUP.unsSeries).forEach(function (k) {
+      if (k.indexOf('SIDO:') !== 0) return;
+      var ar = SUP.unsSeries[k];
+      if (!sum) sum = ar.map(function () { return null; });
+      ar.forEach(function (v, i) { if (v != null) sum[i] = (sum[i] || 0) + v; });
+    });
+    if (sum) {
+      var li2 = -1;
+      for (var q = sum.length - 1; q >= 0; q--) if (sum[q] != null) { li2 = q; break; }
+      var pv = null;
+      for (var w = li2 - 12; w >= 0 && w > li2 - 18; w--) if (sum[w] != null) { pv = sum[w]; break; }
+      us = { arr: sum, months: ms0, last: sum[li2], at: ms0[li2], prev: pv,
+        chg: pv ? (sum[li2] / pv - 1) * 100 : null };
+    }
+  } else us = unsSeriesOf('SIDO:' + sd);
+  var box = el('unsBox');
+  if (!us) { box.hidden = true; return; }
+  box.hidden = false;
+  var ms = us.months, arr = us.arr;
+  var lineC = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
+  var ember = getComputedStyle(document.documentElement).getPropertyValue('--ember').trim();
+  var labels = ms.map(function (m) { return m.slice(0, 4) + '.' + m.slice(4); });
+  if (chartU) chartU.destroy();
+  chartU = new Chart(el('cUns').getContext('2d'), {
+    type: 'line',
+    data: { labels: labels, datasets: [{ label: '미분양 (호)', data: arr, borderColor: ember,
+      backgroundColor: ember + '22', borderWidth: 2.4, pointRadius: 0, tension: .25, fill: true }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 12 } },
+        y: { grid: { color: lineC }, ticks: { font: { size: 11 }, callback: function (v) { return n0(v); } } } } }
+  });
+  var mx = Math.max.apply(null, arr.filter(function (v) { return v != null; }));
+  var mi = Math.min.apply(null, arr.filter(function (v) { return v != null; }));
+  el('unsIns').innerHTML = '<h4>미분양 읽기</h4><ul>' +
+    '<li>' + esc(sd) + ' 미분양은 ' + ymL(+us.at) + ' 기준 <span class="hl">' + n0(us.last) + '호</span>입니다. ' +
+      (us.chg != null ? '1년 전 대비 <span class="' + (us.chg > 0 ? 'dn' : 'up') + '">' + fmtPct(us.chg) + '</span>.' : '') + '</li>' +
+    '<li>최근 11년 최고 ' + n0(mx) + '호 · 최저 ' + n0(mi) + '호. 지금은 그 사이 ' +
+      Math.round((us.last - mi) / (mx - mi) * 100) + '% 지점입니다.</li>' +
+    '<li><b>미분양은 매매에 먼저 옵니다.</b> 시군구 92곳을 같은 달 안에서 비교하면, 미분양이 많을수록 이후 1년 매매가 눌리는 관계가 ' +
+      '<b>10번 중 8번</b> 나타났습니다(급지를 통제해도 10번 중 7번). 입주물량이 전세를 먼저 누르는 것과 대비됩니다.</li>' +
+    '<li>영향이 <b>2년 뒤까지 이어집니다</b>. 입주물량은 2년이면 사라지는데, 미분양은 24개월 뒤에도 관계가 남았습니다 — ' +
+      '안 팔린 재고가 그만큼 오래 시장을 누른다는 뜻입니다.</li></ul>';
+}
 function supNation() {
   var mon = {}, pop = { p: 0, h: 0 }, uns = 0;
   Object.keys(SUP.sido).forEach(function (sd) {
@@ -5214,6 +5333,7 @@ function renderSup() {
       '입주물량 막대와 겹쳐 보면 <b>물량이 쏟아진 시기와 가격이 눌린 시기가 맞물리는지</b> 확인할 수 있습니다.');
   }
   L.push('수요량은 <b>인구 × 0.5% 가정치</b>입니다. 공식 통계가 아니라 업계에서 쓰는 추정식이며, 세대분화 속도가 빠른 지역에서는 과소 추정됩니다.');
+  drawUnsChart(sd);
   el('supIns').innerHTML = '<h4>수급 읽기</h4><ul><li>' + L.join('</li><li>') + '</li></ul>';
 }
 function supDetail(r) {
@@ -5272,7 +5392,8 @@ function supArea(code, R) {
   pool.forEach(function (r) {
     var d = (R <= 0) ? (r.code === code ? 0 : null) : distKm(c0, CO[r.code]);
     if (d == null || d > R) return;
-    var m = SUP.sgg[r.code], pp = SUP.pop[r.code], u = SUP.unsold[r.code];
+    var m = SUP.sgg[r.code], pp = SUP.pop[r.code];
+    var us0 = unsSeriesOf(r.name), u = us0 ? us0.last : SUP.unsold[r.code];
     if (!pp || !pp.p) return;
     sup += supSum(m, y12);
     dem += pp.p * DEMAND_RATE;
