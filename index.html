@@ -1102,7 +1102,8 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div class="ins" id="btIns"></div>
     <div id="btDetail"></div>
     <div class="readme">
-      <b>세대수 기준은 이렇게 나눕니다</b> — 300세대 미만 <b>나홀로</b>, 300~999세대 중형, 1000세대 이상 <b>대단지</b>.
+      <b>세대수 기준은 이렇게 나눕니다</b> — 300세대 미만 <b>나홀로</b>, 300~999세대 <b>중형</b>, 1000세대 이상 <b>대단지</b>.
+      중형까지 세 단계를 모두 표시하므로 <b>"300세대만 넘으면 되는지, 1000세대를 넘어야 하는지"</b>를 구분할 수 있습니다.
       세대수는 K-apt(공동주택관리정보시스템)에서 단지별로 조회합니다. 등록되지 않았거나 단지명이 매칭되지 않으면 빠지는데,
       <b>소규모 단지일수록 누락되기 쉬워</b> 나홀로 표본이 실제보다 적게 잡힐 수 있습니다. 화면에 조회 성공 비율을 함께 표시합니다.<br><br>
       선행연구에서 <b>세대수는 가격과 양(+)의 관계</b>가 반복 확인됩니다 — 거래가 꾸준해 환금성이 좋고, 관리비 규모의 경제가 작동하며,
@@ -2243,7 +2244,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v35.0';
+var VERSION = 'v35.1';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -6244,10 +6245,12 @@ function drawBT() {
       return;
     }
     cases = [
-      { k: A.name + ' 나홀로(300세대 미만)', g: ha.solo, c: 'var(--m1)' },
-      { k: A.name + ' 대단지(1000세대 이상)', g: ha.big, c: 'var(--m4)' },
-      { k: B.name + ' 나홀로(300세대 미만)', g: hb.solo, c: 'var(--ember)' },
-      { k: B.name + ' 대단지(1000세대 이상)', g: hb.big, c: 'var(--taupe)' }
+      { k: A.name + ' 나홀로(300↓)', g: ha.solo, c: 'var(--m1)' },
+      { k: A.name + ' 중형(300~999)', g: ha.mid, c: 'var(--m3)' },
+      { k: A.name + ' 대단지(1000↑)', g: ha.big, c: 'var(--m4)' },
+      { k: B.name + ' 나홀로(300↓)', g: hb.solo, c: 'var(--ember)' },
+      { k: B.name + ' 중형(300~999)', g: hb.mid, c: 'var(--frost)' },
+      { k: B.name + ' 대단지(1000↑)', g: hb.big, c: 'var(--taupe)' }
     ];
   } else {
     ta = tierSplit(la); tb2 = tierSplit(lb);
@@ -6299,6 +6302,15 @@ function drawBT() {
       fmtPct(avgGr(ha.solo)) + ' / 대단지 ' + fmtPct(avgGr(ha.big)) + ' · ' +
       '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 나홀로 ' +
       fmtPct(avgGr(hb.solo)) + ' / 대단지 ' + fmtPct(avgGr(hb.big)) + '.');
+    var stepA = (avgGr(ha.solo) != null && avgGr(ha.mid) != null && avgGr(ha.big) != null)
+      ? { s: avgGr(ha.solo), m: avgGr(ha.mid), b: avgGr(ha.big) } : null;
+    if (stepA) L.push('<b>' + esc(A.name) + ' 규모별 계단</b> — 나홀로 ' + fmtPct(stepA.s) + ' → 중형 ' + fmtPct(stepA.m) +
+      ' → 대단지 ' + fmtPct(stepA.b) + '. ' +
+      (stepA.m - stepA.s > (stepA.b - stepA.m) * 1.5
+        ? '<b>300세대만 넘어도 대부분의 이득이 생겼습니다</b> — 문턱값에 가깝습니다.'
+        : (stepA.b - stepA.m > (stepA.m - stepA.s) * 1.5
+          ? '<b>1000세대를 넘어야 이득이 커집니다</b> — 규모가 클수록 계속 좋아집니다.'
+          : '규모가 커질수록 고르게 좋아졌습니다.')));
     L.push('세대수를 확인한 단지는 ' + esc(A.name) + ' ' + ha.known + '/' + ha.total + '곳, ' +
       esc(B.name) + ' ' + hb.known + '/' + hb.total + '곳입니다. ' +
       '<b>K-apt에 등록되지 않았거나 단지명이 매칭되지 않은 곳은 빠집니다</b> — 소규모 단지일수록 누락되기 쉬워 ' +
@@ -6367,8 +6379,8 @@ function imgBT() {
   var A = BT.A, B = BT.B, yr = BT.yr, cases;
   if (BTMODE === 'hh') {
     var ha2 = hhSplit(BT.la), hb2 = hhSplit(BT.lb);
-    cases = [[A.name + ' 나홀로', ha2.solo], [A.name + ' 대단지', ha2.big],
-             [B.name + ' 나홀로', hb2.solo], [B.name + ' 대단지', hb2.big]];
+    cases = [[A.name + ' 나홀로', ha2.solo], [A.name + ' 중형', ha2.mid], [A.name + ' 대단지', ha2.big],
+             [B.name + ' 나홀로', hb2.solo], [B.name + ' 중형', hb2.mid], [B.name + ' 대단지', hb2.big]];
   } else {
     var ta2 = tierSplit(BT.la), tb3 = tierSplit(BT.lb);
     cases = [[A.name + ' 대장', ta2.top], [A.name + ' 중간', ta2.mid],
