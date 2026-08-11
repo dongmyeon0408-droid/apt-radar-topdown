@@ -1035,9 +1035,17 @@ tr.txrow>td{padding:0;background:var(--lift)}
 <section class="pane" id="pb" hidden>
   <div class="card">
     <span class="eb">BACKTEST</span>
-    <h2>상급지 중간 vs 중급지 대장</h2>
-    <p class="hint">같은 예산이면 <b>더 좋은 동네의 평범한 아파트</b>와 <b>한 급 아래 동네의 최고 아파트</b> 중
-      어느 쪽이 나았는지, 실거래로 직접 검증합니다.</p>
+    <h2>과거 검증</h2>
+    <p class="hint">같은 예산으로 두 선택지 중 어느 쪽이 나았는지 실거래로 직접 검증합니다.
+      <b>평당가 순위</b>로 나누면 "상급지 중간 vs 중급지 대장", <b>세대수</b>로 나누면
+      "최상급지 나홀로 vs 상급지 대단지"를 비교합니다.</p>
+    <div class="inline" style="margin-bottom:14px">
+      <div class="seg" id="btMode">
+        <button data-v="py" aria-pressed="true">평당가 순위 (대장 vs 중간)</button>
+        <button data-v="hh" aria-pressed="false">세대수 (나홀로 vs 대단지)</button>
+      </div>
+    </div>
+    <div class="readme" id="btHint" style="margin-top:0;margin-bottom:14px"><b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.</div>
     <div class="grid g3">
       <div class="field"><label>상급지 (A)</label><select id="btA"></select></div>
       <div class="field"><label>중급지 (B)</label><select id="btB"></select></div>
@@ -1067,6 +1075,11 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div class="ins" id="btIns"></div>
     <div id="btDetail"></div>
     <div class="readme">
+      <b>세대수 기준은 이렇게 나눕니다</b> — 300세대 미만 <b>나홀로</b>, 300~999세대 중형, 1000세대 이상 <b>대단지</b>.
+      세대수는 K-apt(공동주택관리정보시스템)에서 단지별로 조회합니다. 등록되지 않았거나 단지명이 매칭되지 않으면 빠지는데,
+      <b>소규모 단지일수록 누락되기 쉬워</b> 나홀로 표본이 실제보다 적게 잡힐 수 있습니다. 화면에 조회 성공 비율을 함께 표시합니다.<br><br>
+      선행연구에서 <b>세대수는 가격과 양(+)의 관계</b>가 반복 확인됩니다 — 거래가 꾸준해 환금성이 좋고, 관리비 규모의 경제가 작동하며,
+      커뮤니티 시설 수준이 올라가기 때문으로 해석됩니다. 이 검증은 그 프리미엄이 <b>급지 차이를 이길 만큼 큰가</b>를 봅니다.<br><br>
       <b>어떻게 나누나</b> — 검증 시작 시점(예: 10년 전)의 <b>평당가 순위</b>로 단지를 줄 세웁니다.
       상위 20%가 <b>대장</b>, 40~60%가 <b>중간</b>입니다. 지금 기준이 아니라 <b>과거 기준</b>으로 나누기 때문에
       "지금 비싼 걸 골랐더니 많이 올랐더라" 같은 순환논리(look-ahead)를 피합니다.<br><br>
@@ -1927,7 +1940,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v32.0';
+var VERSION = 'v33.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -5783,6 +5796,7 @@ function btMonths(yearsAgo, n) {
   }
   return o;
 }
+var BTMODE = 'py';   /* py = 평당가 순위 · hh = 세대수 */
 function btFetch(code, yearsAgo, mode) {
   var now = btMonths(0, 4), past = btMonths(yearsAgo, 4);
   var tasks = [];
@@ -5807,9 +5821,21 @@ function btFetch(code, yearsAgo, mode) {
       list.push({ apt: g.apt, p0: p0, p1: p1, gr: (p1 / p0 - 1) * 100, n0: g.past.length, n1: g.now.length });
     });
     list.sort(function (u, v) { return v.p0 - u.p0; });   /* 과거 시점 평당가 기준 정렬 */
-    return list;
+    if (BTMODE !== 'hh') return list;
+    return enrich(code, list).then(function () { return list; }, function () { return list; });
   });
 }
+/** 세대수 기준 3분류 */
+function hhSplit(list) {
+  var ok = list.filter(function (g) { return g.hh; });
+  return {
+    solo: ok.filter(function (g) { return g.hh < 300; }),
+    mid: ok.filter(function (g) { return g.hh >= 300 && g.hh < 1000; }),
+    big: ok.filter(function (g) { return g.hh >= 1000; }),
+    known: ok.length, total: list.length
+  };
+}
+function avgHH(a2) { return a2.length ? a2.reduce(function (s, x) { return s + (x.hh || 0); }, 0) / a2.length : null; }
 function tierSplit(list) {
   var n = list.length;
   return {
@@ -5840,13 +5866,29 @@ function drawBT() {
       A.name + ' ' + la.length + '곳 / ' + B.name + ' ' + lb.length + '곳) 평형을 전체로 바꾸거나 기간을 줄여보세요.';
     return;
   }
-  var ta = tierSplit(la), tb2 = tierSplit(lb);
-  var cases = [
-    { k: A.name + ' 대장(상위 20%)', g: ta.top, c: 'var(--m1)' },
-    { k: A.name + ' 중간(40~60%)', g: ta.mid, c: 'var(--m4)' },
-    { k: B.name + ' 대장(상위 20%)', g: tb2.top, c: 'var(--ember)' },
-    { k: B.name + ' 중간(40~60%)', g: tb2.mid, c: 'var(--taupe)' }
-  ];
+  var cases, ta, tb2, ha, hb;
+  if (BTMODE === 'hh') {
+    ha = hhSplit(la); hb = hhSplit(lb);
+    if (ha.known < 4 || hb.known < 4) {
+      el('btStat').textContent = '세대수를 확인한 단지가 부족합니다 (' + A.name + ' ' + ha.known + '/' + ha.total +
+        ', ' + B.name + ' ' + hb.known + '/' + hb.total + '). 평형을 전체로 바꾸거나 다른 지역을 골라보세요.';
+      return;
+    }
+    cases = [
+      { k: A.name + ' 나홀로(300세대 미만)', g: ha.solo, c: 'var(--m1)' },
+      { k: A.name + ' 대단지(1000세대 이상)', g: ha.big, c: 'var(--m4)' },
+      { k: B.name + ' 나홀로(300세대 미만)', g: hb.solo, c: 'var(--ember)' },
+      { k: B.name + ' 대단지(1000세대 이상)', g: hb.big, c: 'var(--taupe)' }
+    ];
+  } else {
+    ta = tierSplit(la); tb2 = tierSplit(lb);
+    cases = [
+      { k: A.name + ' 대장(상위 20%)', g: ta.top, c: 'var(--m1)' },
+      { k: A.name + ' 중간(40~60%)', g: ta.mid, c: 'var(--m4)' },
+      { k: B.name + ' 대장(상위 20%)', g: tb2.top, c: 'var(--ember)' },
+      { k: B.name + ' 중간(40~60%)', g: tb2.mid, c: 'var(--taupe)' }
+    ];
+  }
   var tbl = el('tBT').tBodies[0]; tbl.innerHTML = '';
   cases.forEach(function (x) {
     var a = avgGr(x.g), m = medGr(x.g), p0 = avgP0(x.g);
@@ -5854,7 +5896,7 @@ function drawBT() {
     var tr = document.createElement('tr');
     tr.innerHTML = '<td class="nm"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:' +
       x.c + ';margin-right:8px;vertical-align:-1px"></span>' + esc(x.k) + '</td>' +
-      '<td>' + x.g.length + '곳</td>' +
+      '<td>' + x.g.length + '곳' + (BTMODE === 'hh' && avgHH(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n0(avgHH(x.g)) + '세대</div>' : '') + '</td>' +
       '<td>' + (p0 == null ? '—' : n0(p0) + '만') + '</td>' +
       '<td>' + (p1 == null ? '—' : n0(p1) + '만') + '</td>' +
       '<td style="font-weight:700;color:' + (a >= 100 ? 'var(--good)' : a >= 70 ? 'var(--ember)' : 'var(--slate)') + '">' +
@@ -5865,7 +5907,8 @@ function drawBT() {
   });
 
   /* 예산 매칭 비교 — 과거 가격이 비슷했던 쌍 */
-  var midA = ta.mid, topB = tb2.top;
+  var midA = BTMODE === 'hh' ? ha.solo : ta.mid;
+  var topB = BTMODE === 'hh' ? hb.big : tb2.top;
   var pa = avgP0(midA), pb = avgP0(topB);
   var ga = avgGr(midA), gb = avgGr(topB);
   var lineC = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
@@ -5882,29 +5925,49 @@ function drawBT() {
   });
 
   var L = [];
-  L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 대장 ' +
-    fmtPct(avgGr(ta.top)) + ' / 중간 ' + fmtPct(avgGr(ta.mid)) + ' · ' +
-    '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 대장 ' +
-    fmtPct(avgGr(tb2.top)) + ' / 중간 ' + fmtPct(avgGr(tb2.mid)) + '.');
+  if (BTMODE === 'hh') {
+    L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 나홀로 ' +
+      fmtPct(avgGr(ha.solo)) + ' / 대단지 ' + fmtPct(avgGr(ha.big)) + ' · ' +
+      '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 나홀로 ' +
+      fmtPct(avgGr(hb.solo)) + ' / 대단지 ' + fmtPct(avgGr(hb.big)) + '.');
+    L.push('세대수를 확인한 단지는 ' + esc(A.name) + ' ' + ha.known + '/' + ha.total + '곳, ' +
+      esc(B.name) + ' ' + hb.known + '/' + hb.total + '곳입니다. ' +
+      '<b>K-apt에 등록되지 않았거나 단지명이 매칭되지 않은 곳은 빠집니다</b> — 소규모 단지일수록 누락되기 쉬워 ' +
+      '나홀로 표본이 실제보다 적게 잡힐 수 있습니다.');
+  } else {
+    L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 대장 ' +
+      fmtPct(avgGr(ta.top)) + ' / 중간 ' + fmtPct(avgGr(ta.mid)) + ' · ' +
+      '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 대장 ' +
+      fmtPct(avgGr(tb2.top)) + ' / 중간 ' + fmtPct(avgGr(tb2.mid)) + '.');
+  }
   if (pa != null && pb != null && ga != null && gb != null) {
-    L.push('<b>핵심 비교</b> — ' + esc(A.name) + ' 중간 물건은 ' + yr + '년 전 평당 ' + n0(pa) + '만, ' +
-      esc(B.name) + ' 대장은 ' + n0(pb) + '만이었습니다. ' +
+    L.push('<b>핵심 비교</b> — ' + esc(A.name) + (BTMODE === 'hh' ? ' 나홀로는 ' : ' 중간 물건은 ') + yr + '년 전 평당 ' + n0(pa) + '만, ' +
+      esc(B.name) + (BTMODE === 'hh' ? ' 대단지는 ' : ' 대장은 ') + n0(pb) + '만이었습니다. ' +
       (Math.abs(pa - pb) / Math.max(pa, pb) < 0.25
         ? '<span class="hl">당시 가격대가 비슷해 직접 비교가 가능합니다.</span>'
         : '<span class="dn">당시 가격 차이가 ' + n0(Math.abs(pa - pb)) + '만(' +
           Math.round(Math.abs(pa - pb) / Math.max(pa, pb) * 100) + '%)이라 같은 예산 비교로 보기 어렵습니다.</span>'));
-    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + ' 중간 ' + fmtPct(ga) + '</b> vs <b>' +
-      esc(B.name) + ' 대장 ' + fmtPct(gb) + '</b> — ' +
-      (ga > gb ? '<span class="up">상급지 중간 물건이 앞섰습니다</span>' :
-       gb > ga ? '<span class="up">중급지 대장이 앞섰습니다</span>' : '차이가 없었습니다') +
+    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + (BTMODE === 'hh' ? ' 나홀로 ' : ' 중간 ') + fmtPct(ga) + '</b> vs <b>' +
+      esc(B.name) + (BTMODE === 'hh' ? ' 대단지 ' : ' 대장 ') + fmtPct(gb) + '</b> — ' +
+      (ga > gb ? '<span class="up">' + (BTMODE === 'hh' ? '최상급지 나홀로가' : '상급지 중간 물건이') + ' 앞섰습니다</span>' :
+       gb > ga ? '<span class="up">' + (BTMODE === 'hh' ? '상급지 대단지가' : '중급지 대장이') + ' 앞섰습니다</span>' : '차이가 없었습니다') +
       ' (' + n1(Math.abs(ga - gb)) + '%p).');
   }
-  var aTopVsMid = (avgGr(ta.top) != null && avgGr(ta.mid) != null) ? avgGr(ta.top) - avgGr(ta.mid) : null;
-  var bTopVsMid = (avgGr(tb2.top) != null && avgGr(tb2.mid) != null) ? avgGr(tb2.top) - avgGr(tb2.mid) : null;
-  if (aTopVsMid != null) L.push('같은 지역 안에서 대장과 중간의 차이는 ' + esc(A.name) + ' ' +
-    (aTopVsMid > 0 ? '+' : '') + n1(aTopVsMid) + '%p' +
-    (bTopVsMid != null ? ', ' + esc(B.name) + ' ' + (bTopVsMid > 0 ? '+' : '') + n1(bTopVsMid) + '%p' : '') +
-    '입니다. 이 값이 양수면 <b>지역 안에서도 비싼 단지가 더 올랐다</b>는 뜻입니다.');
+  if (BTMODE === 'hh') {
+    var da = (avgGr(ha.big) != null && avgGr(ha.solo) != null) ? avgGr(ha.big) - avgGr(ha.solo) : null;
+    var db = (avgGr(hb.big) != null && avgGr(hb.solo) != null) ? avgGr(hb.big) - avgGr(hb.solo) : null;
+    if (da != null || db != null) L.push('같은 지역 안에서 <b>대단지 − 나홀로</b> 차이는 ' +
+      (da != null ? esc(A.name) + ' ' + (da > 0 ? '+' : '') + n1(da) + '%p' : '') +
+      (db != null ? (da != null ? ', ' : '') + esc(B.name) + ' ' + (db > 0 ? '+' : '') + n1(db) + '%p' : '') +
+      '입니다. 양수면 <b>같은 동네에서도 대단지가 더 올랐다</b>는 뜻입니다 — 환금성과 커뮤니티 프리미엄이 값에 반영됐다는 해석이 가능합니다.');
+  } else {
+    var aTopVsMid = (avgGr(ta.top) != null && avgGr(ta.mid) != null) ? avgGr(ta.top) - avgGr(ta.mid) : null;
+    var bTopVsMid = (avgGr(tb2.top) != null && avgGr(tb2.mid) != null) ? avgGr(tb2.top) - avgGr(tb2.mid) : null;
+    if (aTopVsMid != null) L.push('같은 지역 안에서 대장과 중간의 차이는 ' + esc(A.name) + ' ' +
+      (aTopVsMid > 0 ? '+' : '') + n1(aTopVsMid) + '%p' +
+      (bTopVsMid != null ? ', ' + esc(B.name) + ' ' + (bTopVsMid > 0 ? '+' : '') + n1(bTopVsMid) + '%p' : '') +
+      '입니다. 이 값이 양수면 <b>지역 안에서도 비싼 단지가 더 올랐다</b>는 뜻입니다.');
+  }
   L.push('<b>표본 주의</b> — ' + yr + '년 전과 현재 모두 거래가 있는 단지만 비교합니다. ' +
     '그 사이 준공된 신축은 빠지고, 재건축으로 이름이 바뀐 단지도 빠집니다. ' +
     '표본이 적은 구간(10곳 미만)은 한두 단지가 평균을 흔들 수 있습니다.');
@@ -5917,8 +5980,11 @@ function drawBT() {
       '<div class="tblwrap"><table><thead><tr><th>단지</th><th>등급</th><th>' + yr + '년 전 평당</th><th>현재 평당</th><th>상승률</th></tr></thead><tbody>';
     var t = tierSplit(list);
     list.forEach(function (x) {
-      var tag = t.top.indexOf(x) >= 0 ? '대장' : (t.mid.indexOf(x) >= 0 ? '중간' : (t.low.indexOf(x) >= 0 ? '하위' : '—'));
-      h += '<tr><td class="nm">' + esc(x.apt) + '</td><td><span class="b ' + (tag === '대장' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
+      var tag = BTMODE === 'hh'
+        ? (!x.hh ? '미상' : x.hh >= 1000 ? '대단지' : x.hh < 300 ? '나홀로' : '중형')
+        : (t.top.indexOf(x) >= 0 ? '대장' : (t.mid.indexOf(x) >= 0 ? '중간' : (t.low.indexOf(x) >= 0 ? '하위' : '—')));
+      h += '<tr><td class="nm">' + esc(x.apt) + (BTMODE === 'hh' && x.hh ? ' <span style="font-size:11px;color:var(--slate)">' + n0(x.hh) + '세대</span>' : '') +
+        '</td><td><span class="b ' + (tag === '대장' || tag === '대단지' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
         '<td>' + n0(x.p0) + '만</td><td>' + n0(x.p1) + '만</td>' +
         '<td style="font-weight:700;color:' + (x.gr >= 100 ? 'var(--good)' : '#16202B') + '">' + fmtPct(x.gr) + '</td></tr>';
     });
@@ -5929,13 +5995,18 @@ function drawBT() {
 }
 function imgBT() {
   if (!BT) return;
-  var A = BT.A, B = BT.B, ta = tierSplit(BT.la), tb2 = tierSplit(BT.lb), yr = BT.yr;
-  var cases = [
-    [A.name + ' 대장', ta.top], [A.name + ' 중간', ta.mid],
-    [B.name + ' 대장', tb2.top], [B.name + ' 중간', tb2.mid]
-  ];
+  var A = BT.A, B = BT.B, yr = BT.yr, cases;
+  if (BTMODE === 'hh') {
+    var ha2 = hhSplit(BT.la), hb2 = hhSplit(BT.lb);
+    cases = [[A.name + ' 나홀로', ha2.solo], [A.name + ' 대단지', ha2.big],
+             [B.name + ' 나홀로', hb2.solo], [B.name + ' 대단지', hb2.big]];
+  } else {
+    var ta2 = tierSplit(BT.la), tb3 = tierSplit(BT.lb);
+    cases = [[A.name + ' 대장', ta2.top], [A.name + ' 중간', ta2.mid],
+             [B.name + ' 대장', tb3.top], [B.name + ' 중간', tb3.mid]];
+  }
   exportPNG({
-    title: '상급지 중간 vs 중급지 대장',
+    title: BTMODE === 'hh' ? '나홀로 vs 대단지' : '상급지 중간 vs 중급지 대장',
     sub: A.name + ' ↔ ' + B.name + ' · 최근 ' + yr + '년 · ' + (BT.mode === 'all' ? '전체 평형' : BT.mode + '㎡대'),
     stats: cases.map(function (x) {
       var g = avgGr(x[1]);
@@ -6629,6 +6700,15 @@ function init() {
   fillSel(el('btA'), allRegions(), '41135');
   fillSel(el('btB'), allRegions(), '41173');
   el('btRun').addEventListener('click', runBT);
+  el('btMode').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    BTMODE = b.dataset.v;
+    el('btMode').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    el('btHint').innerHTML = BTMODE === 'hh'
+      ? '<b>세대수 기준</b> — 300세대 미만을 <b>나홀로</b>, 1000세대 이상을 <b>대단지</b>로 나눕니다. K-apt에서 세대수를 조회하므로 시간이 조금 더 걸립니다.'
+      : '<b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.';
+    if (BT) runBT();
+  });
   el('imgBT').addEventListener('click', imgBT);
   el('own').addEventListener('change', function () {
     syncFirst();
