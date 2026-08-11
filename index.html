@@ -1013,7 +1013,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       아래 표에서 고른 실제 매물로 계산하므로, 이 값이 진짜 들어가는 돈입니다.<br>
       두 값이 크게 다르면 그 지역에 <b>평균가 근처 매물이 실거래로 안 잡힌 것</b>입니다 — 표본 부족을 함께 확인하세요.<br><br>
       <b>지역 필요현금과 단지 필요현금은 다릅니다.</b><br>
-      추천 카드의 필요현금은 <b>그 지역 ㎡당 평균가</b>로 계산한 값입니다. 실제 단지는 평균 위아래로 흩어져 있고,
+      추천 카드의 필요현금은 <b>그 지역 평당 평균가</b>로 계산한 값입니다. 실제 단지는 평균 위아래로 흩어져 있고,
       <b>대장 단지는 지역 평균보다 30~50% 비싼 경우가 흔합니다.</b> 평균으로는 닿아도 그 지역 최고 아파트는
       못 사는 상황이 생깁니다.<br><br>
       그래서 <b>예산으로 살 수 있는 단지 보기</b>는 단지마다 필요현금을 따로 계산해
@@ -1219,11 +1219,11 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <span class="eb">DICTIONARY</span>
     <h3>지표 사전</h3>
     <div class="deck">
-      <div class="tile"><h4>㎡당 가격</h4><p>KB가 조사한 그 지역 아파트의 전용 1㎡당 평균 매매가(만원). 평당가로 보려면 3.3을 곱하세요. 전용 기준이라 네이버 공급면적 평당가보다 25%쯤 높게 나옵니다.</p></div>
+      <div class="tile"><h4>평당가</h4><p>KB가 조사한 그 지역 아파트의 전용 1평(3.3㎡)당 평균 매매가(만원). <b>전용면적 기준</b>이라 네이버 공급면적 평당가보다 25%쯤 높게 나옵니다.</p></div>
       <div class="tile"><h4>필요현금</h4><p>매수가 − 대출가능액 + 취득세 + 중개보수 + 등기·이사비. 통장에서 실제로 빠지는 돈입니다.</p></div>
       <div class="tile"><h4>대출 꼬리표</h4><p>LTV·수도권 총액 상한·DSR 중 <b>가장 낮은 값</b>을 씁니다. 꼬리표가 무엇에 걸렸는지 알려줍니다.</p></div>
       <div class="tile"><h4>전세가율 밴드</h4><p>전세÷매매 비율이 최근 10년 안에서 어디쯤인지. 왼쪽(0%)=역대 최저=매매가 고평가, 오른쪽(100%)=역대 최고=진입 부담 낮음.</p></div>
-      <div class="tile"><h4>배율</h4><p>목표지역 ㎡당가 ÷ 내 지역 ㎡당가. 1.68이면 목표가 68% 비싸다는 뜻. 이 값이 낮을 때 갈아타면 같은 집 팔아 더 윗급지를 싸게 삽니다.</p></div>
+      <div class="tile"><h4>배율</h4><p>목표지역 평당가 ÷ 내 지역 평당가. 1.68이면 목표가 68% 비싸다는 뜻. 이 값이 낮을 때 갈아타면 같은 집 팔아 더 윗급지를 싸게 삽니다.</p></div>
       <div class="tile"><h4>백분위</h4><p>현재 값이 과거 구간 안 몇 % 지점인지. 30% 이하 하단, 70% 이상 상단. 평균보다 백분위가 중요합니다 — 평균은 한 번의 급등에 끌려갑니다.</p></div>
     </div>
   </div>
@@ -1263,7 +1263,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <div class="card">
         <span class="eb">RANKING</span>
         <h2>내 예산으로 갈 수 있는 최상단</h2>
-        <p class="hint">전국 시·군·구를 ㎡당 매매가 순으로 세우고, 위에서부터 내려오며 내 자본이 처음 닿는 지점을 찾습니다.
+        <p class="hint">전국 시·군·구를 평당 매매가 순으로 세우고, 위에서부터 내려오며 내 자본이 처음 닿는 지점을 찾습니다.
           필요현금이 보유 현금 이하인 <b>가장 위쪽 줄</b>이 1순위입니다.</p>
         <div class="inline" style="margin-bottom:12px">
           <div class="seg" id="areaSeg1">
@@ -1292,7 +1292,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
           </select>
         </div>
         <div class="tblwrap"><table id="t1">
-          <thead><tr><th>지역</th><th>서열</th><th>㎡당</th><th id="th1a">추정가</th><th>규제</th><th>LTV</th>
+          <thead><tr><th>지역</th><th>서열</th><th>평당가</th><th id="th1a">추정가</th><th>규제</th><th>LTV</th>
             <th>대출</th><th>필요현금</th><th>전세가율 밴드 (10년)</th><th>3년</th><th>10년</th><th></th></tr></thead><tbody></tbody></table></div>
         <div class="nextstep">
           <b>다음 단계</b><span>마음에 드는 지역을 정했다면, 그 지역 안에서 조건에 맞는 아파트를 찾아보세요.</span>
@@ -1384,7 +1384,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
   <div class="card">
     <span class="eb">TIERS</span>
     <h2>전국 급지표 · 10분위</h2>
-    <p class="hint">KB 시계열이 커버하는 시·군·구 전체를 ㎡당 매매가 순으로 세우고 10등분했습니다.
+    <p class="hint">KB 시계열이 커버하는 시·군·구 전체를 평당 매매가 순으로 세우고 10등분했습니다.
       1분위가 가장 비싼 상위 10%입니다.</p>
     <div class="kpis" id="bm2"></div>
     <div class="inline" style="margin-bottom:16px">
@@ -1398,7 +1398,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <label class="chk"><input type="checkbox" id="dec1"><span>1~3분위만</span></label>
     </div>
     <div class="tblwrap"><table id="t2">
-      <thead><tr><th>지역</th><th>전국 서열</th><th>분위</th><th>㎡당</th><th id="th2a">84㎡ 매매</th><th>전세</th>
+      <thead><tr><th>지역</th><th>전국 서열</th><th>분위</th><th>평당가</th><th id="th2a">84㎡ 매매</th><th>전세</th>
         <th>전세가율</th><th>밴드 (10년)</th><th>3년</th><th>10년</th><th>10y CAGR</th><th>전체 CAGR</th><th>100%</th><th>규제</th></tr></thead><tbody></tbody></table></div>
     <div id="drill2"></div>
     <div class="rowbtns">
@@ -1448,7 +1448,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <label class="chk"><input type="checkbox" id="gapOnlyOk"><span>내 현금으로 되는 곳만</span></label>
     </div>
     <div class="tblwrap"><table id="t3">
-      <thead><tr><th>지역</th><th>서열</th><th>㎡당 매매</th><th>㎡당 전세</th><th id="th3a">매매</th><th>전세</th>
+      <thead><tr><th>지역</th><th>서열</th><th>평당 매매</th><th>평당 전세</th><th id="th3a">매매</th><th>전세</th>
         <th>순수 갭</th><th>총 필요현금</th><th>전세가율</th><th>밴드 (10년)</th><th>10년 상승률</th><th></th></tr></thead><tbody></tbody></table></div>
     <div class="rowbtns">
       <button class="btn sig" id="img3"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 19h16"/></svg>이미지 저장</button>
@@ -1466,7 +1466,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <p class="hint">지금 사는 지역을 가운데 두고 <b>상급지 5곳 · 하급지 5곳</b>을 함께 봅니다.
       줄을 클릭하면 아래에서 그 지역과의 갈아타기 타이밍을 분석합니다.</p>
     <div class="tblwrap"><table id="t4map">
-      <thead><tr><th>지역</th><th>구분</th><th>㎡당</th><th id="th4a">84㎡ 추정</th><th>배율</th>
+      <thead><tr><th>지역</th><th>구분</th><th>평당가</th><th id="th4a">84㎡ 추정</th><th>배율</th>
         <th>10년 평균</th><th>밴드</th><th>추가 필요금</th><th>판정</th></tr></thead><tbody></tbody></table></div>
     <div class="rowbtns">
       <button class="btn sig" id="img4"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 19h16"/></svg>이미지 저장</button>
@@ -1522,7 +1522,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <label class="chk"><input type="checkbox" id="rad3" checked><span>이동 가능 범위 적용</span></label>
     </div>
     <div class="tblwrap"><table id="t4">
-      <thead><tr><th>목표 지역</th><th>㎡당</th><th>현재 배율</th><th>10년 평균</th><th>밴드</th>
+      <thead><tr><th>목표 지역</th><th>평당가</th><th>현재 배율</th><th>10년 평균</th><th>밴드</th>
         <th>추가 필요금</th><th>거리</th><th>역대 최저 시점</th><th>판정</th></tr></thead><tbody></tbody></table></div>
   </div>
 </section>
@@ -1556,7 +1556,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
           <option value="ahead">앞서간 곳</option></select></div>
     </div>
     <div class="tblwrap" style="margin-top:18px"><table id="t5">
-      <thead><tr><th>짝 지역</th><th>㎡당</th><th>현재 배율</th><th>10년 평균</th><th>변동계수</th>
+      <thead><tr><th>짝 지역</th><th>평당가</th><th>현재 배율</th><th>10년 평균</th><th>변동계수</th>
         <th>밴드</th><th>평균 회귀 여력</th><th>3년 상승률 차</th></tr></thead><tbody></tbody></table></div>
     <div class="rowbtns">
       <button class="btn sig" id="img5"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 19h16"/></svg>이미지 저장</button>
@@ -1900,7 +1900,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <span class="eb">DATA</span>
     <h2>데이터 출처와 갱신</h2>
     <div class="readme" style="background:none;padding:0;margin-top:0">
-      <b>KB 월간 주택가격동향 시계열</b> — ㎡당 아파트 평균 매매·전세가(전용 기준), 2013.4~ 월별, 시도·시군구.
+      <b>KB 월간 주택가격동향 시계열</b> — ㎡당 아파트 평균 매매·전세가(전용 기준), 2013.4~ 월별, 시도·시군구. 화면에는 <b>평당가(×3.3058)</b>로 환산해 표시합니다.
       KB는 공개 API가 없어 <b>파일로 내장</b>돼 있습니다. 자동 갱신되지 않으며 매달
       <code>kb-data.js</code>를 교체해야 합니다.<br><br>
       <b>국토교통부 실거래가 · K-apt</b> — 대장 아파트·단지 솔팅 탭에서 <b>매번 실시간 호출</b>합니다. 자동 최신입니다.
@@ -1927,7 +1927,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v30.0';
+var VERSION = 'v32.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -2100,122 +2100,186 @@ function exportCSV(o) {
 function exportPNG(o) {
   if (CSVMODE) { CSVMODE = false; return exportCSV(o); }
   var cv = el('expcv'), dpr = 2;
-  var W = 1120, PADX = 56;
-  var colN = o.headers.length;
-  var rowH = 54, headH = 176, footH = 104;
-  if (o.stats && o.stats.length) headH += 92;
-  var rows = o.rows.slice(0, o.max || 30);
-  var two = !!o.twoCol && rows.length > 8;
+  var W = 1080, PADX = 52;
+  var rowH = 62, footH = 128;
+  var allRows = o.rows || [];
+  var cap = o.max || 16;
+  var rows = allRows.slice(0, cap);
+  var two = !!o.twoCol && rows.length > 10;
   var half = two ? Math.ceil(rows.length / 2) : rows.length;
-  if (two) W = 1400;
-  var H = headH + 52 + half * rowH + footH;
-  cv.width = W * dpr; cv.height = H * dpr;
-  var x = cv.getContext('2d'); x.scale(dpr, dpr);
+  if (two) { W = 1400; }
   var dark = document.documentElement.getAttribute('data-theme') === 'dark';
   var C = dark
     ? { bg: '#0E161F', pane: '#19242F', ink: '#EAF1F4', sub: '#8B9AA6', line: '#26333F', good: '#4FC08D',
-        chip: '#152029', zebra: '#131E27', bad: '#E0876B', moon: '#7FB4CE', ember: '#E0A94E', frost: '#9CCBE0' }
-    : { bg: '#F1F2F1', pane: '#FFFFFF', ink: '#16202B', sub: '#6B7683', line: '#DDE4E7', good: '#1B6B4A',
-        chip: '#E8F0F3', zebra: '#F7F9FA', bad: '#B24A32', moon: '#2F6D8E', ember: '#C8862F', frost: '#8FC4DA' };
+        chip: '#1C2A36', zebra: '#141F2A', bad: '#E0876B', moon: '#7FB4CE', ember: '#E0A94E',
+        frost: '#9CCBE0', onink: '#0E161F', hi: '#16242F' }
+    : { bg: '#F1F2F1', pane: '#FFFFFF', ink: '#16202B', sub: '#6B7683', line: '#E3E9EC', good: '#1B6B4A',
+        chip: '#EDF3F5', zebra: '#F7F9FA', bad: '#B24A32', moon: '#2F6D8E', ember: '#C8862F',
+        frost: '#8FC4DA', onink: '#FFFFFF', hi: '#EAF2F6' };
   var F = "'Pretendard Variable',Pretendard,-apple-system,sans-serif";
-  function rr(a, b, w, h, r) {
-    x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r);
-    x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath();
+
+  /* 헤더 높이 — 제목 줄 수에 맞춰 가변 */
+  var probe = document.createElement('canvas').getContext('2d');
+  function lines(t, maxW, size, weight) {
+    probe.font = (weight || '600 ') + size + 'px ' + F;
+    var out = [], cur = '';
+    String(t).split(' ').forEach(function (wd) {
+      var s = cur ? cur + ' ' + wd : wd;
+      if (probe.measureText(s).width > maxW && cur) { out.push(cur); cur = wd; } else cur = s;
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+  var titleLines = lines(o.title, W - PADX * 2 - 10, 46, '600 ');
+  var subLines = lines(o.sub || '', W - PADX * 2 - 10, 19, '450 ');
+  var headH = 96 + titleLines.length * 54 + (o.sub ? subLines.length * 28 + 6 : 0) + 26;
+  if (o.stats && o.stats.length) headH += 104;
+
+  var H = headH + 58 + half * rowH + footH;
+  cv.width = W * dpr; cv.height = H * dpr;
+  var x = cv.getContext('2d'); x.scale(dpr, dpr);
+  function rr(a2, b, w2, h2, r) {
+    x.beginPath(); x.moveTo(a2 + r, b); x.arcTo(a2 + w2, b, a2 + w2, b + h2, r);
+    x.arcTo(a2 + w2, b + h2, a2, b + h2, r); x.arcTo(a2, b + h2, a2, b, r);
+    x.arcTo(a2, b, a2 + w2, b, r); x.closePath();
+  }
+  function fit(t, maxW, size, weight) {
+    var s = size;
+    while (s > 11) { x.font = (weight || '450 ') + s + 'px ' + F; if (x.measureText(t).width <= maxW) break; s -= 1; }
+    return s;
   }
   x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
-  rr(20, 20, W - 40, H - 40, 34); x.fillStyle = C.pane; x.fill();
+  rr(18, 18, W - 36, H - 36, 32); x.fillStyle = C.pane; x.fill();
 
-  /* 헤더 */
+  /* ── 로고 ── */
+  var y = 58;
   x.save();
-  x.beginPath();
-  x.arc(PADX + 11, 61, 11, 0, 7);
-  x.arc(PADX + 16, 61, 9.6, 0, 7, true);
+  x.beginPath(); x.arc(PADX + 12, y, 12, 0, 7); x.arc(PADX + 17.5, y, 10.5, 0, 7, true);
   x.fillStyle = C.moon; x.fill('evenodd');
-  x.beginPath(); x.arc(PADX + 27, 55, 3.4, 0, 7); x.fillStyle = C.ember; x.fill();
-  x.beginPath(); x.arc(PADX + 28.5, 65, 1.9, 0, 7); x.fillStyle = C.frost; x.fill();
+  x.beginPath(); x.arc(PADX + 29, y - 6, 3.8, 0, 7); x.fillStyle = C.ember; x.fill();
   x.restore();
-  x.fillStyle = C.sub; x.font = '700 14px ' + F;
-  x.fillText('TOP-DOWN APT RADAR', PADX + 44, 66);
-  x.fillStyle = C.ink; x.font = '600 42px ' + F;
-  x.fillText(o.title, PADX, 122);
-  x.fillStyle = C.sub; x.font = '450 17px ' + F;
-  x.fillText(o.sub || '', PADX, 152);
+  x.textAlign = 'left'; x.fillStyle = C.sub; x.font = '700 16px ' + F;
+  x.fillText('TOP-DOWN APT RADAR', PADX + 48, y + 6);
+
+  /* ── 제목 ── */
+  var ty = y + 62;
+  x.fillStyle = C.ink;
+  titleLines.forEach(function (t) { x.font = '600 46px ' + F; x.fillText(t, PADX, ty); ty += 54; });
+  if (o.sub) {
+    x.fillStyle = C.sub; x.font = '450 19px ' + F;
+    ty += 2;
+    subLines.forEach(function (t) { x.fillText(t, PADX, ty); ty += 28; });
+  }
+
+  /* ── 상단 통계 ── */
   if (o.stats && o.stats.length) {
-    var sw = (W - PADX * 2) / o.stats.length, sy = 178;
+    var sw = (W - PADX * 2) / o.stats.length, sy = headH - 104 + 6;
     o.stats.forEach(function (st, si) {
       var sx = PADX + sw * si;
-      rr(sx, sy, sw - 14, 76, 16); x.fillStyle = C.chip; x.fill();
-      x.textAlign = 'left';
-      x.fillStyle = C.sub; x.font = '700 13px ' + F;
-      x.fillText(st.label, sx + 18, sy + 26);
+      rr(sx, sy, sw - 12, 84, 18); x.fillStyle = C.chip; x.fill();
+      x.textAlign = 'left'; x.fillStyle = C.sub; x.font = '700 14px ' + F;
+      x.fillText(st.label, sx + 18, sy + 28);
       x.fillStyle = st.color === 'bad' ? C.bad : (st.color === 'good' ? C.good : C.ink);
-      x.font = '600 30px ' + F;
-      x.fillText(st.value, sx + 18, sy + 60);
+      var fs0 = fit(st.value, sw - 44, 30, '600 ');
+      x.font = '600 ' + fs0 + 'px ' + F;
+      x.fillText(st.value, sx + 18, sy + 66);
     });
   }
 
-  /* 표 헤더 */
-  var w = (two ? (W - PADX * 2 - 46) / 2 : W - PADX * 2), cw = [];
+  /* ── 표 ── */
+  var w = (two ? (W - PADX * 2 - 44) / 2 : W - PADX * 2), cw = [];
   var weights = o.weights || o.headers.map(function () { return 1; });
-  var tot = weights.reduce(function (a, b) { return a + b; }, 0);
+  var tot = weights.reduce(function (a2, b) { return a2 + b; }, 0);
   weights.forEach(function (g) { cw.push(w * g / tot); });
-  var blocks = two ? [{ ox: PADX, rows: rows.slice(0, half) },
-                      { ox: PADX + w + 46, rows: rows.slice(half) }] : [{ ox: PADX, rows: rows }];
-  var y = headH, yEnd = headH;
+  var blocks = two ? [{ ox: PADX, rows: rows.slice(0, half), off: 0 },
+                      { ox: PADX + w + 44, rows: rows.slice(half), off: half }]
+                   : [{ ox: PADX, rows: rows, off: 0 }];
+  var yEnd = headH;
   blocks.forEach(function (blk) {
-  var ox = blk.ox;
-  y = headH;
-  x.strokeStyle = C.line; x.lineWidth = 1.5;
-  x.beginPath(); x.moveTo(ox, y + 34); x.lineTo(ox + w, y + 34); x.stroke();
-  x.font = '700 15px ' + F; x.fillStyle = C.sub;
-  var cx = ox;
-  o.headers.forEach(function (h, i) {
-    if (i === 0) x.textAlign = 'left', x.fillText(h, cx, y + 22);
-    else x.textAlign = 'right', x.fillText(h, cx + cw[i], y + 22);
-    cx += cw[i];
-  });
-  /* 행 */
-  y += 52;
-  blk.rows.forEach(function (row, ri) {
-    if (o.hi && o.hi.indexOf(ri) >= 0) { rr(ox - 14, y - 8, w + 28, rowH - 4, 14); x.fillStyle = C.chip; x.fill(); }
-    else if (ri % 2 === 1) { rr(ox - 14, y - 8, w + 28, rowH - 4, 14); x.fillStyle = C.zebra; x.fill(); }
-    var cx2 = ox;
-    row.forEach(function (cell, i) {
-      var strong = (i === 0) || (o.bold && o.bold.indexOf(i) >= 0);
-      x.font = (strong ? '600 ' : '450 ') + (i === 0 ? '20px ' : '19px ') + F;
-      var t = deent(cell);
-      x.fillStyle = C.ink;
-      if (o.bold && o.bold.indexOf(i) >= 0) x.fillStyle = C.good;
-      if (o.signed && o.signed.indexOf(i) >= 0) {
-        var sv = parseFloat(t.replace(/[^0-9.\-−]/g, '').replace('−', '-'));
-        if (isFinite(sv)) { x.fillStyle = sv < 0 ? C.bad : C.good; x.font = '600 19px ' + F; }
-      }
-      if (o.grade && o.grade.indexOf(i) >= 0) {
-        var nv = parseFloat(t.replace(/[^0-9.\-]/g, ''));
-        if (isFinite(nv)) { x.fillStyle = nv >= 100 ? C.good : (nv >= 70 ? C.ember : C.sub); x.font = '600 19px ' + F; }
-        else x.fillStyle = C.sub;
-      }
-      if (i === 0) { x.textAlign = 'left'; x.fillText(t, cx2, y + 26); }
-      else { x.textAlign = 'right'; x.fillText(t, cx2 + cw[i], y + 26); }
-      cx2 += cw[i];
+    var ox = blk.ox, yy = headH;
+    x.fillStyle = C.sub; x.font = '700 16px ' + F;
+    var cx = ox;
+    o.headers.forEach(function (hd, i) {
+      var fs1 = fit(hd, cw[i] - 8, 16, '700 ');
+      x.font = '700 ' + fs1 + 'px ' + F;
+      if (i === 0) { x.textAlign = 'left'; x.fillText(hd, cx, yy + 22); }
+      else { x.textAlign = 'right'; x.fillText(hd, cx + cw[i] - 4, yy + 22); }
+      cx += cw[i];
     });
-    y += rowH;
+    x.strokeStyle = C.line; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(ox, yy + 38); x.lineTo(ox + w, yy + 38); x.stroke();
+    yy += 58;
+    blk.rows.forEach(function (row, ri) {
+      var gi = blk.off + ri;
+      var isTop = !o.noRank && gi < 3;
+      if (o.hi && o.hi.indexOf(gi) >= 0) { rr(ox - 12, yy - 4, w + 24, rowH - 8, 14); x.fillStyle = C.hi; x.fill(); }
+      else if (isTop) { rr(ox - 12, yy - 4, w + 24, rowH - 8, 14); x.fillStyle = C.chip; x.fill(); }
+      else if (gi % 2 === 1) { rr(ox - 12, yy - 4, w + 24, rowH - 8, 14); x.fillStyle = C.zebra; x.fill(); }
+      var cx2 = ox;
+      row.forEach(function (cell, i) {
+        var t = String(cell == null ? '' : cell);
+        var strong = o.bold && o.bold.indexOf(i) >= 0;
+        x.fillStyle = strong ? C.ink : (i === 0 ? C.ink : C.sub);
+        var base = i === 0 ? 22 : 21;
+        var wt = (strong || i === 0) ? '600 ' : '450 ';
+        if (o.signed && o.signed.indexOf(i) >= 0) {
+          var sv = parseFloat(t.replace(/[^0-9.\-−]/g, '').replace('−', '-'));
+          if (isFinite(sv)) { x.fillStyle = sv < 0 ? C.bad : C.good; wt = '700 '; }
+        }
+        if (o.grade && o.grade.indexOf(i) >= 0) {
+          var nv = parseFloat(t.replace(/[^0-9.\-]/g, ''));
+          if (isFinite(nv)) { x.fillStyle = nv >= 100 ? C.good : (nv >= 70 ? C.ember : C.sub); wt = '700 '; }
+          else x.fillStyle = C.sub;
+        }
+        var fs2 = fit(t, cw[i] - (i === 0 ? 44 : 10), base, wt);
+        x.font = wt + fs2 + 'px ' + F;
+        if (i === 0) {
+          /* 순위 배지 */
+          if (!o.noRank) {
+            var bx = cx2 + 14, by = yy + rowH / 2 - 4;
+            x.beginPath(); x.arc(bx, by - 6, 14, 0, 7);
+            x.fillStyle = gi === 0 ? C.ink : (gi < 3 ? C.moon : C.line); x.fill();
+            x.textAlign = 'center';
+            x.fillStyle = gi < 3 ? C.onink : C.sub;
+            x.font = '700 14px ' + F;
+            x.fillText(String(gi + 1), bx, by - 1);
+            x.textAlign = 'left';
+            x.fillStyle = C.ink; x.font = wt + fs2 + 'px ' + F;
+            x.fillText(t, cx2 + 36, yy + rowH / 2 + 2);
+          } else {
+            x.textAlign = 'left'; x.fillText(t, cx2, yy + rowH / 2 + 2);
+          }
+        } else {
+          x.textAlign = 'right'; x.fillText(t, cx2 + cw[i] - 4, yy + rowH / 2 + 2);
+        }
+        cx2 += cw[i];
+      });
+      yy += rowH;
+    });
+    if (yy > yEnd) yEnd = yy;
   });
-  if (y > yEnd) yEnd = y;
-  });
+
+  /* ── 푸터 ── */
   y = yEnd;
-  /* 푸터 */
-  x.textAlign = 'left'; x.fillStyle = C.sub; x.font = '450 14px ' + F;
+  x.textAlign = 'left';
+  x.strokeStyle = C.line; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(PADX, y + 10); x.lineTo(W - PADX, y + 10); x.stroke();
   var d = new Date();
-  x.fillText((o.note || '') , PADX, y + 26);
+  var more = allRows.length > rows.length
+    ? '전체 ' + allRows.length + '곳 중 상위 ' + rows.length + '곳 · 나머지는 앱에서 확인'
+    : '전체 ' + allRows.length + '곳';
+  x.fillStyle = C.sub; x.font = '600 16px ' + F;
+  x.fillText(more, PADX, y + 44);
+  x.font = '450 15px ' + F;
+  if (o.note) x.fillText(o.note, PADX, y + 72);
   x.fillText('생성 ' + d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() +
-    ' · KB ' + ymL(KB.asof) + ' 기준 · 정보 제공용이며 투자 자문이 아닙니다', PADX, y + 50);
+    ' · KB ' + ymL(KB.asof) + ' 기준 · 정보 제공용이며 투자 자문이 아닙니다', PADX, y + 100);
 
   cv.toBlob(function (b) {
-    var u = URL.createObjectURL(b), a = document.createElement('a');
-    a.href = u; a.download = (o.file || 'apt-radar') + '_' + d.getFullYear() +
+    var u = URL.createObjectURL(b), a2 = document.createElement('a');
+    a2.href = u; a2.download = (o.file || 'apt-radar') + '_' + d.getFullYear() +
       String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.png';
-    a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 3000);
+    a2.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 3000);
   }, 'image/png');
 }
 function copyTSV(headers, rows) {
@@ -2277,7 +2341,7 @@ function render1() {
     if (x.rank - 1 === firstOk) tr.className = 'pick';
     tr.innerHTML =
       '<td class="nm">' + esc(x.r.name) + (x.r.code === (home && home.code) ? ' <span class="b no">거주</span>' : '') + '</td>' +
-      '<td>' + x.rank + '</td><td>' + n0(last(x.r.s)) + '</td><td>' + won(x.price) + '</td>' +
+      '<td>' + x.rank + '</td><td>' + n0(pyPrice(last(x.r.s))) + '</td><td>' + won(x.price) + '</td>' +
       '<td>' + (x.r.reg ? '<span class="b reg">규제</span>' : '<span class="b free">비규제</span>') + '</td>' +
       '<td>' + x.nc.ltv + '%</td>' +
       '<td>' + won(x.nc.loan) + ' <span class="b no">' + x.nc.bind + '</span></td>' +
@@ -2902,7 +2966,7 @@ function render2() {
       '<td class="nm">' + esc(r.name) + (r.code === home ? ' <span class="b warn">지금 여기</span>' : '') + '</td>' +
       '<td>' + (RANK[r.code] || '—') + '</td>' +
       '<td>' + (RANK[r.code] ? '<span class="b ' + (d <= 3 ? 'd1' : 'no') + '">' + d + '분위</span>' : '<span class="b no">시도</span>') + '</td>' +
-      '<td>' + n0(last(r.s)) + '</td><td>' + won(last(r.s) * a) + '</td><td>' + won(last(r.j) * a) + '</td>' +
+      '<td>' + n0(pyPrice(last(r.s))) + '</td><td>' + won(last(r.s) * a) + '</td><td>' + won(last(r.j) * a) + '</td>' +
       '<td>' + n1(jr) + '%</td><td>' + (jb ? gaugeHTML(jb.pct, jb) : '—') + '</td>' +
       '<td>' + fmtPct(chg(r.s, 36)) + '</td>' +
       '<td>' + pct10Cell(chg10(r)) + '</td>' +
@@ -2940,7 +3004,7 @@ function drillSido(name) {
   }).sort(function (u, v) { return (v.idx || 0) - (u.idx || 0); });
   var h = '<div class="card flat" style="margin-top:18px"><span class="eb">' + esc(name) + ' 하위 지역</span>' +
     '<h2 style="font-size:22px;margin-bottom:6px">' + esc(name) + ' 시·군·구 (' + rows.length + '곳)</h2>' +
-    '<p class="hint" style="margin-bottom:14px">KB는 수도권·광역시만 ㎡당 가격을 조사합니다. 그 외 지역은 <b>가격지수</b>로 비교합니다.</p>' +
+    '<p class="hint" style="margin-bottom:14px">KB는 수도권·광역시만 평당 가격을 조사합니다. 그 외 지역은 <b>가격지수</b>로 비교합니다.</p>' +
     '<div class="tblwrap"><table><thead><tr><th>지역</th><th>지수</th><th>10년 상승률</th><th>10년 연복리</th>' +
     '<th>장기 연복리</th><th>조사 시작</th><th></th></tr></thead><tbody>';
   rows.forEach(function (x) {
@@ -2960,15 +3024,15 @@ function fmtPct(v) { return v == null ? '—' : (v > 0 ? '+' : '') + n1(v) + '%'
 function img2() {
   exportPNG({
     title: '전국 급지표 · ' + SIDO2 + ' (' + AREA2 + '㎡ 기준)',
-    sub: 'KB ㎡당 매매가 기준 서열 · 시군구 ' + NTOT + '곳을 10분위로',
+    sub: 'KB 평당 매매가 기준 서열 · 시군구 ' + NTOT + '곳을 10분위로',
     headers: ['지역', '분위', '평당가', AREA2 + '㎡ 매매', '10년 상승률'],
     weights: [2.6, .9, 1.15, 1.35, 1.25],
     bold: [3], grade: [4],
-    rows: LAST2.slice(0, 22).map(function (r) {
+    rows: LAST2.map(function (r) {
       return [r.name, decile(r.code) + '분위', n0(pyPrice(last(r.s))) + '만',
         won(last(r.s) * AREA2), chg10(r) == null ? '—' : '+' + n1(chg10(r)) + '%'];
     }),
-    max: 22,
+    max: 16,
     note: '10년 상승률 100% 이상이 초록 · 평당가는 전용 기준 · KB 표본조사 평균',
     file: 'topdown_tiers'
   });
@@ -3006,7 +3070,7 @@ function render3() {
     var tr = document.createElement('tr');
     if (x.ok) tr.className = 'pick';
     tr.innerHTML = '<td class="nm">' + esc(x.r.name) + (x.r.reg ? ' <span class="b reg">규제</span>' : '') + '</td>' +
-      '<td>' + RANK[x.r.code] + '</td><td>' + n0(last(x.r.s)) + '</td><td>' + n0(last(x.r.j)) + '</td>' +
+      '<td>' + RANK[x.r.code] + '</td><td>' + n0(pyPrice(last(x.r.s))) + '</td><td>' + n0(pyPrice(last(x.r.j))) + '</td>' +
       '<td>' + won(x.p) + '</td><td>' + won(x.je) + '</td><td>' + won(x.g.gap) + '</td>' +
       '<td style="font-weight:700;color:' + (x.ok ? 'var(--good)' : 'var(--slate)') + '">' + won(x.g.need) + '</td>' +
       '<td>' + n1(x.jr) + '%</td><td>' + (x.jb ? gaugeHTML(x.jb.pct, x.jb) : '—') + '</td>' +
@@ -3024,11 +3088,11 @@ function img3() {
     headers: ['지역', '서열', '매매', '전세', '순수 갭', '총 필요현금', '전세가율'],
     weights: [2.4, .8, 1.1, 1.1, 1.1, 1.3, 1],
     bold: [5],
-    rows: LAST3.slice(0, 24).map(function (x) {
+    rows: LAST3.map(function (x) {
       return [x.r.name + (x.r.reg ? ' (규제)' : ''), RANK[x.r.code] + '위', won(x.p), won(x.je),
         won(x.g.gap), won(x.g.need), n1(x.jr) + '%'];
     }),
-    max: 24,
+    max: 16,
     note: '총 필요현금 = 순수 갭 + 취득세 + 중개보수 + 부대비용 · 규제지역은 실거주 의무로 갭 매수 제한',
     file: 'topdown_gap'
   });
@@ -3059,7 +3123,7 @@ function render4() {
     if (!self) tr.dataset.to = r.code;
     tr.innerHTML = '<td class="nm">' + esc(r.name) + '</td>' +
       '<td><span class="b ' + (self ? 'warn' : (kind === '상급지' ? 'd1' : 'no')) + '">' + kind + '</span></td>' +
-      '<td>' + n0(last(r.s)) + '</td><td>' + won(pt) + '</td>' +
+      '<td>' + n0(pyPrice(last(r.s))) + '</td><td>' + won(pt) + '</td>' +
       '<td>' + (b ? b.cur.toFixed(3) : '—') + '</td><td>' + (b ? b.avg.toFixed(3) : '—') + '</td>' +
       '<td>' + (b ? gaugeHTML(b.pct, b) : '—') + '</td>' +
       '<td style="font-weight:700;color:' + (extra <= c.cash && !self ? 'var(--good)' : 'var(--ink)') + '">' +
@@ -3140,7 +3204,7 @@ function targets() {
     tr.className = 'clickable' + (reach && x.b.pct <= .3 ? ' pick' : '');
     tr.dataset.to = x.r.code;
     tr.innerHTML = '<td class="nm">' + esc(x.r.name) + (x.r.reg ? ' <span class="b reg">규제</span>' : '') + '</td>' +
-      '<td>' + n0(last(x.r.s)) + '</td><td>' + x.b.cur.toFixed(3) + '</td><td>' + x.b.avg.toFixed(3) + '</td>' +
+      '<td>' + n0(pyPrice(last(x.r.s))) + '</td><td>' + x.b.cur.toFixed(3) + '</td><td>' + x.b.avg.toFixed(3) + '</td>' +
       '<td>' + gaugeHTML(x.b.pct, x.b) + '</td>' +
       '<td' + (reach ? ' style="color:var(--good);font-weight:700"' : '') + '>' + won(x.extra) + '</td>' +
       '<td>' + (distFromHome(x.r.code) == null ? '—' : n0(distFromHome(x.r.code)) + 'km') + '</td>' +
@@ -3194,7 +3258,7 @@ function render5() {
   rows.slice(0, 25).forEach(function (x) {
     var tr = document.createElement('tr');
     if (Math.abs(x.up) >= 8 && x.b.pct <= .15) tr.className = 'pick';
-    tr.innerHTML = '<td class="nm">' + esc(x.r.name) + '</td><td>' + n0(last(x.r.s)) + '</td>' +
+    tr.innerHTML = '<td class="nm">' + esc(x.r.name) + '</td><td>' + n0(pyPrice(last(x.r.s))) + '</td>' +
       '<td>' + x.b.cur.toFixed(3) + '</td><td>' + x.b.avg.toFixed(3) + '</td><td>' + n1(x.cv * 100) + '%</td>' +
       '<td>' + gaugeHTML(x.b.pct, x.b) + '</td>' +
       '<td' + (x.up > 0 ? ' style="color:var(--good);font-weight:700"' : '') + '>' + (x.up > 0 ? '+' : '') + n1(x.up) + '%</td>' +
@@ -3209,7 +3273,7 @@ function img5() {
     headers: ['짝 지역', '평당가', '현재 배율', '10년평균', '변동계수', '회귀 여력'],
     weights: [2.4, 1.2, 1.1, 1.1, 1.1, 1.2],
     bold: [5],
-    rows: LAST5.slice(0, 22).map(function (x) {
+    rows: LAST5.map(function (x) {
       return [x.r.name, n0(pyPrice(last(x.r.s))) + '만', x.b.cur.toFixed(3), x.b.avg.toFixed(3),
         n1(x.cv * 100) + '%', (x.up > 0 ? '+' : '') + n1(x.up) + '%'];
     }),
@@ -3449,13 +3513,13 @@ function img6() {
     headers: ['지역', '대장 단지', '매매', '전세', '평당가', '단지 10년', '지역 10년'],
     weights: [1.5, 2.15, 1.15, 1.1, 1.05, 1.1, 1.05],
     bold: [2], grade: [5, 6],
-    rows: LAST6.slice(0, 22).map(function (x) {
+    rows: LAST6.map(function (x) {
       var b = x.b;
       return [x.rg.name, b.apt, won(b.med), b.jeon ? won(b.jeon) : '—', n0(b.py) + '만',
         b.g10 == null ? '—' : (b.g10 > 0 ? '+' : '') + n1(b.g10) + '%',
         chg10(x.rg) == null ? '—' : '+' + n1(chg10(x.rg)) + '%'];
     }),
-    max: 22,
+    max: 16,
     note: '10년 상승률 100% 이상이 초록 · 매매·전세는 최근 6개월 실거래 중위값 · 평당가는 전용 기준',
     file: 'topdown_flagship'
   });
@@ -3654,11 +3718,11 @@ function img7() {
     headers: ['단지', '평형', '실거래', '평당가', '전세', '갭', '10년'],
     weights: [2.5, .85, 1.15, 1.05, 1.15, 1.15, 1.05],
     bold: [3], grade: [6],
-    rows: LAST7.slice(0, 22).map(function (g) {
+    rows: LAST7.map(function (g) {
       return [g.apt, g.bucket, won(g.med), n0(g.py) + '만', g.jeon ? won(g.jeon) : '—',
         g.jeon ? won(g.med - g.jeon) : '—', g.g10 == null ? '—' : (g.g10 > 0 ? '+' : '') + n1(g.g10) + '%'];
     }),
-    max: 22,
+    max: 16,
     note: '10년 상승률 100% 이상이 초록 · 실거래 중위값 기준 · 평당가는 전용면적 기준',
     file: 'topdown_complex'
   });
@@ -3852,10 +3916,10 @@ function imgMk() {
     headers: ['연도', '매매', '전세', '매매지수'],
     weights: [1.1, 1.25, 1.25, 1.15],
     signed: [1, 2], twoCol: true,
-    rows: m.rowsY.slice(0, 44).map(function (x) {
+    rows: m.rowsY.map(function (x) {
       return [x.y, fmtPct(x.sc), fmtPct(x.jc), x.idx == null ? '—' : n1(x.idx)];
     }),
-    max: 44,
+    max: 40,
     note: '지수 기준 ' + (KBI.base || '') + ' · 연말(12월) 값 기준, 마지막 해는 최신월 기준',
     file: 'market_yearly'
   });
@@ -3875,10 +3939,10 @@ function imgMk2() {
     headers: ['구간', '매매 2년 수익률', '산술합', '전세 2년 수익률', '매매−전세'],
     weights: [1.35, 1.45, 1.25, 1.4, 1.25],
     signed: [1, 2, 3, 4],
-    rows: m.rows2.slice(0, 22).map(function (x) {
+    rows: m.rows2.map(function (x) {
       return [x.p, fmtPct(x.cum), fmtPct(x.arith), fmtPct(x.ann), fmtPct(x.jcum)];
     }),
-    max: 22,
+    max: 16,
     note: '2년 수익률은 (1+r1)(1+r2)−1, 산술합은 r1+r2 · 두 값의 차이가 복리 효과입니다',
     file: 'market_2yr'
   });
@@ -4321,7 +4385,7 @@ function drawVol() {
 
   /* 가격 방향 — KB ㎡당가 (지방 확장 지역은 실거래 평당가로 대체) */
   var pDir = null, pLabel = '';
-  if (r && r.s) { pDir = chg(r.s, 3); pLabel = 'KB ㎡당가 3개월'; }
+  if (r && r.s) { pDir = chg(r.s, 3); pLabel = 'KB 평당가 3개월'; }
   else {
     var pys = S.filter(function (x) { return x.py; });
     if (pys.length >= 6) {
@@ -4427,13 +4491,13 @@ function imgVol() {
     headers: ['월', '거래건수', '전월 대비', '평당가'],
     weights: [1.2, 1.3, 1.25, 1.25],
     signed: [2], twoCol: true,
-    rows: S.slice().reverse().slice(0, 48).map(function (x, i) {
+    rows: S.slice().reverse().map(function (x, i) {
       var idx = S.length - 1 - i, prev = idx > 0 ? S[idx - 1].n : null;
       var d = (x.n != null && prev) ? (x.n / prev - 1) * 100 : null;
       return [ymL(x.ym), x.n == null ? '—' : n0(x.n) + '건', d == null ? '—' : fmtPct(d),
         x.py ? n0(x.py) + '만' : '—'];
     }),
-    max: 48,
+    max: 36,
     note: '해제(취소) 거래 제외 · 평당가는 전용면적 기준 월별 중위값 · 최근 1~2개월은 신고 지연으로 과소 집계될 수 있음',
     file: 'volume'
   });
@@ -4657,14 +4721,14 @@ function imgQuad() {
   if (!LASTQ.length) return;
   exportPNG({
     title: QSIDO + ' 매매·전세 4분면',
-    sub: 'KB ㎡당 가격 ' + QMO + '개월 변화율 기준',
+    sub: 'KB 평당 가격 ' + QMO + '개월 변화율 기준',
     headers: ['지역', '매매', '전세', '국면', '평당가', '전세가율'],
     weights: [2.3, 1.1, 1.1, 1.3, 1.15, 1.05],
     signed: [1, 2],
-    rows: LASTQ.slice(0, 24).map(function (p) {
+    rows: LASTQ.map(function (p) {
       return [p.r.name, fmtPct(p.s), fmtPct(p.j), p.q.t, n0(p.py) + '만', n1(p.jr) + '%'];
     }),
-    max: 24,
+    max: 16,
     note: '매매↑전세↑ 동반 상승 · 매매↑전세↓ 매매 주도(갭 확대) · 매매↓전세↑ 전세 주도(갭 축소) · 매매↓전세↓ 동반 하락',
     file: 'quadrant'
   });
@@ -4920,11 +4984,11 @@ function imgSup() {
     headers: ['시·군·구', '12개월 물량', '연간 수요', '수급 배율', '준공후 미분양'],
     weights: [2.2, 1.25, 1.15, 1.1, 1.25],
     bold: [1],
-    rows: m.list.filter(function (x) { return x.b > 0 || x.un; }).slice(0, 22).map(function (x) {
+    rows: m.list.filter(function (x) { return x.b > 0 || x.un; }).map(function (x) {
       return [x.r.name, x.a ? n0(x.a) + '세대' : '—', x.dem ? n0(x.dem) + '세대' : '—',
         x.ratio == null ? '—' : x.ratio.toFixed(2) + '배', x.un == null ? '—' : n0(x.un) + '호'];
     }),
-    max: 22,
+    max: 16,
     note: '수급 배율 = 12개월 입주물량 ÷ 연간 추정 수요(인구×0.5% 가정) · 1.0 초과면 공급 우위 · 준공후 미분양은 가장 악성인 재고',
     file: 'supply'
   });
@@ -5697,12 +5761,12 @@ function imgRec() {
     headers: ['지역', '점수', '분위', '진입', '필요현금', '10년'],
     weights: [2.2, .9, .8, 1.1, 1.2, 1.05],
     bold: [4], grade: [5],
-    rows: LASTREC.slice(0, 22).map(function (x) {
+    rows: LASTREC.map(function (x) {
       return [x.r.name, gradeOf(x.total).g + ' ' + Math.round(x.total),
         (x.d || '—') + '분위', x.en.mode === 'gap' ? '전세 끼고' : '대출', won(x.need),
         x.g10 == null ? '—' : (x.g10 > 0 ? '+' : '') + n1(x.g10) + '%'];
     }),
-    max: 22,
+    max: 16,
     note: '급지 40% · 전세 뒷받침 25% · 수급 25% · 장기성과 10% 가중 · 자금은 필터로만 적용 · 투자 자문 아님',
     file: 'recommend'
   });
@@ -6718,11 +6782,11 @@ function init() {
   el('img5').addEventListener('click', img5); el('img6').addEventListener('click', img6);
   el('img7').addEventListener('click', img7);
   el('copy1').addEventListener('click', function () {
-    copyTSV(['서열', '지역', '㎡당', '추정가', '규제', 'LTV', '대출', '필요현금', '가능'],
+    copyTSV(['서열', '지역', '평당', '추정가', '규제', 'LTV', '대출', '필요현금', '가능'],
       LAST1.map(function (x, i) { return [i + 1, x.r.name, Math.round(last(x.r.s)), Math.round(x.price), x.r.reg ? '규제' : '비규제', x.nc.ltv, Math.round(x.nc.loan), Math.round(x.nc.need), x.ok ? 'O' : 'X']; }));
   });
   el('copy2').addEventListener('click', function () {
-    copyTSV(['지역', '서열', '분위', '㎡당', '매매', '전세', '전세가율'],
+    copyTSV(['지역', '서열', '분위', '평당', '매매', '전세', '전세가율'],
       LAST2.map(function (r) { return [r.name, RANK[r.code], decile(r.code), Math.round(last(r.s)), Math.round(last(r.s) * AREA2), Math.round(last(r.j) * AREA2), (last(r.j) / last(r.s) * 100).toFixed(1)]; }));
   });
   el('copy3').addEventListener('click', function () {
