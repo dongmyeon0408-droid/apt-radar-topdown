@@ -326,6 +326,28 @@ canvas.exp{display:none}
 .srcbox{margin-top:18px;padding-top:14px;border-top:1px solid var(--line2);font-size:13px;line-height:1.75;color:var(--slate)}
 .srcbox b{color:var(--charcoal);font-weight:700}
 .srcbox .sl{display:inline-block;min-width:64px;font-weight:700;color:var(--signal)}
+/* ══ 사다리 슬라이더 · 판정 배너 (v40.0) ══ */
+.ladwrap{margin:18px 0 6px}
+.ladhd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.ladhd .lb{font-size:14px;font-weight:700;color:var(--charcoal)}
+.ladhd .vv{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--signal)}
+input[type=range].lad{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;
+  background:linear-gradient(90deg,var(--m8),var(--signal));outline:none;cursor:pointer}
+input[type=range].lad::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:999px;
+  background:#fff;border:3px solid var(--signal);box-shadow:var(--sh1);cursor:pointer}
+input[type=range].lad::-moz-range-thumb{width:28px;height:28px;border-radius:999px;background:#fff;
+  border:3px solid var(--signal);box-shadow:var(--sh1);cursor:pointer}
+input[type=range].lad:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+.ladticks{display:flex;justify-content:space-between;font-size:11px;color:var(--slate);margin-top:6px}
+.verdictbar{display:flex;gap:14px;align-items:flex-start;border-radius:20px;padding:18px 20px;margin-bottom:18px;
+  background:var(--goodbg);border:1px solid rgba(27,107,74,.18)}
+.verdictbar.warn{background:var(--warnbg);border-color:rgba(200,134,47,.25)}
+.verdictbar .vi{flex:0 0 auto;font-size:13px;font-weight:800;letter-spacing:.04em;color:var(--good);
+  background:#fff;border-radius:999px;padding:5px 11px;margin-top:1px}
+.verdictbar.warn .vi{color:var(--ember)}
+.verdictbar .vt{font-size:15.5px;line-height:1.7}
+.verdictbar .vt b{font-weight:800}
+@media(max-width:640px){.verdictbar{flex-direction:column;gap:9px;padding:16px}.ladhd .vv{font-size:26px}}
 @media(max-width:640px){
   .faqhd{padding:22px 20px}
   .faqinner{padding:0 20px}
@@ -972,8 +994,9 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <span class="eb">RECOMMEND</span>
     <h2>내 조건 맞춤 투자처</h2>
     <p class="hint">위 <b>내 조건</b>을 채우고 <b>이 조건으로 추천받기</b>를 누르면, 전국 시·군·구를
-      <b>5개 기준</b>으로 채점해 순위를 매깁니다 — 얼마나 좋은 동네인가(급지), 과거에 얼마나 올랐나(장기 성과),
-      새 아파트가 얼마나 들어오나(수급), 지금이 살 때인가(타이밍), 내 돈으로 되나(자금).
+      <b>3개 기준</b>으로 채점해 순위를 매깁니다 — 얼마나 좋은 동네인가(급지 55%), 지금이 살 때인가(전세 뒷받침 35%),
+      새 아파트가 얼마나 들어오나(수급 10%). 자금은 점수가 아니라 <b>필터</b>이고,
+      과거 상승률은 <b>참고 표시만</b> 합니다(넣으면 오히려 결과가 나빠집니다).
       <button class="btn ghost sm" data-gloss="1" style="margin-left:6px">용어가 어렵나요?</button></p>
     <div class="inline" style="margin-bottom:12px">
       <div class="seg" id="recEntry">
@@ -1052,15 +1075,18 @@ tr.txrow>td{padding:0;background:var(--lift)}
       각 후보 지표가 <b>이후 3년 상승률</b>과 얼마나 맞았는지를 순위상관(IC)으로 쟀습니다.
       같은 달 안에서 지역들을 비교해 시장 국면 효과를 없앴고, 급지 3분할 안에서 다시 재서 급지 효과도 걷어냈습니다.
       64개월치 결과입니다.<br><br>
-      <b>급지 40%</b> — IC <b>+0.118</b>. 비싼 곳이 더 올랐습니다. 2016년 분위로 나눈 10년 검증에서도
-      1~3분위 +177%, 4~6분위 +87%, 7~10분위 +60%로 정렬됩니다. 가장 신뢰할 만한 축이라 비중이 가장 큽니다.<br>
-      <b>전세 뒷받침 25%</b> — 전세가율 <b>수준</b>의 IC가 <b>+0.129</b>로, 밴드(백분위) +0.028보다 4배 이상 강했습니다.
-      그래서 수준 65% + 밴드 35%로 섞었습니다. 전세가율이 높다는 건 매매가가 실사용 가치에 가깝다는 뜻이고,
-      기대가 덜 실린 만큼 하방이 두껍습니다.<br>
-      <b>수급 20%</b> — 반경 15km 생활권 입주물량과 준공후 미분양.<br>
-      <b>장기 성과 15% — 통과선으로만 씁니다</b>. 급지를 통제하고 재면 5년 상승률의 IC가 <b>−0.259</b>(64개월 중 89% 음수)로
-      <b>강하게 역전</b>됩니다. 같은 급지 안에서는 최근 많이 오른 곳이 이후 덜 올랐습니다. 그래서
-      <b>10년 100%를 넘으면 만점이고, 더 올랐다고 추가 점수를 주지 않습니다</b>. 미달이면 감점만 합니다.<br><br>
+      <b>급지 55%</b> — 단독 IC <b>+0.39</b>(100개월 중 81%가 양수). 네 축 중 유일하게 강했습니다.
+      2016년 분위로 나눈 10년 검증에서도 1~3분위 +177%, 4~6분위 +87%, 7~10분위 +60%로 정렬됩니다.<br>
+      <b>전세 뒷받침 35%</b> — 단독으로는 IC가 <b>거의 0</b>인데, 급지를 통제하면 <b>+0.15</b>로 살아납니다.
+      즉 <b>"같은 급지 안에서 어디를 고를까"의 기준</b>이지, 급지를 낮추면서 좇을 축이 아닙니다.
+      수준 65% + 밴드 35%로 섞습니다. 전세가율이 높다는 건 매매가가 실사용 가치에 가깝다는 뜻이고,
+      기대가 덜 실린 만큼 하방이 두껍습니다. 1주택 이상이면 <b>갈아타기 배율 밴드</b>로 자동 전환됩니다.<br>
+      <b>수급 10%</b> — 반경 15km 생활권 입주물량과 준공후 미분양.
+      3년 매매 기준으로는 급지 통제 후 잔여 IC가 <b>+0.01~0.03</b>으로 거의 무력이라 25%에서 10%로 낮췄습니다.
+      다만 <b>당해 전세</b>에는 강하게 작동하므로(FAQ Q9) 없애지는 않았습니다.<br>
+      <b>장기 성과 0% — 점수에서 뺐습니다.</b> 단독 IC <b>−0.37</b>(양수 9%), 급지를 통제한 뒤에도 <b>−0.26</b>이었습니다.
+      "10년 100% 통과선"으로 완화해도 방향이 음수라, 넣는 만큼 점수가 나빠집니다.
+      화면에는 <b>참고 수치로만</b> 남기고 순위에는 반영하지 않습니다. 자세한 건 <b>투자 FAQ Q17</b>을 보세요.<br><br>
       <b>자금 적합성 축은 없앴습니다.</b> 예산 안에서 되는 지역끼리는 전부 만점이라 변별력이 없었고,
       남는 돈에 가점을 주면 싼 지역이 유리해져 급지 축과 정반대로 작동했습니다. 지금은 <b>필터</b>로만 씁니다 —
       예산 내에서 되는 곳만 보여주고, 그 안의 순서는 위 네 축이 정합니다.<br><br>
@@ -1764,9 +1790,164 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)<br>준공연도 &mdash; 한국부동산원 <b>공동주택관리정보시스템(K-apt)</b> 사용승인일</div><div><span class="sl">검증 방법</span><b>검증 시작 시점의 연차</b>로 10년 미만·10~24년·25년 이상 3분할. 지금 연차로 나누면 재건축 진행 여부를 알고 나누는 셈이라 반드시 과거 시점 연차를 씁니다. 10년 검증은 84㎡대 고정, 7년 재검증은 전체 평형.</div><div><span class="sl">표본</span>10년(2016년 기준) 20개 지역 중 구축이 잡힌 16곳 · 7년(2019년 기준) 12개 지역 재검증 · 준공연도 확인 약 48%</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
+  <div class="card faq">
+    <span class="eb">Q15</span>
+    <h3>"지금은 어디 사도 오른다"는 말, 맞나요?</h3>
+    <div class="ans bad">27개월 동안만 맞았습니다.</div>
+    <p>10년을 네 국면으로 쪼개 봤습니다. 같은 10년인데 <b>국면마다 완전히 다른 시장</b>이었습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>국면</th><th>비싼 동네</th><th>중간</th><th>싼 동네</th><th>격차</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">2016~2019<br><span style="font-size:12px;color:var(--slate)">조용했던 상승 초기</span></td><td><b>+37%</b></td><td>+7%</td><td>+6%</td><td><b>+32%p</b></td></tr>
+        <tr><td class="nm">2019~2021<br><span style="font-size:12px;color:var(--slate)">다들 뛰어든 급등기</span></td><td>+56%</td><td><b>+56%</b></td><td>+35%</td><td>+21%p</td></tr>
+        <tr class="self"><td class="nm">2021~2023<br><span style="font-size:12px;color:var(--slate)">하락기</span></td><td>&minus;2%</td><td>&minus;2%</td><td><b>+10%</b></td><td><b>&minus;12%p</b></td></tr>
+        <tr class="pick"><td class="nm">2023~2026<br><span style="font-size:12px;color:var(--slate)">조용한 회복기</span></td><td><b>+30%</b></td><td>+8%</td><td>+1%</td><td><b>+29%p</b></td></tr>
+      </tbody></table></div>
+    <p><b>"어디 사도 오른다"가 사실이었던 건 2019~2021년, 딱 27개월입니다.</b>
+      그때는 중간 동네가 비싼 동네와 <b>똑같이</b> 올랐습니다(+56% vs +56%).
+      많은 사람이 부동산을 시작한 게 이 구간이고, 그때 생긴 믿음이 지금까지 남아 있습니다.</p>
+    <div class="readme">
+      <b>더 뜻밖인 것 &mdash; 하락기에 싼 동네가 올랐습니다.</b><br>
+      2021~2023년 비싼 동네가 &minus;2%일 때 <b>싼 동네는 +10%</b>였습니다.
+      36곳 중 25곳이 올랐고, 광주 동구 +71%, 부산 서구 +39%, 평택 +27%였습니다.<br><br>
+      <b>그런데 그다음이 문제입니다.</b> 이 25곳의 이후 3년 평균은 <b>+1.6%</b>였습니다.
+      이천 &minus;16%, 평택 &minus;3%로 되돌렸습니다.
+      <b>싼 동네의 상승은 사이클의 마지막에 옵니다.</b> 그게 오면 늦은 것입니다.
+    </div>
+    <div class="readme">
+      <b>그래서 이게 핵심입니다.</b><br>
+      비싼 동네와 싼 동네의 격차는 <b>조용한 구간에서 벌어집니다</b> &mdash;
+      상승 초기 +32%p, 회복기 +29%p. 정작 뉴스가 시끄러웠던 급등기에는 격차가 거의 안 벌어졌습니다.<br><br>
+      <b>사고 싶어질 때는 어디를 사도 비슷하고, 사기 싫을 때 어디를 사느냐가 결과를 만듭니다.</b>
+      10년 누적으로 보면 비싼 동네 +173%, 중간 +80%, 싼 동네 +57%인데,
+      그 차이의 대부분이 <b>아무도 관심 없던 시기</b>에 만들어졌습니다.
+    </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 106곳 ㎡당 매매가 (2013.04~2026.07)</div><div><span class="sl">검증 방법</span><b>2016.07 시점 평당가</b>로 전국을 3등분한 뒤 국면을 나눠 각각 측정. 나누는 시점 이후의 정보를 쓰지 않았습니다. 국면 경계는 전국 지수의 고점·저점으로 잡았습니다.</div><div><span class="sl">표본</span>시·군·구 106곳 × 4개 국면</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
+  </div>
+
+  <div class="card faq">
+    <span class="eb">Q16</span>
+    <h3>갈아타기, 조금만 올라가는 게 안전하지 않나요?</h3>
+    <div class="ans bad">아니요. 같은 돈으로 결과가 두 배 차이났습니다.</div>
+    <p>지금 집을 팔고 <b>추가로 낼 수 있는 돈이 정해져 있을 때</b>, 두 가지 방법을 비교했습니다.<br>
+      <b>①</b> 나보다 비싼 곳 중 <b>가장 가까운 곳</b>(추가금이 제일 적게 드는 곳)<br>
+      <b>②</b> 그 돈으로 갈 수 있는 <b>가장 비싼 곳</b></p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>추가로 낼 돈</th><th>가장 가까운 곳</th><th>갈 수 있는 최상단</th><th>어느 쪽이 나았나</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">1억</td><td>+0.92억</td><td><b>+1.20억</b></td><td>최상단 10번 중 7번</td></tr>
+        <tr class="pick"><td class="nm">2억</td><td>+1.00억</td><td><b>+1.73억</b></td><td><b>최상단 10번 중 8번</b></td></tr>
+        <tr class="pick"><td class="nm">3억</td><td>+1.05억</td><td><b>+2.15억</b></td><td><b>최상단 10번 중 8번</b></td></tr>
+      </tbody></table></div>
+    <p><b>추가금은 똑같은데 3년 뒤 결과가 두 배입니다.</b> 이유는 <b>올라간 계단 수</b>에 있습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>고르는 방식</th><th>평균 몇 계단 올라갔나</th><th>3년 뒤</th></tr></thead>
+      <tbody>
+        <tr class="self"><td class="nm">가장 가까운 곳</td><td><b>2.6계단</b></td><td>+1.00억</td></tr>
+        <tr class="pick"><td class="nm">갈 수 있는 최상단</td><td><b>33계단</b></td><td><b>+1.73억</b></td></tr>
+      </tbody></table></div>
+    <p><b>추가금이 같은데 계단 수는 13배 차이납니다.</b>
+      가까운 곳은 대개 <b>옆 동네</b>이고, 옆 동네는 내 집과 같이 움직입니다.
+      팔고 사는 비용만 쓰고 제자리인 셈입니다.</p>
+    <div class="readme">
+      <b>그리고 이건 위험을 더 지는 선택이 아닙니다.</b><br>
+      손해 볼 확률이 가장 가까운 곳은 <b>13%</b>, 갈 수 있는 최상단은 <b>10%</b>였습니다.
+      <b>더 낮습니다.</b><br><br>
+      Q11(같은 돈이면 비싼 집)에서는 손해 확률이 0%에서 11%로 <b>올라갔는데</b> 왜 여기는 반대일까요.
+      추가금에 상한이 있기 때문입니다. 빚을 더 내는 게 아니라 <b>이미 가진 자산을 좋은 동네로 옮기는 것</b>이라
+      레버리지가 거의 안 늘어납니다. <b>하방을 키우지 않고 급지 효과만 가져오는 드문 경우</b>입니다.
+    </div>
+    <div class="readme">
+      <b>그럼 배율(Q8)은 언제 쓰나요</b><br>
+      <b>같은 급지대 안에서 고를 때</b>입니다. 예산으로 갈 수 있는 최상단권에 후보가 여러 곳이면
+      그중 배율이 낮은 곳을 고르세요 &mdash; 3년 기준 약 8%p 이득입니다.<br><br>
+      <b>급지를 낮추면서 배율이 좋은 곳을 좇으면 안 됩니다.</b>
+      급지 효과(20%p)가 배율 효과(8%p)보다 2~3배 큽니다.
+      <b>먼저 갈 수 있는 최상단을 정하고, 그 안에서 배율로 고르는 순서</b>입니다.
+    </div>
+    <div class="readme">
+      <b>한계</b> &mdash; 지역 평균가로 계산했습니다. 실제로는 내 단지가 그 동네 평균보다 비싸거나 쌀 수 있으니
+      <b>갈아타기 탭에서 실제 매도 가능 금액</b>을 넣고 다시 보세요.
+      취득세·중개보수는 넣었지만 양도세, 이사·인테리어 비용, 대출 이자는 넣지 않았습니다.
+      토지거래허가구역의 실거주 의무도 반영되지 않았습니다.
+    </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 106곳 ㎡당 매매가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>매달 모든 지역을 출발점으로 놓고, 추가금 한도 안에서 두 전략이 고르는 지역을 각각 정한 뒤 3년 뒤 순자산 증가(자산 규모 × 상승률)를 비교. 84㎡ 기준.</div><div><span class="sl">표본</span>124개월 × 지역 조합 = 추가금 구간별 약 1.2만 건</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
+  </div>
+
+  <div class="card faq">
+    <span class="eb">Q17</span>
+    <h3>이 도구의 점수는 실제로 맞았나요?</h3>
+    <div class="ans">절반만요. <b>그래서 점수표를 고쳤습니다.</b></div>
+    <p>도구가 쓰는 채점표를 <b>과거로 되돌려</b> 검증했습니다.
+      매달 전국 시·군·구를 그 시점 정보만으로 채점하고, <b>3년 뒤 실제 상승률</b>과 맞춰봤습니다.
+      100개월치, 시점당 84곳입니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>채점 항목</th><th>혼자 쓸 때</th><th>같은 급지끼리 비교하면</th><th>판정</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">급지 (동네 순위)</td><td><b>10번 중 8번 적중</b></td><td>&mdash;</td><td><b>강함</b></td></tr>
+        <tr><td class="nm">전세 뒷받침</td><td>거의 0</td><td><b>10번 중 7번 적중</b></td><td>조건부</td></tr>
+        <tr><td class="nm">수급 (입주물량·미분양)</td><td>거의 0</td><td>거의 0</td><td>약함</td></tr>
+        <tr class="self"><td class="nm">장기 성과 (10년 상승률)</td><td><b>10번 중 9번 반대</b></td><td><b>10번 중 8번 반대</b></td><td><b>거꾸로</b></td></tr>
+      </tbody></table></div>
+    <p><b>세 가지가 드러났습니다.</b></p>
+    <div class="readme">
+      <b>① "과거에 많이 오른 곳" 점수는 거꾸로 작동했습니다.</b><br>
+      10년 상승률이 높은 곳에 가점을 주면 <b>10번 중 9번 틀렸습니다</b>. 급지를 통제한 뒤에도 마찬가지였습니다.
+      Q2에서 확인한 <b>모멘텀 역전</b>이 채점표 안에서도 그대로 나타난 것입니다.<br><br>
+      "10년 100%를 넘으면 만점, 더 올랐다고 가점 없음"이라는 통과선 방식으로 완화해뒀는데도
+      <b>넣는 만큼 점수가 나빠졌습니다.</b> 그래서 <b>배점에서 완전히 뺐습니다</b>(0%).
+      화면에는 참고 수치로만 남겼습니다.
+    </div>
+    <div class="readme">
+      <b>② 전세 뒷받침은 "급지 안에서만" 유효했습니다.</b><br>
+      전국을 한 줄로 세워놓고 전세가율만 보면 예측력이 <b>거의 0</b>입니다.
+      그런데 <b>비슷한 급지끼리만</b> 놓고 비교하면 10번 중 7번 맞았습니다.<br><br>
+      즉 <b>급지를 낮추면서 전세가율 좋은 곳을 좇으면 안 됩니다.</b>
+      Q11에서 전세가율 높은 하급지를 고른 전략이 손해 확률을 0%에서 11%로 올렸던 것과 같은 이야기입니다.
+      먼저 갈 수 있는 최상단을 정하고, <b>그 안에서</b> 전세가율로 고르는 순서입니다.
+    </div>
+    <div class="readme">
+      <b>③ 수급은 3년 매매에는 거의 힘이 없었습니다.</b><br>
+      입주물량·미분양은 <b>당해 전세</b>에는 강하게 작동하지만(Q9·Q10),
+      <b>3년 뒤 매매</b>를 놓고 보면 예측력이 거의 사라집니다.
+      비중을 25%에서 <b>10%</b>로 낮췄고, 완전히 빼지는 않았습니다 &mdash;
+      전세를 끼고 들어가는 경우에는 여전히 중요하기 때문입니다.
+    </div>
+    <p><b>고친 결과입니다.</b> 같은 방식으로 다시 검증했습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>채점표</th><th>1등급 동네<br>3년 뒤</th><th>꼴찌 등급<br>3년 뒤</th><th>차이</th><th>적중</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">예전 (급지40·전세25·수급25·장기10)</td><td>+35.2%</td><td>+17.6%</td><td>+17.6%p</td><td>10번 중 7번</td></tr>
+        <tr class="pick"><td class="nm"><b>지금 (급지55·전세35·수급10·장기0)</b></td><td><b>+38.3%</b></td><td><b>+15.6%</b></td><td><b>+22.6%p</b></td><td><b>10번 중 8번</b></td></tr>
+        <tr><td class="nm">참고 &mdash; 급지 하나만 보면</td><td>+37.8%</td><td>+18.7%</td><td>+19.1%p</td><td>10번 중 8번</td></tr>
+      </tbody></table></div>
+    <p>1등급과 꼴찌의 차이가 <b>17.6%p에서 22.6%p로</b> 벌어졌고,
+      다섯 등급이 <b>순서대로 정렬</b>되는 비율도 올라갔습니다.
+      보유 기간을 1년·2년·5년으로 바꿔도, 기간을 반으로 잘라 따로 봐도 <b>전부 새 채점표가 앞섰습니다.</b></p>
+    <div class="readme">
+      <b>그런데 꼭 같이 보셔야 할 것 &mdash; 점수가 안 통하는 구간이 있습니다.</b><br>
+      2015~2019년에 들어간 경우 1등급과 꼴찌의 차이가 <b>+37.8%p</b>였는데,
+      2019~2023년에 들어간 경우는 <b>+7.9%p</b>에 그쳤습니다.<br><br>
+      Q15에서 본 것과 같은 이야기입니다. <b>급등기에는 어디를 사도 비슷하게 오릅니다.</b>
+      이 도구의 점수는 <b>조용한 구간에서 훨씬 잘 맞습니다.</b>
+      시끄러울 때 이 점수만 믿고 무리하지 마세요.
+    </div>
+    <div class="readme">
+      <b>한계</b><br>
+      <b>①</b> 검증에 쓴 수급 지표는 <b>미분양만</b>입니다. 도구가 실제로 쓰는 생활권 15km 입주물량 합산은
+      과거치를 복원할 수 없어 빠졌습니다. 수급의 진짜 힘은 이보다 클 수도 있습니다.<br>
+      <b>②</b> 장기 성과 검증에는 <b>가격지수</b>를 썼습니다. 도구 화면의 10년 상승률(실거래 평균가)과는 숫자가 다릅니다.
+      다만 방향(음수)은 어느 쪽으로 재도 같았습니다.<br>
+      <b>③</b> 지역 단위 검증입니다. 개별 단지 점수(6축)는 같은 방식으로 검증하지 못했고,
+      지역 검증 결과를 그대로 반영해 배점을 맞춰뒀습니다.<br>
+      <b>④</b> 구간이 겹치는 100개월이라 <b>독립된 사례는 5~6개</b> 수준입니다. 통계로 아주 강하다고는 못 합니다.
+    </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b>(시·군·구 ㎡당 매매·전세, 2013.04~2026.07) · <b>월간 주택가격지수</b>(1986~) · 국토교통부 <b>통계누리</b> 미분양주택현황(시·군·구 월별 2015.07~2026.06)</div><div><span class="sl">검증 방법</span>매달 그 시점까지의 정보만으로 전 지역을 채점(각 축 백분위) → 가중합 → 3년 뒤 실제 상승률과 순위상관 측정. 같은 달 안에서만 비교해 국면 효과를 통제하고, 급지 3등분 안에서 다시 재 급지 효과도 걷어냈습니다. 가중치는 0.05 단위 격자 탐색으로 확인했습니다.</div><div><span class="sl">표본</span>100개월 × 시점당 평균 84곳(미분양 포함 유니버스는 82개월 × 63곳) · 보유기간 1·2·3·5년 교차 확인</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
+  </div>
+
   <div class="card">
     <span class="eb">SUMMARY</span>
-    <h2>열네 개를 한 문장으로</h2>
+    <h2>열일곱 개를 한 문장으로</h2>
     <div class="verdict">
       <b>갈 수 있는 가장 좋은 동네로 가되, 최근 많이 올랐다는 건 이유로 삼지 마라.<br>
       그 동네 안에서는 최소 300세대를 넘겨라 — 16곳 전부 예외가 없었다.<br>
@@ -1774,7 +1955,10 @@ tr.txrow>td{padding:0;background:var(--lift)}
       오르는 시장이면 1등을 고집하지 말고, 안 오르는 시장이면 1등만 사라.<br>
       좋은 동네에 못 갈 만큼 돈이 부족하면, 급하게 사기보다 1년 모아 한 급 올려라.<br>
       떨어질 때 안전한 건 싼 동네가 아니라 좋은 동네다 &mdash; 8개월 만에 돌아왔다.<br>
-      낡은 집이 나쁜 게 아니라 재건축이 안 될 낡은 집이 나쁘다 &mdash; 16곳 중 12곳은 구축이 1등이었다.</b>
+      낡은 집이 나쁜 게 아니라 재건축이 안 될 낡은 집이 나쁘다 &mdash; 16곳 중 12곳은 구축이 1등이었다.<br>
+      갈아타기는 조금씩 올라가지 마라 &mdash; 같은 추가금으로 2.6계단과 33계단이 갈렸다.<br>
+      "어디 사도 오른다"는 27개월짜리였다 &mdash; 격차는 조용할 때 벌어진다.<br>
+      그리고 이 채점표 자체도 과거로 돌려 검증했고, 틀린 축은 빼버렸다.</b>
     </div>
     <div class="readme">
       <b>믿을 수 있는 정도 — 꼭 같이 읽으세요</b><br>
@@ -2207,6 +2391,31 @@ tr.txrow>td{padding:0;background:var(--lift)}
   </div>
 
   <div class="card">
+    <span class="eb">LADDER</span>
+    <h2>얼마 더 쓰면 어디까지 올라가나</h2>
+    <p class="hint">지금 집을 팔고 <b>추가로 낼 수 있는 돈</b>을 밀어보세요.
+      갈 수 있는 가장 좋은 동네와 <b>몇 계단 올라가는지</b>가 바로 바뀝니다.</p>
+    <div class="ladwrap">
+      <div class="ladhd"><span class="lb">추가로 낼 수 있는 돈</span><span class="vv" id="ladV">2.0억</span></div>
+      <input type="range" class="lad" id="ladR" min="0" max="15" step="0.5" value="2" aria-label="추가로 낼 수 있는 돈">
+      <div class="ladticks"><span>0</span><span>5억</span><span>10억</span><span>15억</span></div>
+    </div>
+    <div class="kpis three" id="ladKpi"></div>
+    <div class="tblwrap" style="margin-top:16px"><table id="tLad">
+      <thead><tr><th>추가금</th><th>갈 수 있는 최상단</th><th>계단</th><th>평당가</th><th>가까운 곳만 고르면</th></tr></thead>
+      <tbody></tbody></table></div>
+    <div class="ins" id="ladIns"></div>
+    <div class="readme">
+      <b>왜 "가까운 곳"이 아니라 "최상단"인가</b> &mdash; 같은 추가금으로 검증했더니
+      가까운 곳을 고른 경우 평균 <b>2.6계단</b> 올라 3년 뒤 +1.00억,
+      최상단을 고른 경우 <b>33계단</b> 올라 <b>+1.73억</b>이었습니다(추가금 2억 기준, 10번 중 8번 우세).
+      손해 볼 확률도 13% vs 10%로 최상단이 더 낮았습니다. 자세한 건 <b>투자 FAQ Q16</b>을 보세요.<br><br>
+      <b>계단</b>은 전국 시·군·구 평당가 순위에서 몇 칸 올라가는지입니다.
+      추가금에는 취득세·중개보수·부대비용이 포함돼 있고, <b>지금 집은 그 지역 평균가에 판다</b>고 가정합니다.
+    </div>
+  </div>
+
+  <div class="card">
     <span class="eb">TIMING</span>
     <h2>갈아타기 타이밍</h2>
     <div class="grid g3">
@@ -2538,13 +2747,13 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <div id="pfReport"></div>
     <div class="readme">
       <b>채점 기준</b><br>
-      <b>급지 20%</b> — 전국 분위. 시장이 매긴 서열 자체를 평가로 봅니다.<br>
-      <b>장기 성과 20%</b> — 지역 10년 상승률. 100%(연복리 7.2%)가 통과선입니다.<br>
-      <b>전세 뒷받침 25%</b> — 무주택이면 전세가율 수준(65%)과 10년 밴드(35%)를 섞어 봅니다.
-      <b>1주택 이상이면 갈아타기 배율 10년 밴드</b>(하단일수록 적은 추가금)로 자동 전환됩니다.<br>
-      <b>수급 15%</b> — 향후 12개월 입주물량 ÷ 추정 수요, 준공후 미분양 비율.<br>
-      <b>단지 경쟁력 15%</b> — 세대수·역세권·연식. 선행연구에서 반복 확인된 변수입니다.<br>
-      <b>자금 적합성 15%</b> — 필요현금 대비 보유 현금.<br><br>
+      <b>급지 40%</b> — 전국 분위. 시장이 매긴 서열 자체를 평가로 봅니다.<br>
+      <b>전세 뒷받침 25%</b> — 이 단지 전세가율과 지역 10년 밴드를 섞어 봅니다.<br>
+      <b>단지 경쟁력 15%</b> — 세대수·역세권·연식. FAQ Q3·Q14에서 확인된 변수입니다.<br>
+      <b>수급 10%</b> — 향후 12개월 입주물량 ÷ 추정 수요, 준공후 미분양 비율.<br>
+      <b>실행 가능성 10%</b> — 필요현금 대비 보유 현금.<br>
+      <b>장기 성과 0%</b> — 표시는 하지만 점수에는 넣지 않습니다. 과거 상승률로 가점을 주면
+      결과가 나빠진다는 것이 자체 검증에서 확인됐습니다(FAQ Q17).<br><br>
       <b>이 점수는 순위표가 아닙니다.</b> 여섯 축을 한 눈에 보기 위한 요약이고, 가중치는 임의 설정입니다.
       점수보다 <b>어느 축이 낮은지</b>와 그 이유를 보세요. 낮은 축에는 대안 지역을 함께 제시합니다.
     </div>
@@ -2659,7 +2868,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v39.2';
+var VERSION = 'v41.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -3869,7 +4078,88 @@ function render4() {
       el('v4').scrollIntoView({ block: 'center' });
     });
   });
-  timing(); targets();
+  timing(); targets(); ladder();
+}
+/* ── 사다리: 추가금별로 갈 수 있는 최상단 (v40.0) ── */
+function ladBest(home, pFrom, budget, c) {
+  var pHome = last(home.s), top = null, near = null;
+  SGG.forEach(function (r) {
+    if (r.code === home.code || !last(r.s) || last(r.s) <= pHome) return;
+    if (!radiusOK(r)) return;
+    var pt = priceOf(r, c.area);
+    if (!isFinite(pt)) return;
+    var extra = pt - pFrom + acqTax(pt, c.area, 0, r.reg) + broker(pt) + broker(pFrom) + c.etc;
+    if (extra > budget) return;
+    if (!top || (RANK[r.code] || 999) < (RANK[top.r.code] || 999)) top = { r: r, pt: pt, extra: extra };
+    if (!near || pt < near.pt) near = { r: r, pt: pt, extra: extra };
+  });
+  return { top: top, near: near };
+}
+function stepsUp(home, r) {
+  var a = RANK[home.code] || 999, b = RANK[r.code] || 999;
+  return a - b;
+}
+function ladder() {
+  var c = CFG(), home = BY[el('home').value];
+  if (!home || !el('ladR')) return;
+  var budget = +el('ladR').value;
+  el('ladV').textContent = n1(budget) + '억';
+  var pFrom = priceOf(home, c.area);
+  var B = ladBest(home, pFrom, budget * 1e8, c);
+  var hk = '';
+  if (!B.top) {
+    hk = kpi('갈 수 있는 최상단', '없음', '추가금을 늘리거나 이동 반경을 넓혀보세요', '') +
+      kpi('지금 내 위치', home.name, '전국 ' + (RANK[home.code] || '—') + '위 · 평당 ' + n0(pyPrice(last(home.s))) + '만', '');
+  } else {
+    var st = stepsUp(home, B.top), stN = B.near ? stepsUp(home, B.near) : null;
+    hk = '<div class="kpi hero big"><span class="lb">갈 수 있는 최상단</span>' +
+      '<span class="vl" style="font-size:32px">' + esc(B.top.r.name) + '</span>' +
+      '<span class="sb">전국 ' + RANK[B.top.r.code] + '위 · ' + decile(B.top.r.code) + '분위 · ' +
+      c.area + '㎡ ' + won(B.top.pt) + ' · 추가 ' + won(B.top.extra) + '</span></div>' +
+      kpi('올라가는 계단', st + '계단', '전국 ' + (RANK[home.code] || '—') + '위 → ' + RANK[B.top.r.code] + '위', 'good') +
+      kpi('가까운 곳만 골랐다면', (B.near ? esc(B.near.r.name) : '—'),
+          (stN != null ? stN + '계단 (' + (st - stN) + '계단 손해)' : '—'), 'sig');
+  }
+  el('ladKpi').innerHTML = hk;
+
+  var STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 10];
+  var tb = el('tLad').tBodies[0]; tb.innerHTML = '';
+  STEPS.forEach(function (v) {
+    var q = ladBest(home, pFrom, v * 1e8, c);
+    var tr = document.createElement('tr');
+    if (Math.abs(v - budget) < 0.26) tr.className = 'pick';
+    if (!q.top) {
+      tr.innerHTML = '<td class="nm">' + n1(v) + '억</td><td colspan="4" style="color:var(--slate)">아직 못 올라갑니다</td>';
+    } else {
+      var st2 = stepsUp(home, q.top), sn = q.near ? stepsUp(home, q.near) : null;
+      tr.innerHTML = '<td class="nm">' + n1(v) + '억</td>' +
+        '<td class="nm">' + esc(q.top.r.name) + '</td>' +
+        '<td style="font-weight:700;color:var(--good)">' + st2 + '계단</td>' +
+        '<td>' + n0(pyPrice(last(q.top.r.s))) + '만</td>' +
+        '<td style="color:var(--slate)">' + (sn != null ? esc(q.near.r.name) + ' · ' + sn + '계단' : '—') + '</td>';
+    }
+    tb.appendChild(tr);
+  });
+
+  var L = [];
+  if (B.top) {
+    var st3 = stepsUp(home, B.top), sn3 = B.near ? stepsUp(home, B.near) : null;
+    L.push('<span class="hl">' + esc(home.name) + '</span>(전국 ' + (RANK[home.code] || '—') + '위)에서 추가 <b>' +
+      n1(budget) + '억</b>이면 <span class="hl">' + esc(B.top.r.name) + '</span>(전국 ' + RANK[B.top.r.code] +
+      '위)까지 <b>' + st3 + '계단</b> 올라갑니다.');
+    if (sn3 != null && st3 - sn3 > 0)
+      L.push('같은 돈으로 <b>가장 가까운 상급지</b>를 고르면 ' + esc(B.near.r.name) + ' <b>' + sn3 +
+        '계단</b>에 그칩니다 — <b>' + (st3 - sn3) + '계단</b>을 그냥 버리는 셈입니다.');
+    var q1 = ladBest(home, pFrom, (budget + 1) * 1e8, c);
+    if (q1.top && q1.top.r.code !== B.top.r.code)
+      L.push('여기서 <b>1억을 더</b> 쓰면 ' + esc(q1.top.r.name) + '(전국 ' + RANK[q1.top.r.code] + '위)까지 가서 <b>' +
+        (stepsUp(home, q1.top) - st3) + '계단</b>이 더 올라갑니다.');
+    else L.push('추가로 1억을 더 써도 갈 수 있는 최상단은 바뀌지 않습니다 — 지금 구간이 <b>가성비 지점</b>입니다.');
+    L.push('계단은 <b>전국 시·군·구 평당가 순위</b> 기준입니다. 실제 매도 가능 금액이 지역 평균과 다르면 결과도 달라집니다.');
+  } else {
+    L.push('현재 추가금으로는 지금 사는 곳보다 비싼 지역에 닿지 않습니다. 슬라이더를 올려보세요.');
+  }
+  el('ladIns').innerHTML = '<h4>이 사다리 읽기</h4><ul><li>' + L.join('</li><li>') + '</li></ul>';
 }
 function timing() {
   var c = CFG(), from = BY[el('from3').value], to = BY[el('to3').value], yrs = +el('yrs3').value;
@@ -5845,14 +6135,14 @@ function scoreItem(it, c) {
   /* 1. 급지 — 시장이 매긴 서열 */
   var d = RANK[it.code] ? decile(it.code) : null;
   var s1 = d == null ? 50 : clamp((11 - d) * 10, 5, 100);
-  ax.push({ k: '급지', w: .30, s: s1,
+  ax.push({ k: '급지', w: .40, s: s1,
     d: d == null ? '분위 정보 없음' : '전국 ' + RANK[it.code] + '위 · ' + d + '분위' });
 
   /* 2. 장기 성과 — 10년 상승률 */
   var g10 = chg10(r);
   var s2 = g10 == null ? 55
     : (g10 >= 100 ? 100 : (g10 >= 70 ? 55 + (g10 - 70) / 30 * 45 : clamp(15 + g10 / 70 * 40, 10, 55)));
-  ax.push({ k: '장기 성과', w: .09, s: s2,
+  ax.push({ k: '장기 성과 (참고)', w: 0, s: s2,
     d: g10 == null ? '10년 데이터 없음' : '10년 ' + fmtPct(g10) + ' · 연복리 ' +
       n1((Math.pow(1 + g10 / 100, .1) - 1) * 100) + '% · ' + (g10 >= 100 ? '통과' : g10 >= 70 ? '경계' : '미달') });
 
@@ -5861,7 +6151,7 @@ function scoreItem(it, c) {
   var jrItem = it.jeon && it.med ? it.jeon / it.med * 100 : (jb ? jb.cur : null);
   var sLv2 = jrItem == null ? 55 : clamp(20 + (jrItem - 40) / 40 * 80, 10, 100);
   var sBd2 = jb ? clamp(40 + jb.pct * 60, 40, 100) : 55;
-  ax.push({ k: '전세 뒷받침', w: .20, s: sLv2 * .65 + sBd2 * .35,
+  ax.push({ k: '전세 뒷받침', w: .25, s: sLv2 * .65 + sBd2 * .35,
     d: (jrItem == null ? '전세 정보 없음' : '이 단지 전세가율 ' + n1(jrItem) + '%') +
       (jb ? ' · 지역 10년 밴드 ' + Math.round(jb.pct * 100) + '%' : '') });
 
@@ -5870,7 +6160,7 @@ function scoreItem(it, c) {
   var sr = saI ? saI.ratio : null, ur = saI ? saI.unsR : null;
   var s4 = sr == null ? 55 : clamp(40 + (1.2 - sr) * 45, 20, 100);
   if (sr != null && ur != null) s4 = clamp(s4 - ur * 45, 20, 100);
-  ax.push({ k: '수급', w: .18, s: s4,
+  ax.push({ k: '수급', w: .10, s: s4,
     d: sr == null ? '수급 데이터 없음'
       : '생활권 ' + SUP_R + 'km 배율 ' + sr.toFixed(2) + '배 (' + saI.n + '곳)' +
         (ur != null ? ' · 준공후 미분양 ' + ur.toFixed(2) + '%' : '') });
@@ -5891,7 +6181,7 @@ function scoreItem(it, c) {
   var need = it.med - L.loan + tax + broker(it.med) + c.etc;
   var pay = monthlyPay(L.loan, num('pfRate'), num('pfYears'));
   var s6 = !c.cash ? 55 : (need <= c.cash ? 100 : clamp(60 - (need / c.cash - 1) * 90, 0, 60));
-  ax.push({ k: '실행 가능성', w: .08, s: s6,
+  ax.push({ k: '실행 가능성', w: .10, s: s6,
     d: '필요현금 ' + won(need) + ' / 보유 ' + won(c.cash) + ' · 월 ' + won(pay) +
       (need <= c.cash ? '' : ' · ' + won(need - c.cash) + ' 부족') });
 
@@ -6057,7 +6347,7 @@ function imgReport() {
       return [o.it.apt + ' (' + o.it.region + ')', g.g + ' ' + Math.round(o.sc.total),
         Math.round(a[0].s), Math.round(a[1].s), Math.round(a[2].s), Math.round(a[3].s), won(o.sc.need)];
     }),
-    note: '급지 20% · 장기성과 20% · 타이밍 15% · 수급 15% · 단지경쟁력 15% · 자금적합성 15% 가중 · 투자 자문 아님',
+    note: '급지 40% · 전세 뒷받침 25% · 단지경쟁력 15% · 수급 10% · 실행가능성 10% 가중 · 장기성과 미반영 · 투자 자문 아님',
     file: 'report'
   });
 }
@@ -6095,23 +6385,26 @@ function radiusNote() {
 /** 지역 단위 5축 점수 */
 function scoreRegion(r, c) {
   var ax = [];
-  /* 급지 40% — 시장이 매긴 서열. IC +0.118로 가장 신뢰할 만한 축 */
+  /* 급지 55% — v41.0 자체 백테스트에서 단독 IC +0.39(양수 81%). 유일하게 강한 축이라 비중을 올렸다 */
   var d = RANK[r.code] ? decile(r.code) : null;
-  ax.push({ k: '급지', w: .40, s: d == null ? 50 : clamp((11 - d) * 10, 10, 100),
+  ax.push({ k: '급지', w: .55, s: d == null ? 50 : clamp((11 - d) * 10, 10, 100),
     d: '전국 ' + RANK[r.code] + '위 · ' + d + '분위' });
-  /* 장기 성과 15% — 통과선 방식. 많이 올랐다고 가점을 주면 IC가 음수로 뒤집힌다 */
+  /* 장기 성과 0% — v41.0 자체 백테스트: 단독 IC -0.37(양수 9%), 급지 통제 후에도 -0.26.
+     통과선으로 완화해도 방향이 음수라 점수에서 빼고 참고 표시로만 남긴다 */
   var g10 = chg10(r);
   var s2 = g10 == null ? 55
     : (g10 >= 100 ? 100 : (g10 >= 70 ? 55 + (g10 - 70) / 30 * 45 : clamp(15 + g10 / 70 * 40, 10, 55)));
-  ax.push({ k: '장기 성과', w: .10, s: s2,
+  ax.push({ k: '장기 성과 (참고)', w: 0, s: s2,
     d: g10 == null ? '데이터 없음' : '10년 ' + fmtPct(g10) + ' · 연복리 ' +
-      n1((Math.pow(1 + g10 / 100, .1) - 1) * 100) + '% · ' + (g10 >= 100 ? '통과' : g10 >= 70 ? '경계' : '미달') });
-  /* 수급 15% — 하한 20점 (탈락 사유가 아니라 조정 요소) */
+      n1((Math.pow(1 + g10 / 100, .1) - 1) * 100) + '% · ' + (g10 >= 100 ? '통과' : g10 >= 70 ? '경계' : '미달') +
+      ' · 점수에는 넣지 않습니다' });
+  /* 수급 10% — v41.0 백테스트: 3년 매매 기준 급지 통제 후 잔여 IC +0.01~0.03으로 거의 무력.
+     다만 입주물량은 '당해 전세'에 강하므로(FAQ Q9) 없애지 않고 25%에서 10%로 낮췄다 */
   var sa = supArea(r.code);
   var sr = sa ? sa.ratio : null, ur = sa ? sa.unsR : null;
   var s4 = sr == null ? 55 : clamp(40 + (1.2 - sr) * 45, 20, 100);
   if (sr != null && ur != null) s4 = clamp(s4 - ur * 45, 20, 100);
-  ax.push({ k: '수급', w: .25, s: s4,
+  ax.push({ k: '수급', w: .10, s: s4,
     d: sr == null ? '수급 데이터 없음' : '생활권 ' + SUP_R + 'km 배율 ' + sr.toFixed(2) + '배 (' + sa.n + '곳)' +
       (ur != null ? ' · 미분양 ' + ur.toFixed(2) + '%' : '') });
   /* 진입 타이밍 15% — 무주택은 전세가율 밴드, 유주택은 갈아타기 배율 밴드 */
@@ -6120,15 +6413,16 @@ function scoreRegion(r, c) {
   if (c.own >= 1 && home0 && home0.code !== r.code && last(r.s) > last(home0.s)) swb = band(ratioS(home0, r), 10);
   var jb = band(jrS(r), 10);
   if (swb) {
-    ax.push({ k: '갈아타기 타이밍', w: .25, s: clamp(40 + (1 - swb.pct) * 60, 40, 100),
+    ax.push({ k: '갈아타기 타이밍', w: .35, s: clamp(40 + (1 - swb.pct) * 60, 40, 100),
       d: '배율 ' + swb.cur.toFixed(2) + ' · 10년 밴드 ' + Math.round(swb.pct * 100) + '%' +
         (swb.pct <= .2 ? ' (격차 최소권)' : swb.pct >= .8 ? ' (격차 최대권)' : '') });
   } else {
-    /* 전세가율 수준 65% + 밴드 35% — 수준이 밴드보다 예측력이 4배 강하다 (IC 0.129 vs 0.028) */
+    /* 전세 뒷받침 35% — 단독으로는 IC ≈ 0인데 급지를 통제하면 +0.15로 살아난다.
+       즉 '같은 급지 안에서 어디를 고를까'의 기준이지 급지를 낮추면서 좇을 축이 아니다 */
     var jrNow = jb ? jb.cur : (last(r.j) / last(r.s) * 100);
     var sLv = jrNow == null ? 55 : clamp(20 + (jrNow - 40) / 40 * 80, 10, 100);
     var sBd = jb ? clamp(40 + jb.pct * 60, 40, 100) : 55;
-    ax.push({ k: '전세 뒷받침', w: .25, s: sLv * .65 + sBd * .35,
+    ax.push({ k: '전세 뒷받침', w: .35, s: sLv * .65 + sBd * .35,
       d: '전세가율 ' + n1(jrNow) + '% · 10년 밴드 ' + (jb ? Math.round(jb.pct * 100) + '%' : '—') +
         (jrNow >= 70 ? ' (실수요 견조)' : jrNow <= 50 ? ' (기대가 많이 실림)' : '') });
   }
@@ -6237,6 +6531,36 @@ function renderRec() {
             : '전국 ' + RANK[byRank.r.code] + '위 · ' + byRank.d + '분위', 'sig'));
 
   var h = '';
+  /* 무주택 판정 배너 — Q7 기준(평당 3,200만 / 2,350만) v40.0 */
+  if (c.own === 0 && byRank) {
+    var pyTop = pyPrice(last(byRank.r.s));
+    var vb, vi, vt;
+    if (pyTop >= 3200) {
+      vb = ''; vi = '지금';
+      vt = '예산으로 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>까지 갈 수 있습니다. ' +
+        '과거 검증에서 <b>평당 3,200만 이상</b>에 들어갈 수 있으면 지금 사는 쪽이 10번 중 7번 나았습니다. ' +
+        '더 모으는 동안 오르는 폭이 저축보다 컸습니다.';
+    } else if (pyTop < 2350) {
+      vb = ' warn'; vi = '모으기';
+      vt = '예산으로 갈 수 있는 최상단이 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>입니다. ' +
+        '과거 검증에서 <b>평당 2,350만 아래</b>에서 급하게 사는 것보다 <b>1년 더 모아 한 급 올리는 쪽</b>이 나았습니다. ' +
+        '단, 2년을 넘기면 이득이 줄었습니다 — <b>기다린다면 1년</b>입니다.';
+    } else {
+      vb = ' warn'; vi = '경계';
+      vt = '예산으로 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>까지 갈 수 있습니다. ' +
+        '<b>평당 2,350~3,200만</b>은 지금 사는 것과 더 모으는 것의 결과가 비슷했던 구간입니다. ' +
+        '저축 여력이 크면 1년 더, 아니면 지금 &mdash; <b>투자 FAQ Q7</b>에서 기준을 확인하세요.';
+    }
+    h += '<div class="verdictbar' + vb + '"><span class="vi">' + vi + '</span><span class="vt">' + vt + '</span></div>';
+  }
+  /* 1주택 갈아타기 안내 — Q16 */
+  if (c.own === 1 && byRank) {
+    h += '<div class="verdictbar"><span class="vi">갈아타기</span><span class="vt">' +
+      '갈아타기는 <b>조금씩 올라가면 손해</b>였습니다. 같은 추가금으로 가까운 곳을 고르면 평균 2.6계단, ' +
+      '갈 수 있는 최상단을 고르면 <b>33계단</b>이었고 3년 뒤 결과가 두 배였습니다(FAQ Q16). ' +
+      '<b>갈아타기 탭</b>에서 추가금을 밀어보면 몇 계단 올라가는지 바로 보입니다.' +
+      '</span></div>';
+  }
   list.slice(0, 5).forEach(function (x, i) {
     var gg = gradeOf(x.total);
     h += '<div class="rep">';
@@ -6565,7 +6889,7 @@ function imgRec() {
         x.g10 == null ? '—' : (x.g10 > 0 ? '+' : '') + n1(x.g10) + '%'];
     }),
     max: 16,
-    note: '급지 40% · 전세 뒷받침 25% · 수급 25% · 장기성과 10% 가중 · 자금은 필터로만 적용 · 투자 자문 아님',
+    note: '급지 55% · 전세 뒷받침 35% · 수급 10% 가중 · 장기성과 미반영 · 자금은 필터로만 적용 · 투자 자문 아님',
     file: 'recommend'
   });
 }
@@ -7232,7 +7556,7 @@ function drawOne(pg, no, total, c, top3) {
     x.fillStyle = C.ink; x.font = '600 22px ' + RF;
     x.fillText('탑다운 — 전국 서열 → 내 자본이 닿는 구간 → 그 안의 최상단 → 조건 통과 단지', PAD, H - FOOT + 52);
     x.fillStyle = C.sub; x.font = '450 19px ' + RF;
-    x.fillText('급지 40% · 전세 뒷받침 25% · 수급 25% · 장기성과 10% 가중', PAD, H - FOOT + 88);
+    x.fillText('급지 55% · 전세 뒷받침 35% · 수급 10% 가중 · 장기성과 미반영', PAD, H - FOOT + 88);
     x.fillText('생성 ' + d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() +
       ' · KB ' + ymL(KB.asof) + ' · 국토부 실거래 기준', PAD, H - FOOT + 120);
     x.fillText('공개 통계를 계산한 정보 제공용이며 투자 자문이 아닙니다', PAD, H - FOOT + 152);
@@ -7636,6 +7960,7 @@ function init() {
       : '<b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.';
     if (BT) runBT();
   });
+  if (el('ladR')) el('ladR').addEventListener('input', ladder);
   el('imgBT').addEventListener('click', imgBT);
   el('own').addEventListener('change', function () {
     syncFirst();
