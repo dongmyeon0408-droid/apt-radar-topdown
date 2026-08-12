@@ -323,6 +323,9 @@ canvas.exp{display:none}
 .faqinner{overflow:hidden;padding:0 30px}
 .card.faq.on .faqinner{padding-bottom:28px}
 @media(prefers-reduced-motion:reduce){.faqbody{transition:none}}
+.srcbox{margin-top:18px;padding-top:14px;border-top:1px solid var(--line2);font-size:13px;line-height:1.75;color:var(--slate)}
+.srcbox b{color:var(--charcoal);font-weight:700}
+.srcbox .sl{display:inline-block;min-width:64px;font-weight:700;color:var(--signal)}
 @media(max-width:640px){
   .faqhd{padding:22px 20px}
   .faqinner{padding:0 20px}
@@ -1193,6 +1196,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <p><b>비쌀수록 많이 올랐습니다.</b> 10칸 중 딱 한 번만 순서가 뒤집혔을 뿐, 나머지는 정확히 비싼 순서대로였습니다.
       가장 비싼 곳은 3.1배가 됐고 가장 싼 곳은 1.5배에 그쳤습니다.</p>
     <p>그래서 이 도구는 <b>동네 순위에 가장 큰 비중(40%)</b>을 둡니다.</p>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>2016.07 시점 평당가로 전국을 10칸으로 나눈 뒤 이후 10년 성과를 측정. 나누는 시점 이후의 정보를 일절 쓰지 않았습니다.</div><div><span class="sl">표본</span>시·군·구 114곳 · 1개 시점 10년</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1219,6 +1223,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       그래서 이 도구는 <b>10년에 두 배(100%)를 넘었는지만</b> 봅니다.
       150%든 250%든 똑같이 통과 처리하고, 더 올랐다고 점수를 더 주지 않습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>같은 달 안에서만 순위를 매겨 국면을 통제하고, 직전 상승률과 이후 상승률의 관계를 64개월 반복 측정. 별도로 2016.07 단일 시점 10년 검증도 실시.</div><div><span class="sl">표본</span>64개 시점 × 114곳 · 10년 검증 1건</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1277,6 +1282,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>상대 동네가 절대적으로 부진하면</b> 규모로 뒤집지 못합니다.<br><br>
       <b>정리</b> — 상대 동네가 제 몫을 하는 곳이면 <b>대단지를 고르세요</b>. 상대가 확실히 부진한 동네면 <b>좋은 동네에 남으세요</b>.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)<br>세대수 &mdash; 한국부동산원 <b>공동주택관리정보시스템(K-apt)</b> &mdash; 단지별 세대수·사용승인일</div><div><span class="sl">검증 방법</span>10년 전과 현재 모두 거래가 있는 단지만, 84㎡대로 고정하고 단지별 중위 평당가로 비교. 세대수는 300세대·1,000세대로 3분할.</div><div><span class="sl">표본</span>16개 지역 · 같은 예산 비교 8쌍</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1329,6 +1335,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       대구는 수성 중간이 10년 동안 <b>1.5%</b> 오른 극단적 침체 구간이라 규칙이 성립하지 않았습니다.<br><br>
       <b>수도권에서는 동네를 올리고, 지방에서는 단지를 올리세요.</b>
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)</div><div><span class="sl">검증 방법</span>검증 시작 시점의 평당가로 줄 세워 상위 20%를 1등급, 40~60%를 중간으로 분할. 시작 시점 가격으로만 나눠 결과를 보고 고르지 않았습니다.</div><div><span class="sl">표본</span>13개 지역(수도권 7 · 지방 6)</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1394,6 +1401,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>표본 주의</b> — 성동 소형은 <b>1곳</b>뿐이라 표에서 뺐습니다(그 한 곳이 4.0배였습니다).
       마포·강동·수영 소형도 7~8곳이라 한두 단지가 평균을 흔들 수 있습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)</div><div><span class="sl">검증 방법</span>전용면적으로 소형 55㎡ 미만 · 중형 55~95㎡ · 대형 95㎡ 이상 3분할. 같은 단지라도 평형이 다르면 별도 집계.</div><div><span class="sl">표본</span>12개 지역</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1416,6 +1424,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       동네만 보고 아무거나 사면 한 급 아래 동네의 대단지만도 못할 수 있습니다.<br><br>
       <b>광명 나홀로는 1.7배</b>로 10년에 두 배도 못 됐습니다. <b>싼 동네 + 작은 단지</b>가 가장 나쁜 조합이었습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)<br>세대수 &mdash; 한국부동산원 <b>공동주택관리정보시스템(K-apt)</b> &mdash; 단지별 세대수·사용승인일</div><div><span class="sl">검증 방법</span>같은 세대수 구간(나홀로 300세대 미만)끼리 지역을 넘어 비교. 규모를 통제한 뒤 지역 효과만 본 것입니다.</div><div><span class="sl">표본</span>11개 지역 · 84㎡대</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1452,6 +1461,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       그리고 <b>2년치 사는 비용이 계산에 없습니다</b>. 월세로 살면 모은 돈의 3분의 1이 날아가니,
       <b>전세로 살면서 모으는 경우</b>에만 위 숫자가 맞습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>월 300만원 저축을 가정해 지금 매수와 2년 뒤 매수를 <b>끝나는 시점을 똑같이 맞춰</b> 비교. 100개 시점에서 반복.</div><div><span class="sl">표본</span>100개 시점 × 114곳</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1475,6 +1485,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>격차는 "어디로 갈지" 고를 때 쓰는 것이지, "언제 갈지" 미루는 근거가 아닙니다.</b>
       전부 벌어져 있으면 기다리기보다 한 급 낮춰서라도 지금 올라가는 편이 나았습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>같은 달 안에서 상급지와의 가격 배율을 4구간으로 나눠 3년 뒤 순자산 증가를 비교. 별도로 "기다리기" 전략의 성공률도 측정.</div><div><span class="sl">표본</span>64개월 · 갈아타기 조합 약 20만 건</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1497,6 +1508,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       서울에 많이 짓고 지방에 덜 지으면 전국 합계는 그대로라 <b>서로 상쇄되기 때문</b>입니다.
       그래서 이 도구는 물량을 <b>내 동네 반경 15km</b>로 묶어 봅니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>통계누리</b> <b>주택유형별 주택건설 준공실적(월계)</b> 2010.08~2026.06<br>한국부동산원 <b>입주예정물량</b> CSV (2026.01~2027.12)<br>가격 &mdash; KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>천 세대당 준공 호수를 공급 강도로 삼아, 같은 해 안에서 시·도끼리 비교. 당해·1년 뒤·2년 뒤로 시차를 나눠 각각 측정.</div><div><span class="sl">표본</span>시·도 16~17곳 × 16년</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1522,6 +1534,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       두 지표를 <b>같이 봐야 합니다.</b> 전세를 끼고 살 거면 입주물량을, 대출로 사서 살 거면 미분양을 더 무겁게 보세요.
       입주 물량 탭에서 둘 다 확인할 수 있습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>통계누리</b> <b>미분양주택현황</b> 시·군·구 월별 2015.07~2026.06(132개월)<br>가격 &mdash; KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>같은 달 안에서 시·군·구끼리 비교. 동시점·12개월 뒤·24개월 뒤로 나눠 매매와 전세에 각각 측정하고, 급지 3분할로 통제한 값도 함께 확인.</div><div><span class="sl">표본</span>시·군·구 92곳 × 132개월</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1544,6 +1557,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       그래서 이 도구는 점수에 넣지 않고 <b>정렬 버튼</b>으로만 두었습니다.
       손해 확률을 0%에서 11%로 바꾸는 선택은 도구가 대신할 게 아니라 <b>알고 고를 문제</b>라고 봤습니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>현금 1.5억으로 3년 보유를 가정하고, 순자산 증가를 <b>자산 규모 × 상승률</b>로 계산. 124개 시점에서 반복해 평균·최악·손실확률을 함께 측정.</div><div><span class="sl">표본</span>124개 시점 × 114곳</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1582,6 +1596,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>한계</b> &mdash; 동네 평균 가격이라 개별 아파트 체감 낙폭(20~30%)보다 완만하게 나옵니다.
       어느 동네가 더 크게 빠졌는지 <b>비교하는 용도</b>로만 보세요.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>KB부동산 <b>월간 주택가격 시계열</b> &mdash; 전국 시·군·구 114곳 ㎡당 매매·전세가 (2013.04~2026.07, 160개월)</div><div><span class="sl">검증 방법</span>2020.01~2022.12 구간의 최고치를 고점, 그 이후 최저치를 저점으로 삼아 낙폭·기간·회복을 계산. 급지는 <b>2016.07 시점</b> 평당가로 나눠 결과를 보고 고르지 않았습니다.</div><div><span class="sl">표본</span>시·군·구 114곳</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card faq">
@@ -1615,18 +1630,90 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>그래서 이 도구는 금리를 점수에 넣지 않습니다.</b> 금리는 전국이 같은 값이라
       <b>"어디를 살까"에는 아무 정보가 없습니다.</b> "언제 살까"에만 쓰이는 숫자입니다.
     </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>한국은행 <b>경제통계시스템(ECOS)</b> 기준금리 월별 (1999.05~2026.07, 327개월)<br>가격 &mdash; KB부동산 <b>월간 주택가격지수</b> (1986.01~2026.07, 487개월)</div><div><span class="sl">검증 방법</span>금리 <b>수준</b>과 <b>직전 12개월 변화</b>를 각각 이후 12·24·36개월 상승률과 대조. 금리 방향으로 국면을 나눠 평균을 비교하고, 인하가 시작된 19개 시점을 개별 추적.</div><div><span class="sl">표본</span>327개월 · 인하 시작 19건</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
+  </div>
+
+  <div class="card faq">
+    <span class="eb">Q14</span>
+    <h3>낡은 아파트는 피해야 하나요?</h3>
+    <div class="ans">좋은 동네에서는 <b>오히려 구축이 나았습니다.</b></div>
+    <p>12개 지역에서 <b>2016년 시점 연차</b>로 나눠 봤습니다. 지금 연차가 아니라 <b>그때 연차</b>입니다 &mdash;
+      지금 기준으로 나누면 어느 단지가 재건축으로 갔는지 알고 나누는 셈이 되기 때문입니다.
+      10년 미만을 <b>신축</b>, 10~24년을 <b>준구축</b>, 25년 이상을 <b>구축</b>으로 봤습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>지역</th><th>신축</th><th>준구축</th><th>구축</th><th>1등</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">서울 성동구</td><td>3.1배</td><td>3.2배</td><td><b>3.7배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">성남 분당구</td><td>&mdash;</td><td>3.4배</td><td><b>3.6배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">서울 마포구</td><td>3.0배</td><td>2.7배</td><td><b>3.4배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">서울 송파구</td><td>3.1배</td><td>2.9배</td><td><b>3.4배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">서울 강남구</td><td>2.7배</td><td>2.9배</td><td><b>3.1배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">서울 양천구</td><td>2.4배</td><td>2.4배</td><td><b>3.0배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">부산 수영구</td><td>1.7배</td><td>1.3배</td><td><b>2.0배</b></td><td><b>구축</b></td></tr>
+        <tr class="pick"><td class="nm">서울 노원구</td><td>1.8배</td><td>1.9배</td><td><b>2.2배</b></td><td><b>구축</b></td></tr>
+        <tr><td class="nm">안양 동안구</td><td>1.7배</td><td><b>2.2배</b></td><td>&mdash;</td><td>준구축</td></tr>
+        <tr><td class="nm">서울 은평구</td><td>1.9배</td><td><b>2.0배</b></td><td>1.7배</td><td>준구축</td></tr>
+        <tr class="self"><td class="nm">서울 동대문구</td><td><b>2.5배</b></td><td>2.4배</td><td>2.3배</td><td>신축</td></tr>
+        <tr class="self"><td class="nm">부산 해운대구</td><td><b>1.5배</b></td><td>1.5배</td><td>1.4배</td><td>신축</td></tr>
+      </tbody></table></div>
+    <p><b>12곳 중 8곳에서 구축이 1등이었습니다.</b> 신축이 1등인 곳은 2곳뿐입니다.
+      같은 동네 안에서 <b>구축 &minus; 준구축</b> 격차는 평균 <b>+30%p</b>(11곳 중 8곳 양수),
+      <b>구축 &minus; 신축</b>은 평균 <b>+25%p</b>(10곳 중 7곳 양수)였습니다.</p>
+    <p>과거 가격이 거의 같았던 <b>3쌍</b>을 직접 붙여봤습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>좋은 동네 구축</th><th>아래 동네 신축</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">마포 구축 1,866만 &rarr; <b>3.4배</b></td><td>은평 신축 1,852만 &rarr; 1.9배</td><td><b>구축 +150%p</b></td></tr>
+        <tr class="pick"><td class="nm">성동 구축 1,765만 &rarr; <b>3.7배</b></td><td>동대문 신축 2,009만 &rarr; 2.5배</td><td><b>구축 +116%p</b></td></tr>
+        <tr><td class="nm">강남 구축 3,976만 &rarr; <b>3.1배</b></td><td>송파 신축 3,435만 &rarr; 3.1배</td><td>구축 +2%p</td></tr>
+      </tbody></table></div>
+    <p><b>3쌍 모두 좋은 동네의 낡은 집이 이겼습니다.</b> 성동구 쪽은 <b>더 싸면서도</b> 이겼습니다 &mdash;
+      1,765만원짜리 27년차가 2,009만원짜리 신축보다 많이 올랐습니다.</p>
+    <div class="readme">
+      <b>가장 뜻밖이었던 것</b><br>
+      <b>가장 나쁜 건 신축이 아니라 준구축(10~24년)이었습니다.</b> 송파·마포·부산 수영 세 곳에서
+      신축과 구축이 모두 준구축보다 높은 <b>U자</b>가 나왔습니다.
+      새 아파트 프리미엄은 이미 사라졌는데 재건축은 아직 먼, 가장 애매한 구간입니다.<br><br>
+      <b>강남 은마(1979년, 37년차)는 3.2배</b>로 강남 신축 평균 2.7배보다 높았습니다.
+      <b>성동 한신무학(1989년, 27년차)은 3.7배</b>로, 동대문구에서 가장 잘 오른 신축(래미안크레시티 2.9배)을 크게 앞섰습니다.<br><br>
+      <b>안양 동안구 신축은 1.7배</b>로 같은 동네 준구축 2.2배보다 낮았고, <b>10년에 두 배도 못 넘겼습니다.</b>
+      비산화성파크드림 +36%, 양우내안애팰리스 +41%처럼 신축인데도 참담한 사례가 여럿이었습니다.
+    </div>
+    <div class="readme">
+      <b>그런데 낡았다고 다 오른 건 아닙니다.</b><br>
+      구축이 진 곳을 보면 이유가 분명합니다. 은평 동익파크(25년차) 1.7배, 동대문 서울가든(31년차) 1.9배 &mdash;
+      <b>재건축 이야기가 없는 그냥 낡은 집</b>이었습니다.<br><br>
+      반대로 이긴 쪽은 목동신시가지, 은마, 분당 시범단지, 올림픽선수기자촌, 한신무학처럼
+      <b>전부 재건축 대상</b>입니다.<br><br>
+      <b>값이 붙는 건 "낡음"이 아니라 "대지지분과 재건축 가능성"입니다.</b>
+      땅값이 비싼 동네라야 사업성이 나오고, 그래야 낡은 게 재산이 됩니다.
+      동네가 아래면 재건축이 안 되고 낡은 집은 그냥 낡은 집으로 남습니다 &mdash; Q1과 같은 이야기입니다.
+    </div>
+    <div class="readme">
+      <b>한계 &mdash; 이건 특히 크게 봐주세요</b><br>
+      <b>① 준공연도를 확인한 단지가 절반 이하(48%)입니다.</b> 단지 이름이 공공 데이터와 정확히 맞아야 조회되는데,
+      맞지 않으면 "미상"으로 빠집니다. 분당은 24곳 중 6곳만 확인됐습니다.<br>
+      <b>② 구축 표본이 1~3곳인 지역이 많습니다.</b> 마포·은평·성동은 각 1곳입니다.
+      방향은 12곳에서 일관되지만 <b>개별 숫자는 한두 단지가 흔듭니다.</b><br>
+      <b>③ 재건축이 끝난 단지는 아예 빠집니다.</b> 이름이 바뀌기 때문입니다.
+      가장 크게 오른 사례가 빠지므로 <b>구축 성적은 실제보다 낮게 나온 것</b>입니다.<br>
+      <b>④ 지금의 신축은 답할 수 없습니다.</b> 2016년에도 거래가 있어야 하므로 그 뒤에 지어진 아파트는 전부 제외됩니다.
+      여기서 "신축"은 <b>2016년 시점에 10년 미만</b>이었던 단지입니다.
+    </div>
+    <div class="srcbox"><div><span class="sl">자료 출처</span>국토교통부 <b>실거래가 공개시스템</b> 아파트 매매 실거래 (공공데이터포털 API 실시간)<br>준공연도 &mdash; 한국부동산원 <b>공동주택관리정보시스템(K-apt)</b> &mdash; 단지별 세대수·사용승인일 사용승인일</div><div><span class="sl">검증 방법</span><b>검증 시작 시점(2016년)의 연차</b>로 10년 미만·10~24년·25년 이상 3분할. 지금 연차로 나누면 재건축 진행 여부를 알고 나누는 셈이라 반드시 과거 시점 연차를 씁니다. 84㎡대 고정.</div><div><span class="sl">표본</span>12개 지역 · 준공연도 확인 48%</div><div style="margin-top:6px">같은 시점에 있던 선택지끼리만 비교해 시장 국면을 통제하고, 분류 시점 이후의 정보는 쓰지 않았습니다.</div></div>
   </div>
 
   <div class="card">
     <span class="eb">SUMMARY</span>
-    <h2>열세 개를 한 문장으로</h2>
+    <h2>열네 개를 한 문장으로</h2>
     <div class="verdict">
       <b>갈 수 있는 가장 좋은 동네로 가되, 최근 많이 올랐다는 건 이유로 삼지 마라.<br>
       그 동네 안에서는 최소 300세대를 넘겨라 — 16곳 전부 예외가 없었다.<br>
       평형은 59·84가 기본이다 — 수도권 소형과 지방 소형은 특히 피하라.<br>
       오르는 시장이면 1등을 고집하지 말고, 안 오르는 시장이면 1등만 사라.<br>
       좋은 동네에 못 갈 만큼 돈이 부족하면, 급하게 사기보다 1년 모아 한 급 올려라.<br>
-      떨어질 때 안전한 건 싼 동네가 아니라 좋은 동네다 &mdash; 8개월 만에 돌아왔다.</b>
+      떨어질 때 안전한 건 싼 동네가 아니라 좋은 동네다 &mdash; 8개월 만에 돌아왔다.<br>
+      낡은 집이 나쁜 게 아니라 재건축이 안 될 낡은 집이 나쁘다 &mdash; 12곳 중 8곳은 구축이 1등이었다.</b>
     </div>
     <div class="readme">
       <b>믿을 수 있는 정도 — 꼭 같이 읽으세요</b><br>
@@ -1640,6 +1727,19 @@ tr.txrow>td{padding:0;background:var(--lift)}
       <b>동네끼리 비교</b>하는 용도로만 보세요.<br>
       <b>⑤ 호재는 안 들어갑니다.</b> 새 노선, 재건축 진행 단계, 학군 변화는 숫자로 된 자료가 없어 계산에 못 넣었습니다.<br><br>
       이건 <b>확률의 문제</b>이지 보장이 아닙니다. 같은 방식으로 골라도 개별 사례는 다르게 나옵니다.
+    </div>
+    <div class="srcbox" style="margin-top:20px">
+      <div style="font-size:14px;font-weight:700;color:var(--charcoal);margin-bottom:8px">쓴 자료 전체</div>
+      <div><span class="sl">실거래</span>국토교통부 실거래가 공개시스템 &mdash; 아파트 매매 (공공데이터포털 API 실시간)</div>
+      <div><span class="sl">단지정보</span>한국부동산원 공동주택관리정보시스템(K-apt) &mdash; 세대수·사용승인일</div>
+      <div><span class="sl">시세</span>KB부동산 월간 주택가격 시계열(114곳, 2013.04~) · 월간 주택가격지수(1986.01~)</div>
+      <div><span class="sl">공급</span>국토교통부 통계누리 주택건설 준공실적(2010.08~2026.06) · 한국부동산원 입주예정물량</div>
+      <div><span class="sl">미분양</span>국토교통부 통계누리 미분양주택현황 &mdash; 시·군·구 월별(2015.07~2026.06)</div>
+      <div><span class="sl">인구</span>행정안전부 주민등록 인구·세대현황</div>
+      <div><span class="sl">금리</span>한국은행 경제통계시스템(ECOS) 기준금리 월별(1999.05~)</div>
+      <div style="margin-top:8px">모든 계산은 <b>같은 시점에 있던 선택지끼리만</b> 비교했고(시장 국면 통제),
+        <b>분류 시점 이후의 정보는 쓰지 않았습니다</b>(결과를 보고 고르는 것 방지).
+        수치는 이 앱이 위 원자료로 직접 계산한 것이며, 외부 리포트를 인용한 것이 아닙니다.</div>
     </div>
     <div class="disc" style="margin-top:16px;border:0;padding-top:0">
       공개 통계를 계산한 정보 제공용이며 투자 자문이 아닙니다. 모든 판단과 그 결과에 대한 책임은 이용자 본인에게 있습니다.
