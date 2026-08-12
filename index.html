@@ -295,6 +295,40 @@ canvas.exp{display:none}
 .faq p{font-size:15.5px;line-height:1.75;margin:0 0 14px}
 .faq table{font-size:14px}
 .faq .tblwrap{margin-bottom:16px}
+/* ══ FAQ 아코디언 (v39.0) ══ */
+.faqidx .faqnav{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.faqq{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:var(--lift);border:1px solid var(--line2);border-radius:16px;padding:14px 16px;
+  font:inherit;color:var(--ink);transition:border-color .15s,background .15s,transform .15s}
+.faqq:hover{border-color:var(--signal-lt);background:#fff}
+.faqq:active{transform:scale(.995)}
+.faqq:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.faqq .qn{flex:0 0 auto;font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--signal);
+  background:var(--ghost);border-radius:999px;padding:4px 9px;margin-top:2px}
+.faqq .qt{font-size:15.5px;font-weight:600;line-height:1.5}
+.faqq.on{border-color:var(--signal);background:#fff}
+.card.faq{padding:0;scroll-margin-top:84px}
+.faqhd{display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
+  font:inherit;color:inherit;padding:26px 30px;position:relative}
+.faqhd:focus-visible{outline:2px solid var(--signal);outline-offset:-4px;border-radius:26px}
+.card.faq .faqhd .eb{margin-bottom:2px}
+.card.faq h3{margin:6px 46px 12px 0}
+.faqchev{position:absolute;right:26px;top:26px;width:30px;height:30px;border-radius:999px;
+  background:var(--ghost);color:var(--charcoal);display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;line-height:1;transition:background .15s,color .15s}
+.card.faq.on{box-shadow:var(--sh2)}
+.card.faq.on .faqchev{background:var(--signal);color:#fff}
+.faqbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.card.faq.on .faqbody{grid-template-rows:1fr}
+.faqinner{overflow:hidden;padding:0 30px}
+.card.faq.on .faqinner{padding-bottom:28px}
+@media(prefers-reduced-motion:reduce){.faqbody{transition:none}}
+@media(max-width:640px){
+  .faqhd{padding:22px 20px}
+  .faqinner{padding:0 20px}
+  .faqchev{right:18px;top:22px;width:28px;height:28px;font-size:16px}
+  .faqq .qt{font-size:14.5px}
+}
 /* ══ 모달 ══ */
 .modal{position:fixed;inset:0;z-index:200;background:rgba(10,18,26,.55);backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
@@ -1065,12 +1099,13 @@ tr.txrow>td{padding:0;background:var(--lift)}
     <h2>과거 검증</h2>
     <p class="hint">같은 예산으로 두 선택지 중 어느 쪽이 나았는지 실거래로 직접 검증합니다.
       <b>평당가 순위</b>로 나누면 "상급지 중간 vs 중급지 대장", <b>세대수</b>로 나누면
-      "최상급지 나홀로 vs 상급지 대단지"를 비교합니다.</p>
+      "최상급지 나홀로 vs 상급지 대단지", "상급지 구축 vs 중급지 신축"을 비교합니다.</p>
     <div class="inline" style="margin-bottom:14px">
       <div class="seg" id="btMode">
         <button data-v="py" aria-pressed="true">평당가 순위 (대장 vs 중간)</button>
         <button data-v="hh" aria-pressed="false">세대수 (나홀로 vs 대단지)</button>
         <button data-v="sz" aria-pressed="false">평형 (소형 vs 중형 vs 대형)</button>
+        <button data-v="ag" aria-pressed="false">노후도 (신축 vs 구축)</button>
       </div>
     </div>
     <div class="readme" id="btHint" style="margin-top:0;margin-bottom:14px"><b>평당가 순위 기준</b> — 검증 시작 시점의 평당가로 줄 세워 상위 20%를 <b>대장</b>, 40~60%를 <b>중간</b>으로 나눕니다.</div>
@@ -1511,15 +1546,87 @@ tr.txrow>td{padding:0;background:var(--lift)}
     </div>
   </div>
 
+  <div class="card faq">
+    <span class="eb">Q12</span>
+    <h3>값이 떨어질 때는 싼 동네가 안전하지 않나요?</h3>
+    <div class="ans bad">아니요. 오래 떨어지는 쪽이 싼 동네였습니다.</div>
+    <p>2022년 고점부터 지금까지를 <b>10년 전(2016년) 가격 순서</b>로 나눠 봤습니다.
+      떨어진 폭보다 <b>얼마나 오래 떨어졌고, 돌아왔는지</b>가 훨씬 크게 갈렸습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>2016년 가격대</th><th>떨어진 폭</th><th>떨어진 기간</th><th>지금 고점 대비</th><th>고점 회복</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">가장 비싼 10%</td><td><b>&minus;7.4%</b></td><td><b>8개월</b></td><td><b>+33.0%</b></td><td><b>10곳 전부</b></td></tr>
+        <tr><td class="nm">그 다음 10%</td><td>&minus;10.9%</td><td>11개월</td><td>+20.4%</td><td>10곳 전부</td></tr>
+        <tr><td class="nm">중간쯤</td><td>&minus;14.2%</td><td>18개월</td><td>&minus;6.6%</td><td>10곳 중 2곳</td></tr>
+        <tr class="self"><td class="nm">가장 싼 10%</td><td>&minus;12.3%</td><td><b>31개월</b></td><td><b>&minus;8.9%</b></td><td><b>16곳 중 2곳</b></td></tr>
+      </tbody></table></div>
+    <p>비싼 동네는 <b>8개월 만에 바닥을 찍고 전부 전고점을 넘었습니다.</b>
+      싼 동네는 <b>2년 반 넘게 계속 흘렀고</b>, 4년이 지난 지금도 대부분 고점 아래입니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>권역</th><th>떨어진 폭</th><th>지금 고점 대비</th><th>고점 회복</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td class="nm">서울 25곳</td><td>&minus;9.6%</td><td><b>+18.8%</b></td><td>25곳 중 21곳</td></tr>
+        <tr><td class="nm">경기·인천 42곳</td><td>&minus;13.1%</td><td>&minus;0.3%</td><td>42곳 중 17곳</td></tr>
+        <tr class="self"><td class="nm">지방 39곳</td><td>&minus;12.3%</td><td><b>&minus;6.9%</b></td><td><b>39곳 중 5곳</b></td></tr>
+      </tbody></table></div>
+    <div class="readme">
+      <b>가장 뜻밖이었던 것</b><br>
+      <b>강남이 가장 적게 빠졌습니다</b>(&minus;5.3%). 용산 &minus;4.3%, 송파 &minus;6.9%였고, 송파는 저점에서 <b>+51.3%</b> 올라 이미 고점을 크게 넘겼습니다.
+      강남 하락이 뉴스에 크게 나오는 건 <b>비율이 아니라 금액</b>이 커서입니다.<br><br>
+      반대편에서는 <b>동두천이 &minus;27.3%</b>이고, <b>아직 바닥을 찾지 못했습니다</b>(2026년 7월이 최저점).
+      안성은 4년째 고점보다 13% 낮습니다.<br><br>
+      <b>싼 동네는 안 빠지는 게 아니라, 빠진 뒤 안 돌아옵니다.</b>
+      이게 이 도구가 동네 순위에 40%를 주는 진짜 이유입니다.
+    </div>
+    <div class="readme">
+      <b>한계</b> &mdash; 동네 평균 가격이라 개별 아파트 체감 낙폭(20~30%)보다 완만하게 나옵니다.
+      어느 동네가 더 크게 빠졌는지 <b>비교하는 용도</b>로만 보세요.
+    </div>
+  </div>
+
+  <div class="card faq">
+    <span class="eb">Q13</span>
+    <h3>금리가 내리면 집값이 오르나요?</h3>
+    <div class="ans bad">인하 자체는 신호가 아니었습니다.</div>
+    <p>1999년부터 327개월치 기준금리와 전국 집값을 맞춰봤습니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>금리 상황</th><th>이후 1년 평균</th><th>오른 비율</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">내리는 중</td><td>+5.8%</td><td>10번 중 9번</td></tr>
+        <tr class="pick"><td class="nm">그대로 두는 중</td><td><b>+6.4%</b></td><td>10번 중 8번</td></tr>
+        <tr class="self"><td class="nm">올리는 중</td><td><b>+2.8%</b></td><td>10번 중 7번</td></tr>
+      </tbody></table></div>
+    <p><b>내릴 때보다 가만히 둘 때가 더 올랐습니다.</b> 금리를 내린다는 건 <b>경기가 나쁘다</b>는 말이기도 하기 때문입니다.</p>
+    <p>실제로 금리 인하가 시작된 <b>19번</b>을 하나씩 보면 결과가 극단적으로 갈립니다.</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>인하 시작 시점</th><th>왜 내렸나</th><th>이후 1년</th></tr></thead>
+      <tbody>
+        <tr class="self"><td class="nm">2008년 10월</td><td>금융위기</td><td><b>&minus;0.3%</b></td></tr>
+        <tr class="self"><td class="nm">2012년 7월</td><td>경기 둔화</td><td><b>&minus;1.1%</b></td></tr>
+        <tr class="pick"><td class="nm">2020년 3월</td><td>돈을 푸는 국면</td><td><b>+13.5%</b></td></tr>
+        <tr class="pick"><td class="nm">2001년 7월</td><td>돈을 푸는 국면</td><td><b>+23.1%</b></td></tr>
+      </tbody></table></div>
+    <div class="readme">
+      <b>세 가지가 통념과 달랐습니다.</b><br>
+      <b>① 금리가 높을 때 이후에 더 올랐습니다.</b> 금리는 경기가 좋을 때 높습니다. 금리가 원인이 아니라 <b>경기가 원인</b>입니다.<br>
+      <b>② 중요한 건 금리 수준이 아니라 방향입니다.</b> 금리가 <b>올라가는 중</b>이면 이후 2년이 확실히 나빴습니다.<br>
+      <b>③ 같은 인하인데 결과가 24%p 갈립니다.</b> 위기라서 내리면 떨어지고, 돈을 풀려고 내리면 오릅니다.
+      "금리 인하 = 매수 신호"는 성립하지 않습니다.<br><br>
+      <b>그래서 이 도구는 금리를 점수에 넣지 않습니다.</b> 금리는 전국이 같은 값이라
+      <b>"어디를 살까"에는 아무 정보가 없습니다.</b> "언제 살까"에만 쓰이는 숫자입니다.
+    </div>
+  </div>
+
   <div class="card">
     <span class="eb">SUMMARY</span>
-    <h2>열한 개를 한 문장으로</h2>
+    <h2>열세 개를 한 문장으로</h2>
     <div class="verdict">
       <b>갈 수 있는 가장 좋은 동네로 가되, 최근 많이 올랐다는 건 이유로 삼지 마라.<br>
       그 동네 안에서는 최소 300세대를 넘겨라 — 16곳 전부 예외가 없었다.<br>
       평형은 59·84가 기본이다 — 수도권 소형과 지방 소형은 특히 피하라.<br>
       오르는 시장이면 1등을 고집하지 말고, 안 오르는 시장이면 1등만 사라.<br>
-      좋은 동네에 못 갈 만큼 돈이 부족하면, 급하게 사기보다 1년 모아 한 급 올려라.</b>
+      좋은 동네에 못 갈 만큼 돈이 부족하면, 급하게 사기보다 1년 모아 한 급 올려라.<br>
+      떨어질 때 안전한 건 싼 동네가 아니라 좋은 동네다 &mdash; 8개월 만에 돌아왔다.</b>
     </div>
     <div class="readme">
       <b>믿을 수 있는 정도 — 꼭 같이 읽으세요</b><br>
@@ -2391,7 +2498,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
    ═══════════════════════════════════════════════════════════ */
 (function () {
 'use strict';
-var VERSION = 'v38.0';
+var VERSION = 'v39.0';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;
@@ -6313,7 +6420,7 @@ function btMonths(yearsAgo, n) {
   }
   return o;
 }
-var BTMODE = 'py';   /* py = 평당가 순위 · hh = 세대수 · sz = 평형 */
+var BTMODE = 'py';   /* py = 평당가 순위 · hh = 세대수 · sz = 평형 · ag = 노후도 */
 function szClass(ar) { return ar < 55 ? 'sm' : (ar < 95 ? 'md' : 'lg'); }
 function szLabel(k) { return k === 'sm' ? '소형(55㎡ 미만)' : k === 'md' ? '중형(59·84㎡)' : '대형(95㎡ 이상)'; }
 function sizeSplit(list) {
@@ -6356,7 +6463,7 @@ function btFetch(code, yearsAgo, mode) {
         sz: g.sz || null, ar: g.ars ? median(g.ars) : null });
     });
     list.sort(function (u, v) { return v.p0 - u.p0; });   /* 과거 시점 평당가 기준 정렬 */
-    if (BTMODE !== 'hh') return list;
+    if (BTMODE !== 'hh' && BTMODE !== 'ag') return list;
     return enrich(code, list).then(function () { return list; }, function () { return list; });
   });
 }
@@ -6371,6 +6478,19 @@ function hhSplit(list) {
   };
 }
 function avgHH(a2) { return a2.length ? a2.reduce(function (s, x) { return s + (x.hh || 0); }, 0) / a2.length : null; }
+/** 노후도 3분류 — 반드시 '검증 시작 시점' 연차로 나눈다 (현재 연차로 나누면 결과를 보고 고르는 셈) */
+function ageSplit(list, base) {
+  var ok = list.filter(function (g) { return g.byr && (base - g.byr) >= 0; });
+  ok.forEach(function (g) { g.a0 = base - g.byr; });
+  return {
+    nw: ok.filter(function (g) { return g.a0 < 10; }),
+    md: ok.filter(function (g) { return g.a0 >= 10 && g.a0 < 25; }),
+    od: ok.filter(function (g) { return g.a0 >= 25; }),
+    known: ok.length, total: list.length
+  };
+}
+function avgAge(a2) { var v = a2.filter(function (x) { return x.a0 != null; });
+  return v.length ? v.reduce(function (s, x) { return s + x.a0; }, 0) / v.length : null; }
 function tierSplit(list) {
   var n = list.length;
   return {
@@ -6401,8 +6521,23 @@ function drawBT() {
       A.name + ' ' + la.length + '곳 / ' + B.name + ' ' + lb.length + '곳) 평형을 전체로 바꾸거나 기간을 줄여보세요.';
     return;
   }
-  var cases, ta, tb2, ha, hb, za, zb;
-  if (BTMODE === 'sz') {
+  var cases, ta, tb2, ha, hb, za, zb, aa, ab, base = new Date().getFullYear() - yr;
+  if (BTMODE === 'ag') {
+    aa = ageSplit(la, base); ab = ageSplit(lb, base);
+    if (aa.known < 4 || ab.known < 4) {
+      el('btStat').textContent = '준공연도를 확인한 단지가 부족합니다 (' + A.name + ' ' + aa.known + '/' + aa.total +
+        ', ' + B.name + ' ' + ab.known + '/' + ab.total + '). 평형을 전체로 바꾸거나 다른 지역을 골라보세요.';
+      return;
+    }
+    cases = [
+      { k: A.name + ' 신축(10년↓)', g: aa.nw, c: 'var(--m1)' },
+      { k: A.name + ' 준구축(10~24년)', g: aa.md, c: 'var(--m3)' },
+      { k: A.name + ' 구축(25년↑)', g: aa.od, c: 'var(--m4)' },
+      { k: B.name + ' 신축(10년↓)', g: ab.nw, c: 'var(--ember)' },
+      { k: B.name + ' 준구축(10~24년)', g: ab.md, c: 'var(--frost)' },
+      { k: B.name + ' 구축(25년↑)', g: ab.od, c: 'var(--taupe)' }
+    ];
+  } else if (BTMODE === 'sz') {
     za = sizeSplit(la); zb = sizeSplit(lb);
     cases = [
       { k: A.name + ' 소형', g: za.sm, c: 'var(--m1)' },
@@ -6445,7 +6580,8 @@ function drawBT() {
       x.c + ';margin-right:8px;vertical-align:-1px"></span>' + esc(x.k) + '</td>' +
       '<td>' + x.g.length + '곳' +
         (BTMODE === 'hh' && avgHH(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n0(avgHH(x.g)) + '세대</div>' : '') +
-        (BTMODE === 'sz' && avgAr(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n1(avgAr(x.g)) + '㎡</div>' : '') + '</td>' +
+        (BTMODE === 'sz' && avgAr(x.g) ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n1(avgAr(x.g)) + '㎡</div>' : '') +
+        (BTMODE === 'ag' && avgAge(x.g) != null ? '<div style="font-size:11px;color:var(--slate)">평균 ' + n1(avgAge(x.g)) + '년차</div>' : '') + '</td>' +
       '<td>' + (p0 == null ? '—' : n0(p0) + '만') + '</td>' +
       '<td>' + (p1 == null ? '—' : n0(p1) + '만') + '</td>' +
       '<td style="font-weight:700;color:' + (a >= 100 ? 'var(--good)' : a >= 70 ? 'var(--ember)' : 'var(--slate)') + '">' +
@@ -6456,8 +6592,8 @@ function drawBT() {
   });
 
   /* 예산 매칭 비교 — 과거 가격이 비슷했던 쌍 */
-  var midA = BTMODE === 'sz' ? za.sm : (BTMODE === 'hh' ? ha.solo : ta.mid);
-  var topB = BTMODE === 'sz' ? zb.md : (BTMODE === 'hh' ? hb.big : tb2.top);
+  var midA = BTMODE === 'ag' ? aa.od : (BTMODE === 'sz' ? za.sm : (BTMODE === 'hh' ? ha.solo : ta.mid));
+  var topB = BTMODE === 'ag' ? ab.nw : (BTMODE === 'sz' ? zb.md : (BTMODE === 'hh' ? hb.big : tb2.top));
   var pa = avgP0(midA), pb = avgP0(topB);
   var ga = avgGr(midA), gb = avgGr(topB);
   var lineC = getComputedStyle(document.documentElement).getPropertyValue('--line').trim();
@@ -6474,7 +6610,23 @@ function drawBT() {
   });
 
   var L = [];
-  if (BTMODE === 'sz') {
+  if (BTMODE === 'ag') {
+    [{ n: A.name, s: aa }, { n: B.name, s: ab }].forEach(function (o) {
+      var g1 = avgGr(o.s.nw), g2 = avgGr(o.s.md), g3 = avgGr(o.s.od), p = [];
+      if (g1 != null) p.push('신축 ' + fmtPct(g1));
+      if (g2 != null) p.push('준구축 ' + fmtPct(g2));
+      if (g3 != null) p.push('구축 ' + fmtPct(g3));
+      var shape = '';
+      if (g1 != null && g2 != null && g3 != null) {
+        if (g3 > g1 && g3 > g2) shape = ' &mdash; <b>구축이 가장 높습니다</b>(재건축 기대가 값에 반영된 형태)';
+        else if (g1 > g2 && g3 > g2) shape = ' &mdash; <b>U자입니다</b>(신축과 구축이 가운데보다 높음)';
+        else if (g1 > g2 && g2 > g3) shape = ' &mdash; <b>새 것일수록 좋았습니다</b>';
+        else if (g3 > g2 && g2 > g1) shape = ' &mdash; <b>오래될수록 좋았습니다</b>';
+      }
+      L.push('<span class="hl">' + esc(o.n) + '</span> 연차별(' + base + '년 기준) &mdash; ' + p.join(' · ') + shape +
+        ' (준공연도 확인 ' + o.s.known + '/' + o.s.total + '곳)');
+    });
+  } else if (BTMODE === 'sz') {
     L.push('<span class="hl">' + esc(A.name) + '</span>(' + (RANK[A.code] ? decile(A.code) + '분위' : '—') + ') 소형 ' +
       fmtPct(avgGr(za.sm)) + ' / 중형 ' + fmtPct(avgGr(za.md)) + ' / 대형 ' + fmtPct(avgGr(za.lg)) + ' · ' +
       '<span class="hl">' + esc(B.name) + '</span>(' + (RANK[B.code] ? decile(B.code) + '분위' : '—') + ') 소형 ' +
@@ -6515,19 +6667,31 @@ function drawBT() {
       fmtPct(avgGr(tb2.top)) + ' / 중간 ' + fmtPct(avgGr(tb2.mid)) + '.');
   }
   if (pa != null && pb != null && ga != null && gb != null) {
-    L.push('<b>핵심 비교</b> — ' + esc(A.name) + (BTMODE === 'sz' ? ' 소형은 ' : BTMODE === 'hh' ? ' 나홀로는 ' : ' 중간 물건은 ') + yr + '년 전 평당 ' + n0(pa) + '만, ' +
-      esc(B.name) + (BTMODE === 'sz' ? ' 중형은 ' : BTMODE === 'hh' ? ' 대단지는 ' : ' 대장은 ') + n0(pb) + '만이었습니다. ' +
+    L.push('<b>핵심 비교</b> — ' + esc(A.name) + (BTMODE === 'ag' ? ' 구축은 ' : BTMODE === 'sz' ? ' 소형은 ' : BTMODE === 'hh' ? ' 나홀로는 ' : ' 중간 물건은 ') + yr + '년 전 평당 ' + n0(pa) + '만, ' +
+      esc(B.name) + (BTMODE === 'ag' ? ' 신축은 ' : BTMODE === 'sz' ? ' 중형은 ' : BTMODE === 'hh' ? ' 대단지는 ' : ' 대장은 ') + n0(pb) + '만이었습니다. ' +
       (Math.abs(pa - pb) / Math.max(pa, pb) < 0.25
         ? '<span class="hl">당시 가격대가 비슷해 직접 비교가 가능합니다.</span>'
         : '<span class="dn">당시 가격 차이가 ' + n0(Math.abs(pa - pb)) + '만(' +
           Math.round(Math.abs(pa - pb) / Math.max(pa, pb) * 100) + '%)이라 같은 예산 비교로 보기 어렵습니다.</span>'));
-    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + (BTMODE === 'sz' ? ' 소형 ' : BTMODE === 'hh' ? ' 나홀로 ' : ' 중간 ') + fmtPct(ga) + '</b> vs <b>' +
-      esc(B.name) + (BTMODE === 'sz' ? ' 중형 ' : BTMODE === 'hh' ? ' 대단지 ' : ' 대장 ') + fmtPct(gb) + '</b> — ' +
-      (ga > gb ? '<span class="up">' + (BTMODE === 'sz' ? '상급지 소형이' : BTMODE === 'hh' ? '최상급지 나홀로가' : '상급지 중간 물건이') + ' 앞섰습니다</span>' :
-       gb > ga ? '<span class="up">' + (BTMODE === 'sz' ? '중급지 중형이' : BTMODE === 'hh' ? '상급지 대단지가' : '중급지 대장이') + ' 앞섰습니다</span>' : '차이가 없었습니다') +
+    L.push('이후 ' + yr + '년 성과는 <b>' + esc(A.name) + (BTMODE === 'ag' ? ' 구축 ' : BTMODE === 'sz' ? ' 소형 ' : BTMODE === 'hh' ? ' 나홀로 ' : ' 중간 ') + fmtPct(ga) + '</b> vs <b>' +
+      esc(B.name) + (BTMODE === 'ag' ? ' 신축 ' : BTMODE === 'sz' ? ' 중형 ' : BTMODE === 'hh' ? ' 대단지 ' : ' 대장 ') + fmtPct(gb) + '</b> — ' +
+      (ga > gb ? '<span class="up">' + (BTMODE === 'ag' ? '상급지 구축이' : BTMODE === 'sz' ? '상급지 소형이' : BTMODE === 'hh' ? '최상급지 나홀로가' : '상급지 중간 물건이') + ' 앞섰습니다</span>' :
+       gb > ga ? '<span class="up">' + (BTMODE === 'ag' ? '중급지 신축이' : BTMODE === 'sz' ? '중급지 중형이' : BTMODE === 'hh' ? '상급지 대단지가' : '중급지 대장이') + ' 앞섰습니다</span>' : '차이가 없었습니다') +
       ' (' + n1(Math.abs(ga - gb)) + '%p).');
   }
-  if (BTMODE === 'sz') {
+  if (BTMODE === 'ag') {
+    var ka = (avgGr(aa.od) != null && avgGr(aa.md) != null) ? avgGr(aa.od) - avgGr(aa.md) : null;
+    var kb = (avgGr(ab.od) != null && avgGr(ab.md) != null) ? avgGr(ab.od) - avgGr(ab.md) : null;
+    if (ka != null || kb != null) L.push('같은 지역 안에서 <b>구축 &minus; 준구축</b> 차이는 ' +
+      (ka != null ? esc(A.name) + ' ' + (ka > 0 ? '+' : '') + n1(ka) + '%p' : '') +
+      (kb != null ? (ka != null ? ', ' : '') + esc(B.name) + ' ' + (kb > 0 ? '+' : '') + n1(kb) + '%p' : '') +
+      '입니다. 양수면 <b>재건축 기대가 값에 반영됐다</b>는 뜻이고, 음수면 <b>낡은 것이 그냥 낡은 것</b>이었다는 뜻입니다.');
+    L.push('<b>이 검증이 답할 수 없는 것</b> &mdash; ' + yr + '년 전에도 거래가 있어야 하므로 ' +
+      '<b>' + base + '년 이후 준공된 아파트는 통째로 빠집니다.</b> 여기서 말하는 "신축"은 ' +
+      '<b>' + base + '년 시점에 10년 미만</b>이었던 단지이지 지금의 신축이 아닙니다.');
+    L.push('<b>구축 성적은 실제보다 낮게 나옵니다</b> &mdash; 재건축이 끝나 이름이 바뀐 단지는 표본에서 사라집니다. ' +
+      '가장 크게 오른 사례가 빠지므로, 구축이 이겼다면 실제 격차는 더 컸다고 봐야 합니다.');
+  } else if (BTMODE === 'sz') {
     var sa = (avgGr(za.md) != null && avgGr(za.sm) != null) ? avgGr(za.md) - avgGr(za.sm) : null;
     var sb = (avgGr(zb.md) != null && avgGr(zb.sm) != null) ? avgGr(zb.md) - avgGr(zb.sm) : null;
     if (sa != null || sb != null) L.push('같은 지역 안에서 <b>중형 − 소형</b> 차이는 ' +
@@ -6563,7 +6727,9 @@ function drawBT() {
       '<div class="tblwrap"><table><thead><tr><th>단지</th><th>등급</th><th>' + yr + '년 전 평당</th><th>현재 평당</th><th>상승률</th></tr></thead><tbody>';
     var t = tierSplit(list);
     list.forEach(function (x) {
-      var tag = BTMODE === 'sz'
+      var tag = BTMODE === 'ag'
+        ? (x.a0 == null ? '미상' : x.a0 >= 25 ? '구축' : x.a0 < 10 ? '신축' : '준구축')
+        : BTMODE === 'sz'
         ? (x.sz === 'sm' ? '소형' : x.sz === 'md' ? '중형' : '대형')
         : (BTMODE === 'hh'
           ? (!x.hh ? '미상' : x.hh >= 1000 ? '대단지' : x.hh < 300 ? '나홀로' : '중형')
@@ -6571,7 +6737,8 @@ function drawBT() {
       h += '<tr><td class="nm">' + esc(x.apt) +
         (BTMODE === 'hh' && x.hh ? ' <span style="font-size:11px;color:var(--slate)">' + n0(x.hh) + '세대</span>' : '') +
         (BTMODE === 'sz' && x.ar ? ' <span style="font-size:11px;color:var(--slate)">' + n1(x.ar) + '㎡</span>' : '') +
-        '</td><td><span class="b ' + (tag === '대장' || tag === '대단지' || tag === '대형' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
+        (BTMODE === 'ag' && x.byr ? ' <span style="font-size:11px;color:var(--slate)">' + x.byr + '년 준공 · ' + (x.a0 != null ? x.a0 + '년차' : '') + '</span>' : '') +
+        '</td><td><span class="b ' + (tag === '대장' || tag === '대단지' || tag === '대형' || tag === '구축' ? 'd1' : 'no') + '">' + tag + '</span></td>' +
         '<td>' + n0(x.p0) + '만</td><td>' + n0(x.p1) + '만</td>' +
         '<td style="font-weight:700;color:' + (x.gr >= 100 ? 'var(--good)' : '#16202B') + '">' + fmtPct(x.gr) + '</td></tr>';
     });
@@ -6582,8 +6749,12 @@ function drawBT() {
 }
 function imgBT() {
   if (!BT) return;
-  var A = BT.A, B = BT.B, yr = BT.yr, cases;
-  if (BTMODE === 'sz') {
+  var A = BT.A, B = BT.B, yr = BT.yr, cases, gbase = new Date().getFullYear() - yr;
+  if (BTMODE === 'ag') {
+    var g1 = ageSplit(BT.la, gbase), g2 = ageSplit(BT.lb, gbase);
+    cases = [[A.name + ' 신축', g1.nw], [A.name + ' 준구축', g1.md], [A.name + ' 구축', g1.od],
+             [B.name + ' 신축', g2.nw], [B.name + ' 준구축', g2.md], [B.name + ' 구축', g2.od]];
+  } else if (BTMODE === 'sz') {
     var z1 = sizeSplit(BT.la), z2 = sizeSplit(BT.lb);
     cases = [[A.name + ' 소형', z1.sm], [A.name + ' 중형', z1.md], [A.name + ' 대형', z1.lg],
              [B.name + ' 소형', z2.sm], [B.name + ' 중형', z2.md], [B.name + ' 대형', z2.lg]];
@@ -6597,7 +6768,7 @@ function imgBT() {
              [B.name + ' 대장', tb3.top], [B.name + ' 중간', tb3.mid]];
   }
   exportPNG({
-    title: BTMODE === 'sz' ? '평형별 비교' : BTMODE === 'hh' ? '나홀로 vs 대단지' : '상급지 중간 vs 중급지 대장',
+    title: BTMODE === 'ag' ? '신축 vs 구축' : BTMODE === 'sz' ? '평형별 비교' : BTMODE === 'hh' ? '나홀로 vs 대단지' : '상급지 중간 vs 중급지 대장',
     sub: A.name + ' ↔ ' + B.name + ' · 최근 ' + yr + '년 · ' + (BT.mode === 'all' ? '전체 평형' : BT.mode + '㎡대'),
     stats: cases.map(function (x) {
       var g = avgGr(x[1]);
@@ -7295,7 +7466,9 @@ function init() {
     var b = e.target.closest('button'); if (!b) return;
     BTMODE = b.dataset.v;
     el('btMode').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-    el('btHint').innerHTML = BTMODE === 'sz'
+    el('btHint').innerHTML = BTMODE === 'ag'
+      ? '<b>노후도 기준</b> &mdash; <b>검증 시작 시점</b>의 연차로 나눕니다(지금 연차가 아닙니다). 10년 미만 <b>신축</b>, 10~24년 <b>준구축</b>, 25년 이상 <b>구축</b>. K-apt에서 준공연도를 조회하므로 시간이 조금 더 걸립니다. <b>평형을 84㎡대로 고정</b>하고 돌려야 평형 효과와 섞이지 않습니다.'
+      : BTMODE === 'sz'
       ? '<b>평형 기준</b> — <b>소형</b> 55㎡ 미만(14·18평), <b>중형</b> 55~95㎡(59·84), <b>대형</b> 95㎡ 이상. 위 평형 선택은 무시하고 전체 거래를 봅니다.'
       : BTMODE === 'hh'
       ? '<b>세대수 기준</b> — 300세대 미만을 <b>나홀로</b>, 1000세대 이상을 <b>대단지</b>로 나눕니다. K-apt에서 세대수를 조회하므로 시간이 조금 더 걸립니다.'
@@ -7487,6 +7660,72 @@ function init() {
 window.tdShow = show;
 window.tdCart = { add: cartAdd, list: function () { return CART; }, render: renderFinal };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+/* ══ FAQ 아코디언 (v39.0) ══ */
+(function () {
+  var CARDS = [];
+  function build() {
+    var sec = document.getElementById('pi');
+    if (!sec || sec.dataset.acc) return;
+    var cards = [].slice.call(sec.querySelectorAll('.card.faq'));
+    if (!cards.length) return;
+    sec.dataset.acc = '1'; CARDS = cards;
+    var nav = document.createElement('div');
+    nav.className = 'card faqidx';
+    nav.innerHTML = '<span class="eb">INDEX</span>' +
+      '<h2>\uad81\uae08\ud55c \uac83\ubd80\ud130 \ubcf4\uc138\uc694</h2>' +
+      '<p class="hint">\uc9c8\ubb38\uc744 \ub204\ub974\uba74 \uadfc\uac70\uac00 \ub41c \ub370\uc774\ud130\uc640 \ud45c\uac00 \uc544\ub798\uc5d0 \ud3bc\uccd0\uc9d1\ub2c8\ub2e4.</p>' +
+      '<div class="faqnav"></div>';
+    var list = nav.querySelector('.faqnav');
+    cards.forEach(function (c, i) {
+      var eb = c.querySelector('.eb'), h3 = c.querySelector('h3'), ans = c.querySelector('.ans');
+      if (!h3) return;
+      c.id = 'faqc' + (i + 1);
+      var body = document.createElement('div'); body.className = 'faqbody'; body.id = c.id + 'b';
+      var inner = document.createElement('div'); inner.className = 'faqinner';
+      var start = ans || h3, n = start.nextSibling, mv = [];
+      while (n) { mv.push(n); n = n.nextSibling; }
+      mv.forEach(function (x) { inner.appendChild(x); });
+      body.appendChild(inner); c.appendChild(body);
+      var hd = document.createElement('button');
+      hd.type = 'button'; hd.className = 'faqhd';
+      hd.setAttribute('aria-expanded', 'false');
+      hd.setAttribute('aria-controls', body.id);
+      c.insertBefore(hd, c.firstChild);
+      if (eb) hd.appendChild(eb);
+      hd.appendChild(h3);
+      if (ans) hd.appendChild(ans);
+      var ch = document.createElement('span');
+      ch.className = 'faqchev'; ch.setAttribute('aria-hidden', 'true'); ch.textContent = '+';
+      hd.appendChild(ch);
+      hd.addEventListener('click', function () { setState(i, !CARDS[i].classList.contains('on')); });
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'faqq'; b.dataset.i = i;
+      var qn = document.createElement('span'); qn.className = 'qn'; qn.textContent = eb ? eb.textContent.trim() : 'Q' + (i + 1);
+      var qt = document.createElement('span'); qt.className = 'qt'; qt.textContent = h3.textContent;
+      b.appendChild(qn); b.appendChild(qt);
+      b.addEventListener('click', function () {
+        setState(i, true);
+        setTimeout(function () { CARDS[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+      });
+      list.appendChild(b);
+    });
+    cards[0].parentNode.insertBefore(nav, cards[0]);
+  }
+  function setState(i, on) {
+    var c = CARDS[i]; if (!c) return;
+    c.classList.toggle('on', on);
+    var hd = c.querySelector('.faqhd');
+    if (hd) {
+      hd.setAttribute('aria-expanded', on ? 'true' : 'false');
+      var ch = hd.querySelector('.faqchev'); if (ch) ch.textContent = on ? '\u2212' : '+';
+    }
+    var q = document.querySelector('.faqq[data-i="' + i + '"]');
+    if (q) q.classList.toggle('on', on);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+  else build();
 })();
 
 </script>
