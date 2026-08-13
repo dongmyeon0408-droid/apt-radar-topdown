@@ -523,15 +523,20 @@ function scoreItem(it, c) {
       : '생활권 ' + SUP_R + 'km 배율 ' + sr.toFixed(2) + '배 (' + saI.n + '곳)' +
         (ur != null ? ' · 준공후 미분양 ' + ur.toFixed(2) + '%' : '') });
 
-  /* 5. 단지 경쟁력 — 세대수·역세권·연식 */
+  /* 5. 단지 경쟁력 — 세대수·역세권·연식
+     v43.3 교정: 단지 단위 백테스트(전국 104곳 · 반기 진입 · 11,752 Case) 결과 반영
+     - 세대수  : 단독 IC 3년 +0.091 → 10년 +0.128 (장기로 갈수록 강해짐)  → 비중 .40 → .55
+     - 연식    : 기존 '신축 우대' 곡선은 IC 10년 -0.124 로 역방향이었다.
+                 FAQ Q14(구축 우세) 곡선으로 교체하니 -0.124 → +0.017 로 반전.
+     - 역세권  : 검증 불가(데이터 없음). 비중 .40 → .25 로 낮추고 근거 확보 전까지 보수적으로 둔다. */
   var hh = it.hh || null, walk = it.walk == null ? null : it.walk, age = it.byr ? (new Date().getFullYear() - it.byr) : null;
   var pHh = hh == null ? 55 : (hh >= 2000 ? 100 : hh >= 1000 ? 88 : hh >= 500 ? 72 : hh >= 300 ? 55 : 38);
   var pWk = walk == null ? 55 : (walk <= 5 ? 100 : walk <= 10 ? 88 : walk <= 15 ? 72 : walk <= 20 ? 55 : 38);
-  var pAg = age == null ? 55 : (age <= 5 ? 95 : age <= 10 ? 85 : age <= 20 ? 70 : age <= 30 ? 58 : 65);
-  var s5 = pHh * .4 + pWk * .4 + pAg * .2;
+  var pAg = age == null ? 55 : (age >= 25 ? 100 : age < 10 ? 70 : 45);
+  var s5 = pHh * .55 + pWk * .25 + pAg * .20;
   ax.push({ k: '단지 경쟁력', w: .15, s: s5,
     d: (hh ? n0(hh) + '세대' : '세대수 미상') + ' · ' + (walk == null ? '역 정보 없음' : '도보 ' + walk + '분') +
-       ' · ' + (age == null ? '연식 미상' : age + '년차') });
+       ' · ' + (age == null ? '연식 미상' : age + '년차' + (age >= 25 ? ' (재건축권)' : age < 10 ? ' (신축)' : ' (준구축)')) });
 
   /* 6. 자금 적합성 */
   var L = loanOf(it.med, r, c);
