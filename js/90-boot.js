@@ -214,7 +214,7 @@ function initTheme() {
 function init() {
   initTheme();
   el('ver').textContent = VERSION;
-  el('asof').textContent = 'KB ' + ymL(KB.asof) + ' · 시군구 ' + NTOT + '곳';
+  el('asof').textContent = '국토부 실거래 ' + ymL(KB.asof) + ' · 시군구 ' + NTOT + '곳';
 
   fillSel(el('home'), SGG, '41410');
   fillSel(el('from3'), SGG, '41410');

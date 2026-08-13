@@ -483,7 +483,7 @@ function drawVol() {
 
   /* 가격 방향 — KB ㎡당가 (지방 확장 지역은 실거래 평당가로 대체) */
   var pDir = null, pLabel = '';
-  if (r && r.s) { pDir = chg(r.s, 3); pLabel = 'KB 평당가 3개월'; }
+  if (r && r.s) { pDir = chg(r.s, 3); pLabel = '실거래 평당가 3개월'; }
   else {
     var pys = S.filter(function (x) { return x.py; });
     if (pys.length >= 6) {

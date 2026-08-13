@@ -311,7 +311,7 @@ function render2() {
 function drillSido(name) {
   var subs = KIR.filter(function (r) { return r.sido === name && r.kind === 'sgg'; });
   if (!subs.length) { el('drill2').innerHTML = '<div class="card flat" style="margin-top:18px"><div class="empty">' +
-    esc(name) + '의 시·군·구 지수는 KB 시계열에 없습니다.</div></div>'; return; }
+    esc(name) + '의 시·군·구 자료가 없습니다.</div></div>'; return; }
   var lastI = KIY.length - 1;
   var rows = subs.map(function (r) {
     var f = firstIdx(r.s);
@@ -341,7 +341,7 @@ function fmtPct(v) { return v == null ? '—' : (v > 0 ? '+' : '') + n1(v) + '%'
 function img2() {
   exportPNG({
     title: '전국 급지표 · ' + SIDO2 + ' (' + AREA2 + '㎡ 기준)',
-    sub: 'KB 평당 매매가 기준 서열 · 시군구 ' + NTOT + '곳을 10분위로',
+    sub: '실거래 평당 매매가 기준 서열 · 시군구 ' + NTOT + '곳을 10분위로',
     headers: ['지역', '분위', '평당가', AREA2 + '㎡ 매매', '10년 상승률'],
     weights: [2.6, .9, 1.15, 1.35, 1.25],
     bold: [3], grade: [4],

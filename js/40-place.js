@@ -101,7 +101,7 @@ function imgQuad() {
   if (!LASTQ.length) return;
   exportPNG({
     title: QSIDO + ' 매매·전세 4분면',
-    sub: 'KB 평당 가격 ' + QMO + '개월 변화율 기준',
+    sub: '실거래 평당 가격 ' + QMO + '개월 변화율 기준',
     headers: ['지역', '매매', '전세', '국면', '평당가', '전세가율'],
     weights: [2.3, 1.1, 1.1, 1.3, 1.15, 1.05],
     signed: [1, 2],
