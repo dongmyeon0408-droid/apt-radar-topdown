@@ -152,7 +152,7 @@
   <div class="card">
     <span class="eb">MARKET</span>
     <h2>시장 현황 · 장기 성과</h2>
-    <p class="hint">KB 아파트 가격지수는 <b>1986년 1월</b>부터 이어집니다. 연도별 상승률과 연복리 수익률을
+    <p class="hint">국토부 실거래 연도별 지수는 <b>2006년</b>부터 이어집니다. 연도별 상승률과 연복리 수익률을
       매매·전세로 나눠 봅니다. 지역을 바꾸면 전부 다시 계산됩니다.<br>
       <b>조사 시작 시점이 지역마다 다릅니다</b> — 전국·서울·인천·부산 등은 1986년부터, 서울 자치구는 2002년,
       경기·시군구는 2003년부터입니다. KPI에 각 지역의 실제 시작 연도가 표시됩니다.</p>
@@ -1523,7 +1523,7 @@
       <div style="font-size:14px;font-weight:700;color:var(--charcoal);margin-bottom:8px">쓴 자료 전체</div>
       <div><span class="sl">실거래</span>국토교통부 실거래가 공개시스템 &mdash; 아파트 매매 (공공데이터포털 API 실시간)</div>
       <div><span class="sl">단지정보</span>한국부동산원 공동주택관리정보시스템(K-apt) &mdash; 세대수·사용승인일</div>
-      <div><span class="sl">시세</span>국토교통부 실거래 집계 — 시·군·구 월별 ㎡당 중위가(2006.01~). <b>화면에 보이는 시세는 이 값입니다.</b><br><span class="sl"></span>장기 지수 — KB부동산 월간 주택가격지수(1986.01~). 아래 FAQ의 검증 수치는 KB 월간 시계열(114곳, 2013.04~)로 계산한 것입니다.</div>
+      <div><span class="sl">시세</span>국토교통부 실거래 집계 — 시·군·구 월별 ㎡당 중위가 및 연도별 지수(2006.01~). <b>화면에 보이는 시세와 차트는 모두 이 값입니다.</b><br><span class="sl"></span>아래 FAQ의 검증 수치는 KB 월간 시계열(114곳, 2013.04~)로 계산한 것으로, 화면 시세와 출처가 다릅니다.</div>
       <div><span class="sl">공급</span>국토교통부 통계누리 주택건설 준공실적(2010.08~2026.06) · 한국부동산원 입주예정물량</div>
       <div><span class="sl">미분양</span>국토교통부 통계누리 미분양주택현황 &mdash; 시·군·구 월별(2015.07~2026.06)</div>
       <div><span class="sl">인구</span>행정안전부 주민등록 인구·세대현황</div>
@@ -1691,7 +1691,7 @@
       <tbody>
         <tr><td class="nm">아파트 실거래</td><td>국토교통부 실거래가 공개시스템</td><td>공공데이터포털 API 실시간</td></tr>
         <tr><td class="nm">단지 세대수·준공일</td><td>한국부동산원 K-apt</td><td>공동주택관리정보시스템</td></tr>
-        <tr><td class="nm">지역 시세 (화면 표시)</td><td>국토교통부 실거래 집계</td><td>시·군·구 월별 ㎡당 중위가 2006.1~</td></tr>
+        <tr><td class="nm">지역 시세·지수 (화면 표시)</td><td>국토교통부 실거래 집계</td><td>시·군·구 월별 ㎡당 중위가 · 연도별 지수 2006.1~</td></tr>
         <tr><td class="nm">지역 시세 (FAQ 검증)</td><td>KB부동산</td><td>시·군·구 114곳 2013.4~ · 지수 1986.1~</td></tr>
         <tr><td class="nm">준공실적·미분양</td><td>국토교통부 통계누리</td><td>2010.8~ · 시·군·구 월별 2015.7~</td></tr>
         <tr><td class="nm">입주예정물량</td><td>한국부동산원</td><td>2026.1~2027.12</td></tr>
@@ -2503,7 +2503,7 @@
     <div class="readme" style="background:none;padding:0;margin-top:0">
       <b>국토교통부 실거래 집계</b> — 신고된 아파트 매매·전월세 실거래를 시·군·구별 월별로 모아 ㎡당 중위가로 계산합니다(전용 40~135㎡, 면적대별 고정비중, 5개월 롤링). 2006.1~ 월별. 화면에는 <b>평당가(×3.3058)</b>로 환산해 표시합니다.
       시세는 실거래를 미리 집계한 <b>파일로 내장</b>돼 있습니다. 자동 갱신되지 않으며 매달
-      <code>market-data.js</code>를 교체해야 합니다.<br><br>
+      <code>kb-data.js</code>를 교체해야 합니다.<br><br>
       <b>국토교통부 실거래가 · K-apt</b> — 대장 아파트·단지 솔팅 탭에서 <b>매번 실시간 호출</b>합니다. 자동 최신입니다.
     </div>
   </div>
@@ -2518,7 +2518,6 @@
 
 </main>
 <script src="market-data.js"></script>
-<script src="kb-index.js"></script>
 <script src="supply-data.js"></script>
 <script src="vendor-chart.js"></script>
 <script src="js/00-core.js"></script>
