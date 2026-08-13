@@ -4,7 +4,7 @@ function imgMk() {
   var m = LASTMK;
   exportPNG({
     title: m.r.name + ' 아파트 연도별 상승률',
-    sub: 'KB 아파트 가격지수 · ' + KIY[m.f] + '~' + KIY[m.lastI] + ' (' + (KIY[m.lastI] - KIY[m.f]) + '년)',
+    sub: '국토부 실거래 연도별 지수 · ' + KIY[m.f] + '~' + KIY[m.lastI] + ' (' + (KIY[m.lastI] - KIY[m.f]) + '년)',
     stats: [
       { label: '장기 연복리 (매매)', value: m.cAll == null ? '—' : n1(m.cAll) + '%', color: 'good' },
       { label: '최근 10년 연복리', value: m.c10 == null ? '—' : n1(m.c10) + '%', color: 'good' },
@@ -27,7 +27,7 @@ function imgMk2() {
   var m = LASTMK;
   exportPNG({
     title: m.r.name + ' 2년 단위 수익률',
-    sub: 'KB 아파트 가격지수 · 2년 구간별 수익률 (' + m.nSeg + '개 구간)',
+    sub: '국토부 실거래 연도별 지수 · 2년 구간별 수익률 (' + m.nSeg + '개 구간)',
     stats: [
       { label: '2년 수익률 평균 (매매)', value: m.avg2 == null ? '—' : (m.avg2 > 0 ? '+' : '') + n1(m.avg2) + '%', color: 'good' },
       { label: '2년 수익률 중위', value: m.med2 == null ? '—' : (m.med2 > 0 ? '+' : '') + n1(m.med2) + '%' },

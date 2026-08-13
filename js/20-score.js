@@ -511,7 +511,7 @@ function img7() {
   });
 }
 
-/* ══════════ 시장 현황 (KB 아파트 가격지수 1986~) ══════════ */
+/* ══════════ 시장 현황 (국토부 실거래 연도별 지수) ══════════ */
 var KIY = (typeof KBI !== 'undefined') ? KBI.years : [];
 var KIR = (typeof KBI !== 'undefined') ? KBI.regions.map(function (r) {
   return { name: r.n, sido: r.sd, kind: r.k,
@@ -535,7 +535,7 @@ function mkRegion() {
   return KIR[+v] || KIR[0];
 }
 function renderMarket() {
-  if (!KIR.length) { el('mkKpi').innerHTML = '<div class="empty">지수 데이터를 불러오지 못했습니다. kb-index.js를 확인하세요.</div>'; return; }
+  if (!KIR.length) { el('mkKpi').innerHTML = '<div class="empty">지수 데이터를 불러오지 못했습니다. market-data.js를 확인하세요.</div>'; return; }
   var r = mkRegion();
   var S = r.s, J = r.j;
   var f = firstIdx(S), lastI = S.length - 1;
