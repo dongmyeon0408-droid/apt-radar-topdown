@@ -25,6 +25,21 @@ const REG=KB.regions.filter(r=>r.k==='sgg');
 let AGG=fs.existsSync('raw-agg.json')?JSON.parse(fs.readFileSync('raw-agg.json','utf8')):null;
 if(!AGG){console.error('raw-agg.json 이 없습니다. 먼저 node tools/make-agg.js 를 실행하세요.');process.exit(1);}
 
+/* ── 안전장치: 갱신 전 상태를 기억해 둔다 ── */
+const PREV = (function(){
+  if(!fs.existsSync('market-data.js')) return null;
+  try{
+    const t=fs.readFileSync('market-data.js','utf8');
+    const i=t.indexOf('window.KB'), st=t.indexOf('=',i)+1;
+    let en=t.indexOf('window.KBI',st); if(en<0) en=t.length;
+    const o=JSON.parse(t.slice(st,en).trim().replace(/;\s*$/,''));
+    return { n:o.regions.filter(r=>r.k==='sgg').length, asof:o.asof };
+  }catch(e){ return null; }
+})();
+if(PREV) console.log(`갱신 전 상태 — 시군구 ${PREV.n}곳 · 기준월 ${PREV.asof}\n`);
+const BACKUP = fs.existsSync('raw-agg.json') ? fs.readFileSync('raw-agg.json') : null;
+let FAILS=[];
+
 const num=v=>{const n=parseFloat(String(v==null?'':v).replace(/[,\s]/g,''));return isFinite(n)?n:NaN;};
 const med=a=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;
   return s.length%2?s[m]:(s[m-1]+s[m])/2;};
@@ -94,13 +109,19 @@ function digest(items,isRent){
         AGG[r.c][ym].t=dt.v; AGG[r.c][ym].tn=dt.n;
         AGG[r.c][ym].r=dr.v; AGG[r.c][ym].rn=dr.n;
         if(dt.n.reduce((a,b)=>a+b,0)) changed++;
-      }catch(e){ console.log(`  !! ${r.n} ${ym}: ${e.message}`); }
+      }catch(e){ console.log(`  !! ${r.n} ${ym}: ${e.message}`); FAILS.push(r.n+' '+ym); }
       await sleep(100);
     }
     if((ri+1)%25===0)console.log(`  ... ${ri+1}/${REG.length}곳 (호출 ${calls})`);
   }
+  console.log(`\n수집 완료 — 호출 ${calls}회 · 거래가 있던 지역·월 ${changed}건 · 실패 ${FAILS.length}건`);
+  if(FAILS.length>10){
+    console.error('\n[중단] 수집 실패가 '+FAILS.length+'건입니다(허용 10건).');
+    console.error('  예: '+FAILS.slice(0,8).join(' / '));
+    console.error('  API 키 만료·한도 초과·서버 장애일 수 있습니다. 파일은 바꾸지 않았습니다.');
+    process.exit(1);
+  }
   fs.writeFileSync('raw-agg.json',JSON.stringify(AGG));
-  console.log(`\n수집 완료 — 호출 ${calls}회 · 거래가 있던 지역·월 ${changed}건`);
 
   /* ── market-data.js 생성 ── */
   const last=new Date(now.getFullYear(),now.getMonth()-1,1);
@@ -165,6 +186,23 @@ function digest(items,isRent){
   });
   aggs.push(agg('CAP','수도권','수도권',r=>CAP_SD.indexOf(r.sd)>=0));
   const ALLR=aggs.concat(regions);
+  /* ── 안전장치 2: 지역 수가 크게 줄었는지 ── */
+  if(PREV && regions.length < PREV.n*0.95){
+    if(BACKUP) fs.writeFileSync('raw-agg.json',BACKUP);
+    console.error(`\n[중단] 시군구가 ${PREV.n}곳 → ${regions.length}곳으로 줄었습니다(허용 ${Math.floor(PREV.n*0.95)}곳).`);
+    console.error('  행정구역이 개편됐거나 수집이 덜 됐을 수 있습니다.');
+    console.error('  node tools/map-codes.js 로 지역 코드를 다시 대조해 보세요. 파일은 되돌렸습니다.');
+    process.exit(1);
+  }
+  /* ── 안전장치 3: 최신 달에 값이 있는 지역이 너무 적은지 ── */
+  const lastIdx=ALLM.length-1;
+  const filledLast=regions.filter(r=>r.s.split(',')[lastIdx]!=='').length;
+  if(filledLast < regions.length*0.80){
+    if(BACKUP) fs.writeFileSync('raw-agg.json',BACKUP);
+    console.error(`\n[중단] 최신월(${ALLM[lastIdx]}) 값이 있는 지역이 ${filledLast}/${regions.length}곳뿐입니다(기준 80%).`);
+    console.error('  수집이 덜 됐을 가능성이 큽니다. 파일은 되돌렸습니다.');
+    process.exit(1);
+  }
   const out={asof:ALLM[ALLM.length-1],dates:ALLM,regions:ALLR};
 
   /* 연도별 지수 (전국 최신 = 100) */
@@ -185,5 +223,7 @@ function digest(items,isRent){
   fs.writeFileSync('market-data.js','window.KB = '+JSON.stringify(out)+';\nwindow.KBI = '+JSON.stringify(kbi)+';\n');
   console.log(`\nmarket-data.js 생성 — ${ALLM[0]}~${ALLM[ALLM.length-1]} · 시군구 ${regions.length}곳 · ${(fs.statSync('market-data.js').size/1024).toFixed(0)} KB`);
   if(missing.length) console.log('  자료 없어 빠진 곳: '+missing.join(', '));
+  console.log(`  점검 통과 — 최신월 ${ALLM[lastIdx]} 값 보유 ${filledLast}/${regions.length}곳 · 수집 실패 ${FAILS.length}건`);
+  if(PREV) console.log(`  이전 대비 — 시군구 ${PREV.n} → ${regions.length}곳 · 기준월 ${PREV.asof} → ${out.asof}`);
   console.log('\n이제 market-data.js 와 raw-agg.json 을 GitHub 에 올리면 끝입니다.');
 })();
