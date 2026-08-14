@@ -324,6 +324,23 @@ function init() {
     el('recEntry').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     renderRec();
   });
+  /* v47.0 — 보유기간 선택 (이것 하나로 단지 정렬이 정해진다) */
+  el('recHold').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    HOLD = b.dataset.v;
+    el('recHold').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    var nt = el('holdNote');
+    if (nt) { var h = holdLabel(); nt.innerHTML = h.d; }
+    if (LASTREC.length) renderRec();
+    /* 단지 목록을 이미 불러온 상태면 새 기준으로 다시 세운다 */
+    var loaded = false;
+    document.querySelectorAll('[data-aptbox]').forEach(function (q) {
+      if (q.querySelector('table')) loaded = true;
+    });
+    if (loaded) recTopApts();
+  });
+  (function () { var nt = el('holdNote'); if (nt) nt.innerHTML = holdLabel().d; })();
+
   el('recSort').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     RECSORT = b.dataset.v;

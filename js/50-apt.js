@@ -124,7 +124,23 @@ var LASTREC = [], RECSORT = 'rank', ENTRY = 'auto', GAPTOP = null;
 /* v46.0 — 제외한 지역·단지 (사용자가 직접 뺀 것) */
 var EXREG = {}, EXAPT = {};
 /* v46.0 — 단지 목록 정렬 기준: 'py'(평당가) | 'sc'(점수) */
-var APTSORT = 'rec';   /* 'rec'(추천) | 'py'(비싼) | 'sc'(점수) */
+/* v47.0 — 보유기간 하나로 단지 정렬을 결정한다.
+   근거: 정렬 방식 7종을 앱 흐름 그대로 백테스트한 결과(4,044회 검증)
+     3년  점수 순 +14.4%p (평당가 순은 +9.7 로 꼴찌) · 이긴 비율 75% vs 58%
+     10년 평당가 순 +89.3%p (점수 순은 +78.5 로 꼴찌)
+     전 기간 균형은 급지50+점수50 이 2~3위로 안정
+   짧게 볼수록 단지 조건, 길게 볼수록 동네가 이긴다 — Q17·Q18 과 같은 방향. */
+var HOLD = 'mid';                     /* 'short' | 'mid' | 'long' */
+function holdMix() {                  /* 0 = 평당가만 · 1 = 점수만 */
+  return HOLD === 'short' ? 1 : HOLD === 'long' ? 0 : 0.5;
+}
+function holdLabel() {
+  return HOLD === 'short'
+    ? { t:'3~5년', d:'짧게 보실 거라 <b>단지 조건</b>(연식·역세권·세대수·전세)을 우선했습니다. 과거 검증에서 3년 보유는 이 방식이 가장 나았습니다.' }
+    : HOLD === 'long'
+    ? { t:'7년 이상', d:'길게 보실 거라 <b>좋은 동네·비싼 단지</b>를 우선했습니다. 10년 보유는 이 방식이 가장 나았습니다.' }
+    : { t:'미정', d:'기간을 정하지 않으셔서 <b>동네와 단지를 반반</b>으로 두었습니다. 어느 기간에도 크게 뒤지지 않는 설정입니다.' };
+}
 /** 단지 점수 — scoreItem 의 단지 경쟁력·전세 부분만 뽑아 목록 정렬에 쓴다 */
 function aptScore(g, r) {
   var hh = g.hh || null, walk = g.walk == null ? null : g.walk;
@@ -322,7 +338,6 @@ function renderRec() {
       var cd = b.dataset.exreg;
       EXREG[cd] = (BY[cd] && BY[cd].name) || cd;
       renderRec();
-      var box = el('recAptWrap'); if (box) box.innerHTML = '';
       var st2 = el('recAptStat');
       if (st2) st2.textContent = '지역을 뺐습니다 — 단지를 다시 보려면 «예산으로 살 수 있는 단지 보기»를 눌러주세요';
     });
@@ -437,25 +452,16 @@ function recTopApts() {
           loan: nc2.loan, bind: nc2.bind, ok: use <= c.cash,
           jr: g.jeon ? g.jeon / g.med * 100 : null };
       }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; });      /* v46.0 제외 */
-      /* v46.1 — 정렬
-         추천 순 : 예산 내 단지 중 '최상단권(최고 평당가의 85% 이상)'만 남기고 그 안에서 점수로 재정렬.
-                   급지를 먼저 확보하고 그 안에서 고르는 순서(FAQ Q16·Q20)를 그대로 따른 것.
-         비싼 순 : 평당가 내림차순
-         점수 순 : 가격을 보지 않고 단지 점수만 (참고용) */
-      var okAll = all.filter(function (y) { return y.ok; });
-      var topPy = okAll.length ? Math.max.apply(null, okAll.map(function (y) { return y.g.py; })) : 0;
-      var RECBAND = 0.85;
-      all.forEach(function (y) {
-        y.sc = aptScore(y.g, x.r);
-        y.inBand = y.ok && topPy > 0 && y.g.py >= topPy * RECBAND;
-      });
+      /* v47.0 — 보유기간에 따라 «동네(평당가)»와 «단지 조건(점수)»의 비중을 정한다.
+         두 값을 각각 백분위로 바꿔 가중 합산한다(검증에서 이 방식이 안정적이었다). */
+      var mix = holdMix();
+      var pys = all.map(function (y) { return y.g.py; });
+      var scs = all.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
+      var rPy = pctRankArr(pys), rSc = pctRankArr(scs);
+      all.forEach(function (y, i2) { y.rank = (1 - mix) * rPy[i2] + mix * rSc[i2]; });
       all.sort(function (u, v) {
-        if (APTSORT === 'sc') { var d0 = v.sc - u.sc; if (d0) return d0; return v.g.py - u.g.py; }
-        if (APTSORT === 'rec') {
-          if (u.inBand !== v.inBand) return u.inBand ? -1 : 1;     /* 최상단권 먼저 */
-          if (u.inBand && v.inBand) { var d1 = v.sc - u.sc; if (d1) return d1; }
-          return v.g.py - u.g.py;
-        }
+        if (u.ok !== v.ok) return u.ok ? -1 : 1;          /* 예산 안에 드는 것 먼저 */
+        var d = v.rank - u.rank; if (d) return d;
         return v.g.py - u.g.py;
       });
       if (!all.length) {
@@ -496,24 +502,9 @@ function recTopApts() {
           '<b>평형을 낮추거나</b>, 한 급 아래 지역을 보거나, 아래 <b>예산 초과 단지도 보기</b>로 전체를 확인하세요.</div>';
       }
       if (show3.length) {
-        var nBand = all.filter(function (y) { return y.inBand; }).length;
-        hh += '<div class="aptsortbar">' +
-          '<span class="lb">정렬</span>' +
-          '<button class="chip' + (APTSORT === 'rec' ? ' on' : '') + '" data-aptsort="rec">추천 순</button>' +
-          '<button class="chip' + (APTSORT === 'py' ? ' on' : '') + '" data-aptsort="py">비싼 순</button>' +
-          '<button class="chip' + (APTSORT === 'sc' ? ' on' : '') + '" data-aptsort="sc">점수 순</button>' +
-          '</div>' +
-          '<div class="aptsorthelp">' +
-          (APTSORT === 'rec'
-            ? '<b>예산으로 갈 수 있는 최상단권</b>(가장 비싼 단지의 85% 이상, ' + nBand + '곳)만 남기고, ' +
-              '그 안에서 <b>연식·역세권·세대수·전세 뒷받침</b>으로 다시 세웠습니다. ' +
-              '급지를 먼저 확보하고 그 안에서 고르는 순서입니다.'
-            : APTSORT === 'py'
-            ? '평당가가 높은 순입니다. <b>같은 값이면 위쪽이 더 좋은 동네·단지</b>라는 전제(FAQ Q1)를 그대로 따릅니다.'
-            : '<b>가격을 보지 않고</b> 연식·역세권·세대수·전세 뒷받침만으로 세웠습니다. ' +
-              '싸고 낡은 단지가 위로 올 수 있으니 <b>참고용</b>으로만 보세요 — ' +
-              '급지를 낮추면서 점수를 좇으면 손해였습니다(FAQ Q18).') +
-          '</div>';
+        var hl2 = holdLabel();
+        hh += '<div class="aptsorthelp"><b>' + hl2.t + ' 기준으로 세웠습니다.</b> ' + hl2.d +
+          ' <span class="hint" style="display:block;margin-top:5px">이 순서는 투자 FAQ <b>Q20</b>에서 검증한 방식 그대로입니다.</span></div>';
         hh += '<div class="tblwrap"><table style="min-width:840px"><thead><tr><th>순위</th><th>단지</th><th>평당가</th>' +
           '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
@@ -590,12 +581,7 @@ function recTopApts() {
           renderExBar();
         });
       });
-      /* v46.0 — 정렬 전환 */
-      box.querySelectorAll('[data-aptsort]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          APTSORT = b.dataset.aptsort; recTopApts();
-        });
-      });
+
     });
     drawBestCompare(targets, c);
     st.textContent = targets.length + '개 지역 표시 완료 — 리포트 이미지에도 포함됩니다';
@@ -801,4 +787,18 @@ function openMapFor(code, aptName) {
     var el2 = el('aptFocus');
     if (el2 && el2.scrollIntoView) el2.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 120);
+}
+
+/* ══ v47.0 — 백분위 순위 (동점은 평균 순위) ══ */
+function pctRankArr(v) {
+  var n = v.length, o = v.map(function (_, i) { return i; }).sort(function (a, b) { return v[a] - v[b]; });
+  var out = new Array(n).fill(50), i = 0;
+  while (i < n) {
+    var k = i;
+    while (k + 1 < n && v[o[k + 1]] === v[o[i]]) k++;
+    var a = (i + k) / 2;
+    for (var q = i; q <= k; q++) out[o[q]] = n > 1 ? 100 * a / (n - 1) : 50;
+    i = k + 1;
+  }
+  return out;
 }
