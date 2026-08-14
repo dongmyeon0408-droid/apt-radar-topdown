@@ -123,7 +123,12 @@ function scoreRegion(r, c) {
 /* v47.2 — 기본값을 백테스트와 일치시켰다.
    Q17·Q20 은 ①지역을 «급지60+전세40 종합 점수»로 세우고 ②대출 매수 기준 필요현금으로
    예산을 걸러 계산했다. 화면 기본값이 그와 달라 결과가 어긋나던 것을 바로잡았다. */
-var LASTREC = [], RECSORT = 'score', ENTRY = 'loan', GAPTOP = null;
+/* v48.0 — 진입 방식 기본값 «best»
+   검증 결과(21,570회, 진입 방식 5종 비교):
+     대출만·생애최초 +45.8%p > 자동·생애최초 +42.4 > 대출만 +40.1 > 자동 +37.4 > 전세끼고만 +19.3
+   «자동(필요현금이 적은 쪽)»은 전세 끼고로 밀려 비규제지역만 남기 때문에 오히려 나빴다.
+   그래서 «best»는 대출 매수를 우선하고, 대출로는 갈 곳이 거의 없을 때만 전세 끼고를 쓴다. */
+var LASTREC = [], RECSORT = 'score', ENTRY = 'best', GAPTOP = null, BESTGAP = false;
 /* v46.0 — 제외한 지역·단지 (사용자가 직접 뺀 것) */
 var EXREG = {}, EXAPT = {};
 /* v46.0 — 단지 목록 정렬 기준: 'py'(평당가) | 'sc'(점수) */
@@ -192,7 +197,8 @@ function entryOf(r, c) {
   var g = gapNeedOf(r, c);
   if (ENTRY === 'gap' && !g)
     return { mode: 'gap', need: Infinity, blocked: true, loan: 0, bind: r.reg ? '규제지역 불가' : '전세 데이터 없음', g: null, alt: ln.need };
-  if (ENTRY === 'loan' || !g) return { mode: 'loan', need: ln.need, loan: ln.loan, bind: ln.bind, alt: g ? g.need : null, g: g };
+  if (ENTRY === 'loan' || ENTRY === 'best' || !g)
+    return { mode: 'loan', need: ln.need, loan: ln.loan, bind: ln.bind, alt: g ? g.need : null, g: g };
   if (ENTRY === 'gap') return { mode: 'gap', need: g.need, alt: ln.need, g: g, loan: 0, bind: '전세 승계' };
   return g.need < ln.need
     ? { mode: 'gap', need: g.need, alt: ln.need, g: g, loan: 0, bind: '전세 승계' }
@@ -216,6 +222,17 @@ function renderRec() {
   var list = pool.map(function (r) { return scoreRegion(r, c); });
   list = list.filter(function (x) { return isFinite(x.need); });
   if (onlyOk) list = list.filter(function (x) { return x.need <= c.cash; });
+  /* v48.0 — «best»: 대출 매수를 우선하되, 그것만으로 갈 곳이 5곳 미만이면
+     전세 끼고까지 열어 후보를 만든다. 검증에서 대출 매수가 나았으므로 순서를 그렇게 둔다. */
+  var gapOpened = false;
+  if (ENTRY === 'best' && onlyOk && list.length < 5) {
+    var save = ENTRY; ENTRY = 'auto';
+    var list2 = pool.map(function (r) { return scoreRegion(r, c); })
+      .filter(function (x) { return isFinite(x.need) && x.need <= c.cash; });
+    ENTRY = save;
+    if (list2.length > list.length) { list = list2; gapOpened = true; }
+  }
+  BESTGAP = gapOpened;
   list = recSort(list);
   LASTREC = list;
 
@@ -337,13 +354,16 @@ function renderRec() {
       '</div>';
     h += '</div>';
   });
+  h = verifyBanner(c) + h;
   /* v47.3 — 무주택인데 «생애최초»를 안 켰으면 알려준다 (LTV 40% → 70%) */
   if (c.own === 0 && !c.first && list.length) {
     var reg1 = list.filter(function (q) { return q.r.reg; }).length;
     if (reg1) {
       h = '<div class="verdictbar warn" style="margin-bottom:16px"><span class="vi">확인</span><span class="vt">' +
         '<b>생애최초 주택 구입에 해당하시면 «생애최초»를 켜주세요.</b> ' +
-        '규제지역 대출 한도가 <b>40%에서 70%로</b> 올라가 갈 수 있는 곳이 크게 늘어납니다. ' +
+        '규제지역 대출 한도가 <b>40%에서 70%로</b> 올라갑니다. ' +
+        '과거 검증에서 <b>현금 1.5~2억 구간은 결과가 2.4배</b>였습니다 ' +
+        '(같은 예산 무작위 대비 +45%포인트 → <b>+106%포인트</b>, 10년 기준). ' +
         '지금은 끈 상태로 계산했습니다.' +
         '</span></div>' + h;
     }
@@ -467,7 +487,8 @@ function recTopApts() {
           ? (g.med - g.jeon) + acqTax(g.med, g.ar, tOwn, x.r.reg) + broker(g.med) + c.etc : null;
         var use = nc2.need, mode = 'loan';
         if (ENTRY === 'gap') { use = gapNeed == null ? Infinity : gapNeed; mode = 'gap'; }
-        else if (ENTRY === 'auto' && gapNeed != null && gapNeed < nc2.need) { use = gapNeed; mode = 'gap'; }
+        else if ((ENTRY === 'auto' || (ENTRY === 'best' && BESTGAP)) &&
+                 gapNeed != null && gapNeed < nc2.need) { use = gapNeed; mode = 'gap'; }
         return { g: g, need: use, loanNeed: nc2.need, gapNeed: gapNeed, mode: mode,
           loan: nc2.loan, bind: nc2.bind, ok: use <= c.cash,
           jr: g.jeon ? g.jeon / g.med * 100 : null };
@@ -930,4 +951,60 @@ function toggleInlineMap(btn, code, aptName, dong) {
   steps.push({ kind:'place',   q: an + ' ' + aptName });
   steps.push({ kind:'address', q: dong ? (an + ' ' + dong) : an });
   geoFind(steps, function (pos) { INMAP[cacheKey] = pos; draw(pos); });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   v48.0 — 이 설정이 과거에 얼마나 나았는지 실측치로 보여준다
+   출처: 진입 방식 백테스트 21,570회 · 정렬 방식 백테스트 4,044회
+   (투자 FAQ Q20 · Q22)
+   ══════════════════════════════════════════════════════════════ */
+var BT_GAIN = {
+  /* [3년, 5년, 7년, 10년] — 같은 예산 무작위 대비 «더 번 만큼»(%p) */
+  loan:      [11.4, 24.0, 45.5, 79.6],
+  loanFirst: [14.1, 28.9, 51.6, 88.5],
+  auto:      [10.7, 22.5, 42.7, 73.9],
+  autoFirst: [12.9, 26.7, 47.7, 82.0],
+  gap:       [ 6.0, 11.8, 23.6, 35.8]
+};
+var BT_WIN = {
+  loan:      [71, 84, 96, 99],
+  loanFirst: [75, 86, 98, 99],
+  auto:      [70, 81, 95, 97],
+  autoFirst: [73, 84, 96, 97],
+  gap:       [68, 81, 91, 96]
+};
+function btKey(c) {
+  var gap = (ENTRY === 'gap') || (ENTRY === 'best' && BESTGAP) || (ENTRY === 'auto');
+  if (ENTRY === 'gap') return 'gap';
+  if (gap) return c.first ? 'autoFirst' : 'auto';
+  return c.first ? 'loanFirst' : 'loan';
+}
+function btIndex() { return HOLD === 'short' ? 0 : HOLD === 'long' ? 3 : 1; }
+function btLabel() { return HOLD === 'short' ? '3년' : HOLD === 'long' ? '10년' : '5년'; }
+function verifyBanner(c) {
+  var k = btKey(c), i = btIndex();
+  var g = BT_GAIN[k][i], w = BT_WIN[k][i], yr = btLabel();
+  var how = k === 'gap' ? '전세 끼고'
+          : /First/.test(k) ? (/^auto/.test(k) ? '생애최초 · 전세 포함' : '생애최초 대출')
+          : /^auto/.test(k) ? '대출 + 전세 포함' : '대출 매수';
+  var warn = (k === 'gap') || (/^auto/.test(k) && !BESTGAP);
+  return '<div class="btbanner' + (warn ? ' warn' : '') + '">' +
+    '<div class="btb-l"><span class="btb-k">지금 설정</span>' +
+      '<b>' + how + ' · ' + yr + ' 보유</b></div>' +
+    '<div class="btb-r">' +
+      '<div><span>같은 예산 아무거나 산 것보다</span><b>+' + g.toFixed(1) + '%포인트</b></div>' +
+      '<div><span>이긴 비율</span><b>' + w + '%</b></div>' +
+    '</div>' +
+    '<div class="btb-n">' +
+      (k === 'gap'
+        ? '<b>전세 끼고만 쓰면 검증에서 가장 나빴습니다</b>(+19.3%포인트 · 대출 매수는 +40.1). 규제지역에 못 들어가 좋은 동네가 빠지기 때문입니다.'
+        : (/^auto/.test(k) && !BESTGAP)
+        ? '<b>«자동»은 검증에서 대출 매수보다 나빴습니다.</b> 당장 돈이 덜 드는 쪽을 고르다 비규제지역으로 밀리기 때문입니다.'
+        : BESTGAP
+        ? '대출만으로는 갈 곳이 거의 없어 <b>전세 끼고까지 열었습니다.</b> 예산이 늘면 대출 매수가 더 낫습니다.'
+        : (!c.first
+        ? '검증된 기본 설정입니다. <b>생애최초에 해당하시면</b> 같은 돈으로 +' + BT_GAIN.loanFirst[i].toFixed(1) + '%포인트까지 올라갑니다.'
+        : '검증에서 가장 좋았던 설정입니다.')) +
+      ' <span class="hint">과거 21,570회 검증 · 투자 FAQ Q20·Q22</span>' +
+    '</div></div>';
 }
