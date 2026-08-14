@@ -458,35 +458,52 @@
   <div class="card">
     <span class="eb">RECOMMEND</span>
     <h2>내 조건 맞춤 투자처</h2>
-    <p class="hint">위 <b>내 조건</b>을 채우고 <b>이 조건으로 추천받기</b>를 누르면, 전국 시·군·구를
-      <b>2개 기준</b>으로 채점해 순위를 매깁니다 — 얼마나 좋은 동네인가(급지 <b>60%</b>), 지금이 살 때인가(전세 뒷받침 <b>40%</b>).
-      자금은 점수가 아니라 <b>필터</b>이고, 과거 상승률과 수급은 <b>참고 표시만</b> 합니다
-      (넣으면 오히려 결과가 나빠졌습니다 — FAQ Q17).
+    <p class="hint">위 <b>내 조건</b>을 채우고 아래 <b>몇 년 보실 건가요</b>만 고르시면 됩니다.
+      나머지는 <b>과거 검증에서 가장 좋았던 방식</b>으로 자동 설정됩니다(투자 FAQ Q20·Q21).
       <button class="btn ghost sm" data-gloss="1" style="margin-left:6px">용어가 어렵나요?</button></p>
-    <div class="inline" style="margin-bottom:12px">
-      <div class="seg" id="recEntry">
-        <button data-v="auto" aria-pressed="true">자동 (유리한 쪽)</button>
-        <button data-v="loan" aria-pressed="false">대출 매수만</button>
-        <button data-v="gap" aria-pressed="false">전세 끼고만</button>
+
+    <div class="holdpick">
+      <div class="hp-q">몇 년 보실 건가요?</div>
+      <div class="seg big" id="recHold">
+        <button data-v="short" aria-pressed="false">3~5년</button>
+        <button data-v="long"  aria-pressed="false">7년 이상</button>
+        <button data-v="mid"   aria-pressed="true">아직 모르겠어요</button>
       </div>
+      <div class="hp-note" id="holdNote"></div>
     </div>
-    <div class="inline" style="margin-bottom:12px">
-      <div class="seg" id="recSort">
-        <button data-v="rank" aria-pressed="true">서열 높은 순</button>
-        <button data-v="score" aria-pressed="false">종합 점수 순</button>
-        <button data-v="need" aria-pressed="false">필요현금 적은 순</button>
-        <button data-v="size" aria-pressed="false">투자 규모 큰 순</button>
-      </div>
-    </div>
+
     <div class="inline" style="margin-bottom:16px">
-      <label class="chk"><input type="checkbox" id="recOk" checked><span>예산 안에서만</span></label>
       <button class="btn" id="recApt">예산으로 살 수 있는 단지 보기</button>
-      <label class="chk"><input type="checkbox" id="recAptOk" checked><span>예산 내 단지만</span></label>
       <span class="status" id="recAptStat"></span>
       <button class="btn sig" id="imgRecFull">리포트 이미지 (4장)</button>
       <button class="btn ghost sm" id="imgRec">표만 이미지</button>
       <button class="btn ghost sm" data-csv="imgRec">엑셀 저장</button>
     </div>
+
+    <details class="advbox">
+      <summary>세부 조정 <span>— 기본값이 검증된 설정입니다. 바꾸지 않으셔도 됩니다.</span></summary>
+      <div class="advin">
+        <div class="advrow"><span class="advlb">진입 방식</span>
+          <div class="seg" id="recEntry">
+            <button data-v="auto" aria-pressed="true">자동 (유리한 쪽)</button>
+            <button data-v="loan" aria-pressed="false">대출 매수만</button>
+            <button data-v="gap" aria-pressed="false">전세 끼고만</button>
+          </div>
+        </div>
+        <div class="advrow"><span class="advlb">지역 정렬</span>
+          <div class="seg" id="recSort">
+            <button data-v="rank" aria-pressed="true">서열 높은 순</button>
+            <button data-v="score" aria-pressed="false">종합 점수 순</button>
+            <button data-v="need" aria-pressed="false">필요현금 적은 순</button>
+            <button data-v="size" aria-pressed="false">투자 규모 큰 순</button>
+          </div>
+        </div>
+        <div class="advrow"><span class="advlb">범위</span>
+          <label class="chk"><input type="checkbox" id="recOk" checked><span>예산 안에서만</span></label>
+          <label class="chk"><input type="checkbox" id="recAptOk" checked><span>예산 내 단지만</span></label>
+        </div>
+      </div>
+    </details>
     <div class="kpis" id="recKpi"></div>
     <div class="ins" id="recIns"></div>
     <div id="recBest"></div>
