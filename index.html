@@ -483,17 +483,21 @@
     <details class="advbox">
       <summary>세부 조정 <span>— 기본값이 검증된 설정입니다. 바꾸지 않으셔도 됩니다.</span></summary>
       <div class="advin">
+        <div class="advnote"><b>«검증됨» 표시가 기본값입니다.</b>
+          투자 FAQ <b>Q17·Q20</b>의 백테스트가 이 설정으로 계산됐습니다.
+          다른 항목은 편의를 위해 넣은 것으로 <b>따로 검증하지 않았습니다</b> —
+          바꾸시면 화면 결과와 FAQ 수치가 서로 달라집니다.</div>
         <div class="advrow"><span class="advlb">진입 방식</span>
           <div class="seg" id="recEntry">
-            <button data-v="auto" aria-pressed="true">자동 (유리한 쪽)</button>
-            <button data-v="loan" aria-pressed="false">대출 매수만</button>
+            <button data-v="loan" aria-pressed="true">대출 매수만 <em>검증됨</em></button>
+            <button data-v="auto" aria-pressed="false">자동 (유리한 쪽)</button>
             <button data-v="gap" aria-pressed="false">전세 끼고만</button>
           </div>
         </div>
         <div class="advrow"><span class="advlb">지역 정렬</span>
           <div class="seg" id="recSort">
-            <button data-v="rank" aria-pressed="true">서열 높은 순</button>
-            <button data-v="score" aria-pressed="false">종합 점수 순</button>
+            <button data-v="score" aria-pressed="true">종합 점수 순 <em>검증됨</em></button>
+            <button data-v="rank" aria-pressed="false">서열 높은 순</button>
             <button data-v="need" aria-pressed="false">필요현금 적은 순</button>
             <button data-v="size" aria-pressed="false">투자 규모 큰 순</button>
           </div>
