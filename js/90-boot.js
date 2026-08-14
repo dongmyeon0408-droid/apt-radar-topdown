@@ -568,10 +568,24 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
       if (eb) hd.appendChild(eb);
       hd.appendChild(h3);
       if (ans) hd.appendChild(ans);
+      var sec2 = c;
       var ch = document.createElement('span');
       ch.className = 'faqchev'; ch.setAttribute('aria-hidden', 'true'); ch.textContent = '+';
       hd.appendChild(ch);
-      hd.addEventListener('click', function () { setState(i, !CARDS[i].classList.contains('on')); });
+      hd.addEventListener('click', function (ev) {
+        if (ev.target && ev.target.closest && ev.target.closest('.faqshot')) return;
+        setState(i, !CARDS[i].classList.contains('on'));
+      });
+      /* 인스타 스토리용 이미지 저장 버튼 */
+      var shot = document.createElement('button');
+      shot.type = 'button'; shot.className = 'faqshot';
+      shot.title = '이 문항을 세로 이미지(1080×1920)로 저장';
+      shot.innerHTML = '<span>\u2193</span> 이미지';
+      shot.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        try { faqStory(sec2); } catch (e) { alert('이미지를 만들지 못했습니다: ' + e.message); }
+      });
+      hd.appendChild(shot);
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'faqq'; b.dataset.i = i;
       var qn = document.createElement('span'); qn.className = 'qn'; qn.textContent = eb ? eb.textContent.trim() : 'Q' + (i + 1);
@@ -600,3 +614,159 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   else build();
 })();
 
+/* ══════════════════════════════════════════════════════════════
+   FAQ 카드 → 인스타 스토리 이미지 (1080×1920)
+   각 FAQ 카드 헤더에 「이미지 저장」 버튼을 붙이고,
+   질문 · 한 줄 답 · 핵심 표 1개 · 핵심 문장을 세로로 렌더링한다.
+   ══════════════════════════════════════════════════════════════ */
+function faqStory(sec) {
+  var dark = document.body.classList.contains('dark');
+  var C = dark
+    ? { bg:'#0E161F', card:'#19242F', ink:'#EAF1F4', sub:'#8B9AA6', line:'#26333F',
+        good:'#4FC08D', bad:'#E0876B', accent:'#7FB4CE', ember:'#E0A94E', onink:'#0E161F' }
+    : { bg:'#16202B', card:'#1E2B37', ink:'#FFFFFF', sub:'#9DAEBB', line:'#2C3A47',
+        good:'#4FC08D', bad:'#E88A6C', accent:'#7FB4CE', ember:'#E0A94E', onink:'#16202B' };
+  var F = "'Pretendard Variable',Pretendard,-apple-system,sans-serif";
+  var W = 1080, H = 1920, PAD = 72;
+  var dpr = 2;
+  var cv = document.createElement('canvas');
+  cv.width = W * dpr; cv.height = H * dpr;
+  var x = cv.getContext('2d'); x.scale(dpr, dpr);
+
+  function rr(a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r);
+    x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
+  function wrap(t, maxW, size, weight){
+    x.font = (weight||'700 ')+size+'px '+F;
+    var out=[], cur='';
+    String(t).split(' ').forEach(function(wd){
+      var s2 = cur ? cur+' '+wd : wd;
+      if (x.measureText(s2).width > maxW && cur){ out.push(cur); cur=wd; } else cur=s2;
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+  var txt = function(el2){ return (el2 ? el2.textContent : '').replace(/\s+/g,' ').trim(); };
+
+  /* ── 내용 추출 ── */
+  var qno   = txt(sec.querySelector('.eb'));
+  var qtext = txt(sec.querySelector('h3'));
+  var ans   = txt(sec.querySelector('.ans'));
+  var tbl   = sec.querySelector('.tblwrap table');
+  var head=[], rows=[];
+  if (tbl){
+    tbl.querySelectorAll('thead th').forEach(function(th){ head.push(txt(th)); });
+    Array.prototype.slice.call(tbl.querySelectorAll('tbody tr')).slice(0,6).forEach(function(tr){
+      var r=[]; tr.querySelectorAll('td').forEach(function(td){ r.push(txt(td)); });
+      rows.push({ c:r, hi: tr.classList.contains('pick'), lo: tr.classList.contains('self') });
+    });
+  }
+  /* 본문 첫 문단 (핵심 문장) */
+  var pEl = sec.querySelector('.faqbody p') || sec.querySelector('p');
+  var lead = txt(pEl).slice(0, 150);
+
+  /* ── 배경 ── */
+  x.fillStyle = C.bg; x.fillRect(0,0,W,H);
+  /* 상단 은은한 그라데이션 */
+  var g = x.createLinearGradient(0,0,0,420);
+  g.addColorStop(0,'rgba(127,180,206,.16)'); g.addColorStop(1,'rgba(127,180,206,0)');
+  x.fillStyle = g; x.fillRect(0,0,W,420);
+
+  var y = 150;
+  /* 배지 */
+  x.font='800 26px '+F; var bw = x.measureText(qno).width + 44;
+  x.fillStyle = C.ember; rr(PAD, y, bw, 50, 25); x.fill();
+  x.fillStyle = C.onink; x.textAlign='center';
+  x.fillText(qno, PAD+bw/2, y+34); x.textAlign='left';
+  y += 96;
+
+  /* 질문 */
+  var qs = qtext.length > 26 ? 58 : 66;
+  var ql = wrap(qtext, W-PAD*2, qs, '800 ');
+  x.fillStyle = C.ink; x.font='800 '+qs+'px '+F;
+  ql.forEach(function(l){ x.fillText(l, PAD, y); y += qs*1.34; });
+  y += 26;
+
+  /* 한 줄 답 */
+  if (ans){
+    var al = wrap(ans, W-PAD*2-64, 40, '700 ');
+    var ah = al.length*56 + 52;
+    x.fillStyle = dark ? 'rgba(79,192,141,.14)' : 'rgba(79,192,141,.16)';
+    rr(PAD, y, W-PAD*2, ah, 22); x.fill();
+    x.fillStyle = C.good; x.font='700 40px '+F;
+    var ay = y + 60;
+    al.forEach(function(l){ x.fillText(l, PAD+32, ay); ay += 56; });
+    y += ah + 54;
+  }
+
+  /* 표 */
+  if (rows.length){
+    var nCol = head.length || rows[0].c.length;
+    var tw = W - PAD*2, colW = [];
+    var first = Math.min(0.40, Math.max(0.30, 1/nCol + 0.10));
+    colW.push(tw*first);
+    for (var i=1;i<nCol;i++) colW.push(tw*(1-first)/(nCol-1));
+    var rowH = 78;
+    /* 헤더 */
+    if (head.length){
+      x.fillStyle = C.sub; x.font='600 26px '+F;
+      var cx = PAD;
+      head.forEach(function(h,i2){
+        x.textAlign = i2===0 ? 'left' : 'right';
+        x.fillText(h, i2===0 ? cx : cx+colW[i2], y+34);
+        cx += colW[i2];
+      });
+      x.textAlign='left';
+      y += 54;
+      x.fillStyle = C.line; x.fillRect(PAD, y, tw, 2); y += 10;
+    }
+    rows.forEach(function(r){
+      if (r.hi){ x.fillStyle='rgba(79,192,141,.13)'; rr(PAD-16,y-6,tw+32,rowH-8,14); x.fill(); }
+      else if (r.lo){ x.fillStyle='rgba(232,138,108,.11)'; rr(PAD-16,y-6,tw+32,rowH-8,14); x.fill(); }
+      var cx2 = PAD;
+      r.c.forEach(function(v,i2){
+        var isNum = i2>0;
+        x.font = (r.hi?'800 ':'600 ') + (isNum?34:32) + 'px '+F;
+        x.fillStyle = r.hi ? C.good : r.lo ? C.bad : C.ink;
+        if (i2===0) x.fillStyle = C.ink;
+        x.textAlign = isNum ? 'right' : 'left';
+        var s2 = v.length>14 ? v.slice(0,13)+'…' : v;
+        x.fillText(s2, isNum ? cx2+colW[i2]-6 : cx2, y+46);
+        cx2 += colW[i2];
+      });
+      x.textAlign='left';
+      y += rowH;
+    });
+    y += 40;
+  }
+
+  /* 핵심 문장 */
+  if (lead && y < 1480){
+    var ll = wrap(lead, W-PAD*2-56, 30, '450 ').slice(0, Math.floor((1520-y)/44));
+    if (ll.length){
+      x.fillStyle = C.card; rr(PAD, y, W-PAD*2, ll.length*44+56, 20); x.fill();
+      x.fillStyle = C.sub; x.font='450 30px '+F;
+      var ly = y+52;
+      ll.forEach(function(l){ x.fillText(l, PAD+28, ly); ly += 44; });
+      y += ll.length*44+56;
+    }
+  }
+
+  /* 푸터 */
+  var fy = H - 168;
+  x.fillStyle = C.line; x.fillRect(PAD, fy, W-PAD*2, 2);
+  x.fillStyle = C.ink; x.font='800 34px '+F;
+  x.fillText('겨울잠 · 아파트 레이더', PAD, fy+64);
+  x.fillStyle = C.sub; x.font='450 24px '+F;
+  x.fillText('국토교통부 실거래 · 한국부동산원 자료로 직접 검증', PAD, fy+106);
+  x.font='500 24px '+F; x.fillStyle = C.accent; x.textAlign='right';
+  x.fillText('apt-radar-topdown.vercel.app', W-PAD, fy+106);
+  x.textAlign='left';
+
+  /* 저장 */
+  cv.toBlob(function(b){
+    var u = URL.createObjectURL(b), a = document.createElement('a');
+    a.href = u; a.download = 'aptradar_' + qno + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 1200);
+  }, 'image/png');
+}
