@@ -321,7 +321,7 @@ function drillSido(name) {
   }).sort(function (u, v) { return (v.idx || 0) - (u.idx || 0); });
   var h = '<div class="card flat" style="margin-top:18px"><span class="eb">' + esc(name) + ' 하위 지역</span>' +
     '<h2 style="font-size:22px;margin-bottom:6px">' + esc(name) + ' 시·군·구 (' + rows.length + '곳)</h2>' +
-    '<p class="hint" style="margin-bottom:14px">KB는 수도권·광역시만 평당 가격을 조사합니다. 그 외 지역은 <b>가격지수</b>로 비교합니다.</p>' +
+    '<p class="hint" style="margin-bottom:14px">연도별 <b>가격지수</b>로 비교합니다. <b>전국 평균이 100</b>이므로, 100보다 크면 전국 평균보다 비싼 동네입니다.</p>' +
     '<div class="tblwrap"><table><thead><tr><th>지역</th><th>지수</th><th>10년 상승률</th><th>10년 연복리</th>' +
     '<th>장기 연복리</th><th>조사 시작</th><th></th></tr></thead><tbody>';
   rows.forEach(function (x) {
