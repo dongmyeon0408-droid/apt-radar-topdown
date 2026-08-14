@@ -594,3 +594,40 @@ tr.txrow>td{padding:0;background:var(--lift)}
   .iconbtn{width:28px;height:28px;margin-left:3px}
   .aptsorthelp{font-size:11.5px}
 }
+
+/* v47.0 — 보유기간 선택 · 세부 조정 접기 */
+.holdpick{background:var(--chip);border:1px solid var(--line);border-radius:18px;
+  padding:20px 22px;margin:0 0 18px}
+.hp-q{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:14px}
+.seg.big{display:inline-flex;flex-wrap:wrap;gap:8px;border:0;background:none;padding:0}
+.seg.big button{border:1.5px solid var(--line);background:var(--pane);color:var(--slate);
+  border-radius:14px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .16s ease;min-width:132px}
+.seg.big button:hover{border-color:var(--teal);color:var(--ink)}
+.seg.big button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);
+  color:#fff;box-shadow:0 3px 12px rgba(22,84,95,.22)}
+.hp-note{margin-top:14px;font-size:13px;line-height:1.7;color:var(--slate)}
+.hp-note b{color:var(--ink)}
+
+.advbox{border:1px solid var(--line);border-radius:14px;background:var(--pane);
+  margin:0 0 16px;overflow:hidden}
+.advbox>summary{cursor:pointer;padding:13px 18px;font-size:13.5px;font-weight:700;
+  color:var(--slate);list-style:none;user-select:none}
+.advbox>summary::-webkit-details-marker{display:none}
+.advbox>summary::before{content:'⌄';display:inline-block;margin-right:8px;
+  transition:transform .2s;font-size:15px}
+.advbox[open]>summary::before{transform:rotate(180deg)}
+.advbox>summary span{font-weight:400;font-size:12px;opacity:.8}
+.advbox>summary:hover{color:var(--ink);background:var(--chip)}
+.advin{padding:6px 18px 18px;border-top:1px solid var(--line)}
+.advrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.advlb{font-size:12.5px;font-weight:700;color:var(--slate);min-width:64px}
+
+@media(max-width:640px){
+  .holdpick{padding:16px 16px;border-radius:16px}
+  .hp-q{font-size:15.5px}
+  .seg.big{width:100%}
+  .seg.big button{flex:1 1 100%;min-width:0;padding:13px 12px;font-size:14.5px}
+  .advrow{gap:8px}
+  .advlb{min-width:100%}
+}
