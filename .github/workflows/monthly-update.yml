@@ -1,0 +1,39 @@
+name: 시세 자동 갱신
+
+# 매달 5일 새벽 3시(한국시간)에 실행. 수동 실행도 가능합니다.
+on:
+  schedule:
+    - cron: '0 18 4 * *'      # UTC 18:00 = 한국 새벽 3시
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 저장소 받기
+        uses: actions/checkout@v4
+
+      - name: Node 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 최근 4개월 시세 갱신
+        env:
+          MOLIT_API_KEY: ${{ secrets.MOLIT_API_KEY }}
+        run: node tools/update.js 4
+
+      - name: 바뀐 게 있으면 커밋
+        run: |
+          git config user.name  "apt-radar-bot"
+          git config user.email "bot@users.noreply.github.com"
+          if [ -n "$(git status --porcelain market-data.js raw-agg.json)" ]; then
+            git add market-data.js raw-agg.json
+            git commit -m "시세 자동 갱신 $(date +%Y-%m)"
+            git push
+            echo "갱신 완료"
+          else
+            echo "바뀐 내용 없음"
+          fi
