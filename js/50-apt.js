@@ -337,6 +337,17 @@ function renderRec() {
       '</div>';
     h += '</div>';
   });
+  /* v47.3 — 무주택인데 «생애최초»를 안 켰으면 알려준다 (LTV 40% → 70%) */
+  if (c.own === 0 && !c.first && list.length) {
+    var reg1 = list.filter(function (q) { return q.r.reg; }).length;
+    if (reg1) {
+      h = '<div class="verdictbar warn" style="margin-bottom:16px"><span class="vi">확인</span><span class="vt">' +
+        '<b>생애최초 주택 구입에 해당하시면 «생애최초»를 켜주세요.</b> ' +
+        '규제지역 대출 한도가 <b>40%에서 70%로</b> 올라가 갈 수 있는 곳이 크게 늘어납니다. ' +
+        '지금은 끈 상태로 계산했습니다.' +
+        '</span></div>' + h;
+    }
+  }
   el('recWrap').innerHTML = h;
   renderExBar();
   el('recWrap').querySelectorAll('[data-exreg]').forEach(function (b) {
@@ -486,10 +497,12 @@ function recTopApts() {
       var show3 = (onlyOk ? okList : all).slice(0, 3);
       var flagship = all[0];
 
-      var best1 = okList[0];
+      /* v47.3 — «살 수 있는 최고 매물»은 이름 그대로 예산 내 가장 비싼 매물이어야 한다.
+         아래 목록 1위는 보유기간 기준으로 세운 것이라 서로 다를 수 있다. */
+      var best1 = okList.slice().sort(function (u, v) { return v.g.med - u.g.med; })[0];
       if (best1) {
         var left = c.cash - best1.need;
-        hh0 = '<div class="kvhead real">실제 매물 기준 <span>— 아래 표에서 고른 매물로 계산한 값입니다</span></div>' +
+        hh0 = '<div class="kvhead real">예산으로 갈 수 있는 최상단 <span>— 아래 목록 1위와 다를 수 있습니다</span></div>' +
           '<div class="kvrow real"><div><span>살 수 있는 최고 매물</span><b>' + won(best1.g.med) +
             '<i style="font-style:normal;font-size:11.5px;color:var(--slate);display:block">' + esc(best1.g.apt) + '</i></b></div>' +
           '<div><span>필요현금</span><b style="color:var(--good)">' + won(best1.need) +
@@ -898,11 +911,23 @@ function toggleInlineMap(btn, code, aptName, dong) {
   /* 지번 → 동+단지명 → 동 중심 순으로 시도 */
   var jib = btn.dataset.aptjibun || '';
   var an = addrName(r.name);
-  geoFind([
+  /* «옥빛마을(주공)16(그린나래)» 처럼 괄호·차수가 붙은 이름은 지도에 없다.
+     괄호 안을 떼고, 숫자까지 뗀 이름으로도 차례로 시도한다. */
+  var nm1 = aptName.replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();   /* 옥빛마을16 */
+  var nm2 = nm1.replace(/\d+\s*(단지|차)?$/, '').trim();                       /* 옥빛마을 */
+  var alt = [];
+  if (nm1 && nm1 !== aptName) alt.push(nm1);
+  if (nm2 && nm2 !== nm1 && nm2.length >= 2) alt.push(nm2);
+  var steps = [
     { kind:'place',   q: (dong ? an + ' ' + dong + ' ' : an + ' ') + aptName },
-    { kind:'place',   q: aptName + ' ' + (dong || an) },
-    { kind:'address', q: jib ? (an + ' ' + (dong || '') + ' ' + jib) : '' },
-    { kind:'place',   q: an + ' ' + aptName },
-    { kind:'address', q: dong ? (an + ' ' + dong) : an }
-  ], function (pos) { INMAP[cacheKey] = pos; draw(pos); });
+    { kind:'address', q: jib ? (an + ' ' + (dong || '') + ' ' + jib) : '' }
+  ];
+  alt.forEach(function (v) {
+    steps.push({ kind:'place', q: (dong ? an + ' ' + dong + ' ' : an + ' ') + v });
+    steps.push({ kind:'place', q: v + ' 아파트 ' + (dong || an) });
+  });
+  steps.push({ kind:'place',   q: aptName + ' ' + (dong || an) });
+  steps.push({ kind:'place',   q: an + ' ' + aptName });
+  steps.push({ kind:'address', q: dong ? (an + ' ' + dong) : an });
+  geoFind(steps, function (pos) { INMAP[cacheKey] = pos; draw(pos); });
 }
