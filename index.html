@@ -120,11 +120,12 @@
       <div class="field"><label>주담대 금리 (%)</label><input type="number" id="rate" value="4.5" step="0.1" min="0"></div>
       <div class="field"><label>이동 가능 범위</label>
         <select id="radius">
-          <option value="auto" selected>자동 (규제지역만 60km 이내)</option>
+          <option value="auto" selected>자동 (규제지역만 60km · 비규제는 거리 무관)</option>
           <option value="off">제한 없음 (전국)</option>
-          <option value="30">30km 이내</option>
-          <option value="50">50km 이내</option>
-          <option value="100">100km 이내</option>
+          <option value="20">20km 이내 (직선)</option>
+          <option value="30">30km 이내 (직선)</option>
+          <option value="50">50km 이내 (직선)</option>
+          <option value="100">100km 이내 (직선)</option>
         </select></div>
       <div class="field"><label>보유 주택 상태</label>
         <select id="own">
@@ -489,6 +490,7 @@
     <div class="kpis" id="recKpi"></div>
     <div class="ins" id="recIns"></div>
     <div id="recBest"></div>
+    <div id="exBar" class="exbar" style="display:none"></div>
     <div id="recWrap"></div>
     <div class="readme">
       <b>두 가지 진입 방식을 같이 봅니다</b><br>
