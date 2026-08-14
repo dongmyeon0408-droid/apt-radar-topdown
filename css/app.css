@@ -534,3 +534,17 @@ tr.txrow>td{padding:0;background:var(--lift)}
 .txbox th{background:var(--lift);font-size:11px}
 .txbox td,.txbox th{padding:7px 8px;border-bottom:1px solid var(--line2)}
 .exp-ind{color:var(--slate);font-size:11px;margin-left:6px}
+
+/* FAQ 이미지 저장 버튼 (v45.1) */
+.faqhd{position:relative}
+.faqshot{position:absolute;right:74px;top:26px;display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--line);background:var(--pane);color:var(--slate);
+  font:600 13px/1 inherit;padding:8px 14px;border-radius:999px;cursor:pointer;
+  transition:all .15s ease;z-index:2}
+.faqshot span{font-size:15px;line-height:1}
+.faqshot:hover{border-color:var(--teal);color:var(--teal);background:var(--chip)}
+.faqshot:active{transform:scale(.96)}
+@media(max-width:640px){
+  .faqshot{right:64px;top:20px;padding:7px 11px;font-size:12px}
+  .faqshot span{font-size:13px}
+}
