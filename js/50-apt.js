@@ -121,6 +121,24 @@ function scoreRegion(r, c) {
     maxP: mx, maxMode: mxAny.mode, maxCap: mxAny.capped, km: distFromHome(r.code) };
 }
 var LASTREC = [], RECSORT = 'rank', ENTRY = 'auto', GAPTOP = null;
+/* v46.0 — 제외한 지역·단지 (사용자가 직접 뺀 것) */
+var EXREG = {}, EXAPT = {};
+/* v46.0 — 단지 목록 정렬 기준: 'py'(평당가) | 'sc'(점수) */
+var APTSORT = 'py';
+/** 단지 점수 — scoreItem 의 단지 경쟁력·전세 부분만 뽑아 목록 정렬에 쓴다 */
+function aptScore(g, r) {
+  var hh = g.hh || null, walk = g.walk == null ? null : g.walk;
+  var age = g.byr ? (new Date().getFullYear() - g.byr) : null;
+  var pHh = hh == null ? 55 : (hh >= 2000 ? 100 : hh >= 500 ? 65 : hh >= 300 ? 48 : 42);
+  var pWk = walk == null ? 55 : (walk <= 5 ? 100 : walk <= 10 ? 62 : walk <= 15 ? 52 : 45);
+  var pAg = age == null ? 55 : (age >= 35 ? 100 : age >= 25 ? 88 : age >= 20 ? 55 : age >= 10 ? 52 : 30);
+  var comp = pAg * .35 + pWk * .35 + pHh * .30;
+  var jr = (g.jeon && g.med) ? g.jeon / g.med * 100 : null;
+  var pJe = jr == null ? 55 : clamp(20 + (jr - 40) / 40 * 80, 10, 100);
+  /* 단지 6축 중 지역 안에서 변별력이 있는 부분만: 전세 30% + 단지 경쟁력 15% → 정규화 */
+  return (pJe * .30 + comp * .15) / .45;
+}
+function exKeyApt(code, apt) { return code + '|' + apt; }
 /** 전세 끼고 매수 시 필요현금 (비규제 지역만 — 규제지역은 실거주 의무) */
 function gapNeedOf(r, c) {
   if (r.reg) return null;
@@ -172,6 +190,7 @@ function renderRec() {
   var onlyOk = el('recOk').checked;
   var pool = SGG.filter(function (r) { return last(r.s) && radiusOK(r); });
   if (el('capOnly').checked) pool = pool.filter(function (r) { return r.cap; });
+  pool = pool.filter(function (r) { return !EXREG[r.code]; });      /* v46.0 제외 반영 */
   var list = pool.map(function (r) { return scoreRegion(r, c); });
   list = list.filter(function (x) { return isFinite(x.need); });
   if (onlyOk) list = list.filter(function (x) { return x.need <= c.cash; });
@@ -292,10 +311,22 @@ function renderRec() {
       '<button class="btn sm" data-rgo="' + x.r.code + '">이 지역 단지 보기</button>' +
       '<button class="btn ghost sm" data-rmap="' + x.r.code + '">지도에서 보기</button>' +
       (home && home.code !== x.r.code ? '<button class="btn ghost sm" data-rsw="' + x.r.code + '">갈아타기 분석</button>' : '') +
+      '<button class="btn ghost sm exbtn" data-exreg="' + x.r.code + '" title="이 지역 빼고 다음 순위 보기">✕ 이 지역 빼기</button>' +
       '</div>';
     h += '</div>';
   });
   el('recWrap').innerHTML = h;
+  renderExBar();
+  el('recWrap').querySelectorAll('[data-exreg]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var cd = b.dataset.exreg;
+      EXREG[cd] = (BY[cd] && BY[cd].name) || cd;
+      renderRec();
+      var box = el('recAptWrap'); if (box) box.innerHTML = '';
+      var st2 = el('recAptStat');
+      if (st2) st2.textContent = '지역을 뺐습니다 — 단지를 다시 보려면 «예산으로 살 수 있는 단지 보기»를 눌러주세요';
+    });
+  });
   el('recWrap').querySelectorAll('[data-rgo]').forEach(function (b) {
     b.addEventListener('click', function () { el('rg5').value = b.dataset.rgo; show('p7'); });
   });
@@ -405,7 +436,11 @@ function recTopApts() {
         return { g: g, need: use, loanNeed: nc2.need, gapNeed: gapNeed, mode: mode,
           loan: nc2.loan, bind: nc2.bind, ok: use <= c.cash,
           jr: g.jeon ? g.jeon / g.med * 100 : null };
-      }).sort(function (u, v) { return v.g.py - u.g.py; });
+      }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; })      /* v46.0 제외 */
+        .sort(function (u, v) {
+          if (APTSORT === 'sc') { var d = aptScore(v.g, x.r) - aptScore(u.g, x.r); if (d) return d; }
+          return v.g.py - u.g.py;
+        });
       if (!all.length) {
         box.innerHTML = '<div class="aptwarn">최근 6개월 ' + c.area + '㎡대 거래가 없습니다. 평형을 바꿔보세요.</div>';
         return;
@@ -444,7 +479,13 @@ function recTopApts() {
           '<b>평형을 낮추거나</b>, 한 급 아래 지역을 보거나, 아래 <b>예산 초과 단지도 보기</b>로 전체를 확인하세요.</div>';
       }
       if (show3.length) {
-        hh += '<div class="tblwrap"><table style="min-width:700px"><thead><tr><th>순위</th><th>단지</th><th>평당가</th>' +
+        hh += '<div class="aptsortbar">' +
+          '<span>정렬</span>' +
+          '<button class="chip' + (APTSORT === 'py' ? ' on' : '') + '" data-aptsort="py">비싼 순</button>' +
+          '<button class="chip' + (APTSORT === 'sc' ? ' on' : '') + '" data-aptsort="sc">점수 순</button>' +
+          '<span class="hint" style="margin-left:8px">점수 = 연식 35 · 역세권 35 · 세대수 30 · 전세 뒷받침 (FAQ Q18)</span>' +
+          '</div>';
+        hh += '<div class="tblwrap"><table style="min-width:840px"><thead><tr><th>순위</th><th>단지</th><th>평당가</th>' +
           '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
           var g = y.g;
@@ -458,7 +499,11 @@ function recTopApts() {
               (y.ok ? '' : '<div style="font-size:11px">' + won(y.need - c.cash) + ' 부족</div>') + '</td>' +
             '<td>' + (g.jeon ? won(g.jeon) + '<div style="font-size:11px;color:var(--slate)">' + n1(y.jr) + '%</div>' : '—') + '</td>' +
             '<td>' + g.n + '건</td>' +
-            '<td><button class="btn ghost sm" data-rcart=\'' + JSON.stringify({ c: x.r.code, a: g.apt, b: bucketOf(g.ar), m: g.med, j: g.jeon || null, p: g.py, r: g.ar }).replace(/'/g, '&#39;') + '\'>담기</button></td></tr>';
+            '<td class="aptacts">' +
+              '<button class="btn ghost sm" data-rcart=\'' + JSON.stringify({ c: x.r.code, a: g.apt, b: bucketOf(g.ar), m: g.med, j: g.jeon || null, p: g.py, r: g.ar }).replace(/'/g, '&#39;') + '\'>담기</button>' +
+              '<button class="btn ghost sm" data-aptmap="' + esc(g.apt) + '" data-aptrg="' + esc(x.r.name) + '" title="지도에서 위치 보기">지도</button>' +
+              '<button class="btn ghost sm exbtn" data-exapt="' + esc(g.apt) + '" data-exrg="' + x.r.code + '" title="이 단지 빼고 다시 보기">✕</button>' +
+            '</td></tr>';
         });
         hh += '</tbody></table></div>';
         var gapWin = all.filter(function (y) { return y.mode === 'gap' && y.ok && y.g.py > show3[0].g.py * 0.99; });
@@ -494,6 +539,27 @@ function recTopApts() {
           var ok = cartAdd({ key: o.c + ':' + o.a + ':' + o.b, code: o.c, region: rg.name, apt: o.a,
             bucket: o.b, med: o.m, jeon: o.j, py: o.p, area: o.r, hh: null, walk: null, byr: null, g10: null });
           b.textContent = ok ? '담김 ✓' : '이미 담김'; b.disabled = true;
+        });
+      });
+      /* v46.0 — 지도 */
+      box.querySelectorAll('[data-aptmap]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var q = encodeURIComponent(b.dataset.aptrg + ' ' + b.dataset.aptmap);
+          window.open('https://map.kakao.com/?q=' + q, '_blank', 'noopener');
+        });
+      });
+      /* v46.0 — 이 단지 빼기 */
+      box.querySelectorAll('[data-exapt]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          EXAPT[exKeyApt(b.dataset.exrg, b.dataset.exapt)] = b.dataset.exapt;
+          recTopApts();
+          renderExBar();
+        });
+      });
+      /* v46.0 — 정렬 전환 */
+      box.querySelectorAll('[data-aptsort]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          APTSORT = b.dataset.aptsort; recTopApts();
         });
       });
     });
@@ -644,4 +710,32 @@ function btFetch(code, yearsAgo, mode) {
     if (BTMODE !== 'hh' && BTMODE !== 'ag') return list;
     return enrich(code, list).then(function () { return list; }, function () { return list; });
   });
+}
+
+/* ══ v46.0 — 뺀 지역·단지 목록 표시 ══ */
+function renderExBar() {
+  var host = el('exBar'); if (!host) return;
+  var rk = Object.keys(EXREG), ak = Object.keys(EXAPT);
+  if (!rk.length && !ak.length) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = '';
+  var h = '<div class="exhead"><b>내가 뺀 것</b>' +
+    '<button class="btn ghost sm" id="exClear">전부 되돌리기</button></div><div class="extags">';
+  rk.forEach(function (c) {
+    h += '<span class="extag" data-unreg="' + c + '">지역 · ' + esc(EXREG[c]) + ' <i>✕</i></span>';
+  });
+  ak.forEach(function (k) {
+    var rg = BY[k.split('|')[0]];
+    h += '<span class="extag" data-unapt="' + esc(k) + '">단지 · ' + esc(EXAPT[k]) +
+      (rg ? ' <em>(' + esc(rg.name) + ')</em>' : '') + ' <i>✕</i></span>';
+  });
+  h += '</div><div class="hint">뺀 항목은 추천에서 제외되고 <b>다음 순위가 자동으로 올라옵니다.</b> ✕를 누르면 되돌립니다.</div>';
+  host.innerHTML = h;
+  host.querySelectorAll('[data-unreg]').forEach(function (t) {
+    t.addEventListener('click', function () { delete EXREG[t.dataset.unreg]; renderRec(); });
+  });
+  host.querySelectorAll('[data-unapt]').forEach(function (t) {
+    t.addEventListener('click', function () { delete EXAPT[t.dataset.unapt]; renderExBar(); recTopApts(); });
+  });
+  var cb = el('exClear');
+  if (cb) cb.addEventListener('click', function () { EXREG = {}; EXAPT = {}; renderRec(); });
 }
