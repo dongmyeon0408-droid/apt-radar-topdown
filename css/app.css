@@ -549,6 +549,28 @@ tr.txrow>td{padding:0;background:var(--lift)}
   .faqshot span{font-size:13px}
 }
 
+/* v46.1 — 단지 위치 안내 카드 */
+.aptfocus{background:var(--chip);border:1px solid var(--teal);border-radius:16px;
+  padding:16px 18px;margin:0 0 16px}
+.focushead{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.focushead b{font-size:16px;color:var(--ink)}
+.focushead span{font-size:12.5px;color:var(--slate)}
+.aptfocus .hint{margin:0 0 12px}
+.aptfocus .rowbtns{margin:0;display:flex;gap:8px;flex-wrap:wrap}
+.aptfocus a.btn{text-decoration:none;display:inline-flex;align-items:center}
+
+/* v46.1 — 표 안 아이콘 버튼 */
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;padding:0;margin-left:5px;vertical-align:middle;
+  border:1px solid var(--line);border-radius:9px;background:var(--pane);
+  color:var(--slate);cursor:pointer;transition:all .15s}
+.iconbtn:hover{border-color:var(--teal);color:var(--teal)}
+.iconbtn.ex:hover{border-color:#B24A32;color:#B24A32}
+.iconbtn:active{transform:scale(.94)}
+.aptsorthelp{font-size:12px;line-height:1.65;color:var(--slate);
+  background:var(--chip);border-radius:10px;padding:10px 14px;margin:0 0 12px}
+.aptsortbar .lb{font-size:12.5px;color:var(--slate);font-weight:600}
+
 /* v46.0 — 뺀 항목 표시줄 · 단지 정렬 바 · 제외 버튼 */
 .exbar{background:var(--chip);border:1px solid var(--line);border-radius:16px;
   padding:14px 18px;margin:0 0 16px}
@@ -565,12 +587,10 @@ tr.txrow>td{padding:0;background:var(--lift)}
 .exbar .hint{margin-top:10px;font-size:12px}
 .exbtn{color:var(--slate)!important}
 .exbtn:hover{border-color:#B24A32!important;color:#B24A32!important}
-.aptsortbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
-.aptsortbar>span:first-child{font-size:12.5px;color:var(--slate);font-weight:600}
-.aptsortbar .hint{margin:0;font-size:11.5px}
-.aptacts{white-space:nowrap}
-.aptacts .btn{margin-right:4px}
+.aptsortbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:16px 0 8px}
+.aptacts{white-space:nowrap;text-align:right}
 @media(max-width:640px){
-  .aptsortbar .hint{width:100%;margin-top:4px}
-  .aptacts .btn{margin:0 2px 3px 0;padding:5px 9px;font-size:11.5px}
+  .aptacts .btn{padding:5px 10px;font-size:11.5px}
+  .iconbtn{width:28px;height:28px;margin-left:3px}
+  .aptsorthelp{font-size:11.5px}
 }
