@@ -120,7 +120,10 @@ function scoreRegion(r, c) {
   return { r: r, ax: ax, total: total, need: en.need, price: p, en: en, jb: jb, sr: sr, g10: g10, d: d,
     maxP: mx, maxMode: mxAny.mode, maxCap: mxAny.capped, km: distFromHome(r.code) };
 }
-var LASTREC = [], RECSORT = 'rank', ENTRY = 'auto', GAPTOP = null;
+/* v47.2 — 기본값을 백테스트와 일치시켰다.
+   Q17·Q20 은 ①지역을 «급지60+전세40 종합 점수»로 세우고 ②대출 매수 기준 필요현금으로
+   예산을 걸러 계산했다. 화면 기본값이 그와 달라 결과가 어긋나던 것을 바로잡았다. */
+var LASTREC = [], RECSORT = 'score', ENTRY = 'loan', GAPTOP = null;
 /* v46.0 — 제외한 지역·단지 (사용자가 직접 뺀 것) */
 var EXREG = {}, EXAPT = {};
 /* v46.0 — 단지 목록 정렬 기준: 'py'(평당가) | 'sc'(점수) */
@@ -800,19 +803,39 @@ function pctRankArr(v) {
    지번 주소를 먼저 쓰고, 실패하면 법정동 중심으로 물러난다.
    ══════════════════════════════════════════════════════════════ */
 var INMAP = {};                       /* 좌표 캐시 */
-function geoFind(queries, cb) {
+/* 시·군·구 이름을 실제 주소 표기로 바꾼다 — «안양 만안구» → «안양시 만안구» */
+function addrName(nm) {
+  var t = String(nm || '').trim();
+  var m = t.match(/^(\S+)\s+(.+구)$/);
+  if (m && !/^(서울|부산|대구|인천|광주|대전|울산)/.test(m[1]) && !/시$/.test(m[1])) {
+    return m[1] + '시 ' + m[2];
+  }
+  return t;
+}
+/* 좌표 찾기 — ①장소명 검색(아파트는 장소로 등록돼 있다) ②지번 주소 ③동 중심 */
+function geoFind(steps, cb) {
   if (!window.kakao || !kakao.maps || !kakao.maps.services) { cb(null); return; }
+  var ps = kakao.maps.services.Places ? new kakao.maps.services.Places() : null;
   var gc = new kakao.maps.services.Geocoder();
   var i = 0;
   (function next() {
-    if (i >= queries.length) { cb(null); return; }
-    var q = queries[i++];
-    if (!q) { next(); return; }
-    gc.addressSearch(q, function (res, status) {
-      if (status === kakao.maps.services.Status.OK && res && res.length) {
-        cb({ lat: +res[0].y, lng: +res[0].x, matched: q });
-      } else next();
-    });
+    if (i >= steps.length) { cb(null); return; }
+    var st = steps[i++];
+    if (!st || !st.q) { next(); return; }
+    var ok = function (res) {
+      if (res && res.length) { cb({ lat: +res[0].y, lng: +res[0].x, matched: st.q }); }
+      else next();
+    };
+    if (st.kind === 'place') {
+      if (!ps) { next(); return; }
+      ps.keywordSearch(st.q, function (res, status) {
+        ok(status === kakao.maps.services.Status.OK ? res : null);
+      });
+    } else {
+      gc.addressSearch(st.q, function (res, status) {
+        ok(status === kakao.maps.services.Status.OK ? res : null);
+      });
+    }
   })();
 }
 function toggleInlineMap(btn, code, aptName, dong) {
@@ -850,8 +873,8 @@ function toggleInlineMap(btn, code, aptName, dong) {
   var cacheKey = code + '|' + aptName;
   function draw(pos) {
     if (!pos) {
-      host.innerHTML = '<div class="inmap-msg"><b>정확한 위치를 찾지 못했습니다.</b><br>' +
-        '아래 링크로 확인해 주세요. 실거래 자료의 단지명이 줄임말인 경우가 있습니다.</div>';
+      host.innerHTML = '<div class="inmap-msg"><b>지도에서 이 단지를 찾지 못했습니다.</b><br>' +
+        '실거래 자료의 단지명이 줄임말이거나 지도 등록명과 다를 수 있습니다. 아래 링크로 확인해 주세요.</div>';
       return;
     }
     host.innerHTML = '';
@@ -874,10 +897,12 @@ function toggleInlineMap(btn, code, aptName, dong) {
   if (INMAP[cacheKey] !== undefined) { draw(INMAP[cacheKey]); return; }
   /* 지번 → 동+단지명 → 동 중심 순으로 시도 */
   var jib = btn.dataset.aptjibun || '';
+  var an = addrName(r.name);
   geoFind([
-    jib ? (r.name + ' ' + (dong || '') + ' ' + jib) : '',
-    (dong ? r.name + ' ' + dong + ' ' + aptName : ''),
-    r.name + ' ' + aptName,
-    (dong ? r.name + ' ' + dong : r.name)
+    { kind:'place',   q: (dong ? an + ' ' + dong + ' ' : an + ' ') + aptName },
+    { kind:'place',   q: aptName + ' ' + (dong || an) },
+    { kind:'address', q: jib ? (an + ' ' + (dong || '') + ' ' + jib) : '' },
+    { kind:'place',   q: an + ' ' + aptName },
+    { kind:'address', q: dong ? (an + ' ' + dong) : an }
   ], function (pos) { INMAP[cacheKey] = pos; draw(pos); });
 }
