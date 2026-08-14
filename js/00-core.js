@@ -1,5 +1,5 @@
 'use strict';
-var VERSION = 'v46.0';
+var VERSION = 'v46.1';
 
 /* ── 데이터 ───────────────────────────────────────────────── */
 var DATES = KB.dates, NM = DATES.length;

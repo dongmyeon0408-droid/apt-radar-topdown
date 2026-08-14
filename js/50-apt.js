@@ -124,7 +124,7 @@ var LASTREC = [], RECSORT = 'rank', ENTRY = 'auto', GAPTOP = null;
 /* v46.0 — 제외한 지역·단지 (사용자가 직접 뺀 것) */
 var EXREG = {}, EXAPT = {};
 /* v46.0 — 단지 목록 정렬 기준: 'py'(평당가) | 'sc'(점수) */
-var APTSORT = 'py';
+var APTSORT = 'rec';   /* 'rec'(추천) | 'py'(비싼) | 'sc'(점수) */
 /** 단지 점수 — scoreItem 의 단지 경쟁력·전세 부분만 뽑아 목록 정렬에 쓴다 */
 function aptScore(g, r) {
   var hh = g.hh || null, walk = g.walk == null ? null : g.walk;
@@ -436,11 +436,28 @@ function recTopApts() {
         return { g: g, need: use, loanNeed: nc2.need, gapNeed: gapNeed, mode: mode,
           loan: nc2.loan, bind: nc2.bind, ok: use <= c.cash,
           jr: g.jeon ? g.jeon / g.med * 100 : null };
-      }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; })      /* v46.0 제외 */
-        .sort(function (u, v) {
-          if (APTSORT === 'sc') { var d = aptScore(v.g, x.r) - aptScore(u.g, x.r); if (d) return d; }
+      }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; });      /* v46.0 제외 */
+      /* v46.1 — 정렬
+         추천 순 : 예산 내 단지 중 '최상단권(최고 평당가의 85% 이상)'만 남기고 그 안에서 점수로 재정렬.
+                   급지를 먼저 확보하고 그 안에서 고르는 순서(FAQ Q16·Q20)를 그대로 따른 것.
+         비싼 순 : 평당가 내림차순
+         점수 순 : 가격을 보지 않고 단지 점수만 (참고용) */
+      var okAll = all.filter(function (y) { return y.ok; });
+      var topPy = okAll.length ? Math.max.apply(null, okAll.map(function (y) { return y.g.py; })) : 0;
+      var RECBAND = 0.85;
+      all.forEach(function (y) {
+        y.sc = aptScore(y.g, x.r);
+        y.inBand = y.ok && topPy > 0 && y.g.py >= topPy * RECBAND;
+      });
+      all.sort(function (u, v) {
+        if (APTSORT === 'sc') { var d0 = v.sc - u.sc; if (d0) return d0; return v.g.py - u.g.py; }
+        if (APTSORT === 'rec') {
+          if (u.inBand !== v.inBand) return u.inBand ? -1 : 1;     /* 최상단권 먼저 */
+          if (u.inBand && v.inBand) { var d1 = v.sc - u.sc; if (d1) return d1; }
           return v.g.py - u.g.py;
-        });
+        }
+        return v.g.py - u.g.py;
+      });
       if (!all.length) {
         box.innerHTML = '<div class="aptwarn">최근 6개월 ' + c.area + '㎡대 거래가 없습니다. 평형을 바꿔보세요.</div>';
         return;
@@ -479,11 +496,23 @@ function recTopApts() {
           '<b>평형을 낮추거나</b>, 한 급 아래 지역을 보거나, 아래 <b>예산 초과 단지도 보기</b>로 전체를 확인하세요.</div>';
       }
       if (show3.length) {
+        var nBand = all.filter(function (y) { return y.inBand; }).length;
         hh += '<div class="aptsortbar">' +
-          '<span>정렬</span>' +
+          '<span class="lb">정렬</span>' +
+          '<button class="chip' + (APTSORT === 'rec' ? ' on' : '') + '" data-aptsort="rec">추천 순</button>' +
           '<button class="chip' + (APTSORT === 'py' ? ' on' : '') + '" data-aptsort="py">비싼 순</button>' +
           '<button class="chip' + (APTSORT === 'sc' ? ' on' : '') + '" data-aptsort="sc">점수 순</button>' +
-          '<span class="hint" style="margin-left:8px">점수 = 연식 35 · 역세권 35 · 세대수 30 · 전세 뒷받침 (FAQ Q18)</span>' +
+          '</div>' +
+          '<div class="aptsorthelp">' +
+          (APTSORT === 'rec'
+            ? '<b>예산으로 갈 수 있는 최상단권</b>(가장 비싼 단지의 85% 이상, ' + nBand + '곳)만 남기고, ' +
+              '그 안에서 <b>연식·역세권·세대수·전세 뒷받침</b>으로 다시 세웠습니다. ' +
+              '급지를 먼저 확보하고 그 안에서 고르는 순서입니다.'
+            : APTSORT === 'py'
+            ? '평당가가 높은 순입니다. <b>같은 값이면 위쪽이 더 좋은 동네·단지</b>라는 전제(FAQ Q1)를 그대로 따릅니다.'
+            : '<b>가격을 보지 않고</b> 연식·역세권·세대수·전세 뒷받침만으로 세웠습니다. ' +
+              '싸고 낡은 단지가 위로 올 수 있으니 <b>참고용</b>으로만 보세요 — ' +
+              '급지를 낮추면서 점수를 좇으면 손해였습니다(FAQ Q18).') +
           '</div>';
         hh += '<div class="tblwrap"><table style="min-width:840px"><thead><tr><th>순위</th><th>단지</th><th>평당가</th>' +
           '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
@@ -501,8 +530,14 @@ function recTopApts() {
             '<td>' + g.n + '건</td>' +
             '<td class="aptacts">' +
               '<button class="btn ghost sm" data-rcart=\'' + JSON.stringify({ c: x.r.code, a: g.apt, b: bucketOf(g.ar), m: g.med, j: g.jeon || null, p: g.py, r: g.ar }).replace(/'/g, '&#39;') + '\'>담기</button>' +
-              '<button class="btn ghost sm" data-aptmap="' + esc(g.apt) + '" data-aptrg="' + esc(x.r.name) + '" title="지도에서 위치 보기">지도</button>' +
-              '<button class="btn ghost sm exbtn" data-exapt="' + esc(g.apt) + '" data-exrg="' + x.r.code + '" title="이 단지 빼고 다시 보기">✕</button>' +
+              '<button class="iconbtn" data-aptmap="' + esc(g.apt) + '" data-aptrg="' + x.r.code + '" title="지도에서 위치 보기" aria-label="지도">' +
+                '<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7">' +
+                '<path d="M10 18s6-5.2 6-9.4A6 6 0 0 0 4 8.6C4 12.8 10 18 10 18Z"/><circle cx="10" cy="8.6" r="2.2"/></svg>' +
+              '</button>' +
+              '<button class="iconbtn ex" data-exapt="' + esc(g.apt) + '" data-exrg="' + x.r.code + '" title="이 단지 빼고 다시 보기" aria-label="빼기">' +
+                '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+                '<path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></svg>' +
+              '</button>' +
             '</td></tr>';
         });
         hh += '</tbody></table></div>';
@@ -541,11 +576,10 @@ function recTopApts() {
           b.textContent = ok ? '담김 ✓' : '이미 담김'; b.disabled = true;
         });
       });
-      /* v46.0 — 지도 */
+      /* v46.1 — 지도: 앱 안의 «지도로 보기» 탭으로 이동해 그 지역을 띄운다 */
       box.querySelectorAll('[data-aptmap]').forEach(function (b) {
         b.addEventListener('click', function () {
-          var q = encodeURIComponent(b.dataset.aptrg + ' ' + b.dataset.aptmap);
-          window.open('https://map.kakao.com/?q=' + q, '_blank', 'noopener');
+          openMapFor(b.dataset.aptrg, b.dataset.aptmap);
         });
       });
       /* v46.0 — 이 단지 빼기 */
@@ -738,4 +772,33 @@ function renderExBar() {
   });
   var cb = el('exClear');
   if (cb) cb.addEventListener('click', function () { EXREG = {}; EXAPT = {}; renderRec(); });
+}
+
+/* ══ v46.1 — 단지 위치 보기 ══
+   앱 안의 «지도로 보기» 탭으로 이동해 해당 지역을 띄우고,
+   그 단지를 찾기 쉽도록 안내 줄과 외부 지도 링크를 함께 보여준다. */
+function openMapFor(code, aptName) {
+  var r = BY[code];
+  SELCODE = code;
+  show('pm');
+  try { showDetail(code); } catch (e) {}
+  var host = el('aptFocus');
+  if (!host) return;
+  if (!aptName || !r) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = '';
+  /* 검색어에 시·군·구 이름을 붙여 동명이 단지와 헷갈리지 않게 한다 */
+  var q = encodeURIComponent(r.name.replace(/\s+/g, ' ') + ' ' + aptName);
+  host.innerHTML =
+    '<div class="focushead"><b>' + esc(aptName) + '</b><span>' + esc(r.name) + '</span></div>' +
+    '<p class="hint">아래 지도에서 <b>' + esc(r.name) + '</b> 일대를 보고 계십니다. ' +
+    '단지 하나의 정확한 위치와 주변 시설은 아래 버튼으로 확인하세요.</p>' +
+    '<div class="rowbtns">' +
+      '<a class="btn sm" target="_blank" rel="noopener" href="https://map.kakao.com/?q=' + q + '">카카오맵에서 이 단지 찾기</a>' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://map.naver.com/p/search/' + q + '">네이버 지도</a>' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://new.land.naver.com/search?ms=&query=' + q + '">네이버 부동산 매물</a>' +
+    '</div>';
+  setTimeout(function () {
+    var el2 = el('aptFocus');
+    if (el2 && el2.scrollIntoView) el2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 120);
 }
