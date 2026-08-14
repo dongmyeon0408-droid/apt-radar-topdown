@@ -549,16 +549,6 @@ tr.txrow>td{padding:0;background:var(--lift)}
   .faqshot span{font-size:13px}
 }
 
-/* v46.1 — 단지 위치 안내 카드 */
-.aptfocus{background:var(--chip);border:1px solid var(--teal);border-radius:16px;
-  padding:16px 18px;margin:0 0 16px}
-.focushead{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
-.focushead b{font-size:16px;color:var(--ink)}
-.focushead span{font-size:12.5px;color:var(--slate)}
-.aptfocus .hint{margin:0 0 12px}
-.aptfocus .rowbtns{margin:0;display:flex;gap:8px;flex-wrap:wrap}
-.aptfocus a.btn{text-decoration:none;display:inline-flex;align-items:center}
-
 /* v46.1 — 표 안 아이콘 버튼 */
 .iconbtn{display:inline-flex;align-items:center;justify-content:center;
   width:30px;height:30px;padding:0;margin-left:5px;vertical-align:middle;
@@ -566,6 +556,7 @@ tr.txrow>td{padding:0;background:var(--lift)}
   color:var(--slate);cursor:pointer;transition:all .15s}
 .iconbtn:hover{border-color:var(--teal);color:var(--teal)}
 .iconbtn.ex:hover{border-color:#B24A32;color:#B24A32}
+.iconbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
 .iconbtn:active{transform:scale(.94)}
 .aptsorthelp{font-size:12px;line-height:1.65;color:var(--slate);
   background:var(--chip);border-radius:10px;padding:10px 14px;margin:0 0 12px}
@@ -604,8 +595,10 @@ tr.txrow>td{padding:0;background:var(--lift)}
   border-radius:14px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;
   transition:all .16s ease;min-width:132px}
 .seg.big button:hover{border-color:var(--teal);color:var(--ink)}
-.seg.big button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);
-  color:#fff;box-shadow:0 3px 12px rgba(22,84,95,.22)}
+.seg.big button[aria-pressed="true"],
+.seg.big button[aria-pressed="true"]:hover{background:var(--teal)!important;
+  border-color:var(--teal)!important;color:#fff!important;
+  box-shadow:0 3px 12px rgba(22,84,95,.22)}
 .hp-note{margin-top:14px;font-size:13px;line-height:1.7;color:var(--slate)}
 .hp-note b{color:var(--ink)}
 
@@ -631,3 +624,17 @@ tr.txrow>td{padding:0;background:var(--lift)}
   .advrow{gap:8px}
   .advlb{min-width:100%}
 }
+
+/* v47.1 — 단지 인라인 지도 */
+tr.maprow>td{padding:0!important;background:var(--chip)}
+.inmap{padding:14px 18px 18px}
+.inmap-h{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;margin-bottom:10px}
+.inmap-t{font-size:15px;font-weight:800;color:var(--ink)}
+.inmap-t span{font-weight:500;font-size:12.5px;color:var(--slate);margin-left:8px}
+.inmap-c{width:100%;height:300px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:var(--pane)}
+.inmap-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.inmap-links a{text-decoration:none}
+.inmap-msg{padding:22px;text-align:center;font-size:13px;color:var(--slate)}
+@media(max-width:640px){ .inmap-c{height:240px} .inmap{padding:12px 12px 14px} }
