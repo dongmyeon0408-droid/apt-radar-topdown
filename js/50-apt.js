@@ -131,15 +131,18 @@ var EXREG = {}, EXAPT = {};
      전 기간 균형은 급지50+점수50 이 2~3위로 안정
    짧게 볼수록 단지 조건, 길게 볼수록 동네가 이긴다 — Q17·Q18 과 같은 방향. */
 var HOLD = 'mid';                     /* 'short' | 'mid' | 'long' */
-function holdMix() {                  /* 0 = 평당가만 · 1 = 점수만 */
-  return HOLD === 'short' ? 1 : HOLD === 'long' ? 0 : 0.5;
+function holdMix() {                  /* 0 = 가격(급지)만 · 1 = 단지 점수만 */
+  /* v47.1 교정 — 검증에서 3년에 «점수 순»이 좋았던 것은
+     이미 지역 상위 5곳으로 걸러진 상태에서였다. 한 지역 안에서 가격을 완전히
+     무시하면 예산으로 갈 수 있는 최상단을 놓치므로, 짧게 볼 때도 가격을 30% 남긴다. */
+  return HOLD === 'short' ? 0.70 : HOLD === 'long' ? 0 : 0.45;
 }
 function holdLabel() {
   return HOLD === 'short'
-    ? { t:'3~5년', d:'짧게 보실 거라 <b>단지 조건</b>(연식·역세권·세대수·전세)을 우선했습니다. 과거 검증에서 3년 보유는 이 방식이 가장 나았습니다.' }
+    ? { t:'3~5년', d:'짧게 보실 거라 <b>단지 조건</b>(연식·역세권·세대수·전세)에 무게를 뒀습니다(70%). 과거 검증에서 3년 보유는 이 방식이 나았습니다 — 다만 <b>가격도 30%</b> 봅니다.' }
     : HOLD === 'long'
     ? { t:'7년 이상', d:'길게 보실 거라 <b>좋은 동네·비싼 단지</b>를 우선했습니다. 10년 보유는 이 방식이 가장 나았습니다.' }
-    : { t:'미정', d:'기간을 정하지 않으셔서 <b>동네와 단지를 반반</b>으로 두었습니다. 어느 기간에도 크게 뒤지지 않는 설정입니다.' };
+    : { t:'미정', d:'기간을 정하지 않으셔서 <b>가격과 단지 조건을 반반</b>으로 두었습니다. 어느 기간에도 크게 뒤지지 않는 설정입니다.' };
 }
 /** 단지 점수 — scoreItem 의 단지 경쟁력·전세 부분만 뽑아 목록 정렬에 쓴다 */
 function aptScore(g, r) {
@@ -425,7 +428,10 @@ function recTopApts() {
         if (x.k === 's' && t.canceled) return;
         if (x.k === 'j' && !t.jeonse) return;
         var key = x.code + '|' + normName(t.apt);
-        var g = G[key] || (G[key] = { code: x.code, apt: deent(t.apt), s: [], j: [], ar: [] });
+        var g = G[key] || (G[key] = { code: x.code, apt: deent(t.apt), s: [], j: [], ar: [], dong: '', byr: null, jibun: '' });
+        if (!g.dong && t.dong) g.dong = t.dong;
+        if (!g.byr && t.buildYear) g.byr = t.buildYear;
+        if (!g.jibun && t.jibun) g.jibun = t.jibun;
         if (x.k === 's') { g.s.push(t.amount); g.ar.push(t.area); } else g.j.push(t.deposit);
       });
     });
@@ -434,7 +440,7 @@ function recTopApts() {
       var g = G[k]; if (g.s.length < 2) return;
       var med = median(g.s), ar = median(g.ar);
       (byReg[g.code] = byReg[g.code] || []).push({ apt: g.apt, med: med, ar: ar, py: med / ar * PY,
-        jeon: median(g.j), n: g.s.length });
+        jeon: median(g.j), n: g.s.length, dong: g.dong, byr: g.byr, jibun: g.jibun });
     });
     targets.forEach(function (x) {
       var box = document.querySelector('[data-aptbox="' + x.r.code + '"]');
@@ -503,14 +509,26 @@ function recTopApts() {
       }
       if (show3.length) {
         var hl2 = holdLabel();
+        /* 예산으로 갈 수 있는 최상단을 항상 먼저 알린다 — 목록 1위와 다를 수 있다 */
+        var reach = all.filter(function (y) { return y.ok; })
+          .sort(function (u, v) { return v.g.py - u.g.py; })[0];
+        if (reach && show3.length && reach.g.apt !== show3[0].g.apt) {
+          hh += '<div class="aptref" style="border-left-color:var(--teal)">' +
+            '<b>예산으로 갈 수 있는 최상단은 ' + esc(reach.g.apt) + '</b> — 평당 ' + n0(reach.g.py) + '만 · 매매 ' + won(reach.g.med) +
+            ' · 필요현금 ' + won(reach.need) + '입니다.<br>' +
+            '아래 목록은 <b>' + hl2.t + ' 기준</b>으로 세운 순서라 1위가 다를 수 있습니다. ' +
+            '<b>길게 보실 거면 «7년 이상»</b>을 고르시면 이 단지가 위로 올라옵니다.</div>';
+        }
         hh += '<div class="aptsorthelp"><b>' + hl2.t + ' 기준으로 세웠습니다.</b> ' + hl2.d +
           ' <span class="hint" style="display:block;margin-top:5px">이 순서는 투자 FAQ <b>Q20</b>에서 검증한 방식 그대로입니다.</span></div>';
-        hh += '<div class="tblwrap"><table style="min-width:840px"><thead><tr><th>순위</th><th>단지</th><th>평당가</th>' +
+        hh += '<div class="tblwrap"><table style="min-width:900px"><thead><tr><th>순위</th><th>단지</th><th>동네</th><th>평당가</th>' +
           '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
           var g = y.g;
           hh += '<tr' + (y.ok ? ' class="pick"' : '') + '><td class="nm"><span class="b ' + (i === 0 ? 'd1' : 'no') + '">' + (i + 1) + '위</span></td>' +
-            '<td class="nm">' + esc(g.apt) + '</td><td style="font-weight:700">' + n0(g.py) + '만</td>' +
+            '<td class="nm">' + esc(g.apt) + '</td>' +
+            '<td style="font-size:12.5px;color:var(--slate)">' + esc(g.dong || '—') + '</td>' +
+            '<td style="font-weight:700">' + n0(g.py) + '만</td>' +
             '<td>' + won(g.med) + '</td>' +
             '<td>' + (y.mode === 'gap' ? '<span class="b ok">전세 끼고</span>' : '<span class="b no">대출 매수</span>') +
               (y.mode === 'loan' && y.gapNeed != null ? '<div style="font-size:11px;color:var(--slate)">전세 끼면 ' + won(y.gapNeed) + '</div>' :
@@ -521,7 +539,7 @@ function recTopApts() {
             '<td>' + g.n + '건</td>' +
             '<td class="aptacts">' +
               '<button class="btn ghost sm" data-rcart=\'' + JSON.stringify({ c: x.r.code, a: g.apt, b: bucketOf(g.ar), m: g.med, j: g.jeon || null, p: g.py, r: g.ar }).replace(/'/g, '&#39;') + '\'>담기</button>' +
-              '<button class="iconbtn" data-aptmap="' + esc(g.apt) + '" data-aptrg="' + x.r.code + '" title="지도에서 위치 보기" aria-label="지도">' +
+              '<button class="iconbtn" data-aptmap="' + esc(g.apt) + '" data-aptrg="' + x.r.code + '" data-aptdong="' + esc(g.dong || '') + '" data-aptjibun="' + esc(g.jibun || '') + '" title="지도에서 위치 보기" aria-label="지도">' +
                 '<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7">' +
                 '<path d="M10 18s6-5.2 6-9.4A6 6 0 0 0 4 8.6C4 12.8 10 18 10 18Z"/><circle cx="10" cy="8.6" r="2.2"/></svg>' +
               '</button>' +
@@ -567,10 +585,10 @@ function recTopApts() {
           b.textContent = ok ? '담김 ✓' : '이미 담김'; b.disabled = true;
         });
       });
-      /* v46.1 — 지도: 앱 안의 «지도로 보기» 탭으로 이동해 그 지역을 띄운다 */
+      /* v47.1 — 지도: 그 자리에서 바로 펼친다 */
       box.querySelectorAll('[data-aptmap]').forEach(function (b) {
         b.addEventListener('click', function () {
-          openMapFor(b.dataset.aptrg, b.dataset.aptmap);
+          toggleInlineMap(b, b.dataset.aptrg, b.dataset.aptmap, b.dataset.aptdong);
         });
       });
       /* v46.0 — 이 단지 빼기 */
@@ -760,34 +778,6 @@ function renderExBar() {
   if (cb) cb.addEventListener('click', function () { EXREG = {}; EXAPT = {}; renderRec(); });
 }
 
-/* ══ v46.1 — 단지 위치 보기 ══
-   앱 안의 «지도로 보기» 탭으로 이동해 해당 지역을 띄우고,
-   그 단지를 찾기 쉽도록 안내 줄과 외부 지도 링크를 함께 보여준다. */
-function openMapFor(code, aptName) {
-  var r = BY[code];
-  SELCODE = code;
-  show('pm');
-  try { showDetail(code); } catch (e) {}
-  var host = el('aptFocus');
-  if (!host) return;
-  if (!aptName || !r) { host.innerHTML = ''; host.style.display = 'none'; return; }
-  host.style.display = '';
-  /* 검색어에 시·군·구 이름을 붙여 동명이 단지와 헷갈리지 않게 한다 */
-  var q = encodeURIComponent(r.name.replace(/\s+/g, ' ') + ' ' + aptName);
-  host.innerHTML =
-    '<div class="focushead"><b>' + esc(aptName) + '</b><span>' + esc(r.name) + '</span></div>' +
-    '<p class="hint">아래 지도에서 <b>' + esc(r.name) + '</b> 일대를 보고 계십니다. ' +
-    '단지 하나의 정확한 위치와 주변 시설은 아래 버튼으로 확인하세요.</p>' +
-    '<div class="rowbtns">' +
-      '<a class="btn sm" target="_blank" rel="noopener" href="https://map.kakao.com/?q=' + q + '">카카오맵에서 이 단지 찾기</a>' +
-      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://map.naver.com/p/search/' + q + '">네이버 지도</a>' +
-      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://new.land.naver.com/search?ms=&query=' + q + '">네이버 부동산 매물</a>' +
-    '</div>';
-  setTimeout(function () {
-    var el2 = el('aptFocus');
-    if (el2 && el2.scrollIntoView) el2.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 120);
-}
 
 /* ══ v47.0 — 백분위 순위 (동점은 평균 순위) ══ */
 function pctRankArr(v) {
@@ -801,4 +791,93 @@ function pctRankArr(v) {
     i = k + 1;
   }
   return out;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   v47.1 — 단지 위치를 표 안에서 바로 펼친다
+   카카오 주소 검색으로 «시군구 + 법정동 + 지번»의 좌표를 얻어
+   해당 위치에 지도를 띄운다. 단지명만으로는 못 찾는 경우가 많아
+   지번 주소를 먼저 쓰고, 실패하면 법정동 중심으로 물러난다.
+   ══════════════════════════════════════════════════════════════ */
+var INMAP = {};                       /* 좌표 캐시 */
+function geoFind(queries, cb) {
+  if (!window.kakao || !kakao.maps || !kakao.maps.services) { cb(null); return; }
+  var gc = new kakao.maps.services.Geocoder();
+  var i = 0;
+  (function next() {
+    if (i >= queries.length) { cb(null); return; }
+    var q = queries[i++];
+    if (!q) { next(); return; }
+    gc.addressSearch(q, function (res, status) {
+      if (status === kakao.maps.services.Status.OK && res && res.length) {
+        cb({ lat: +res[0].y, lng: +res[0].x, matched: q });
+      } else next();
+    });
+  })();
+}
+function toggleInlineMap(btn, code, aptName, dong) {
+  var tr = btn.closest('tr');
+  var next = tr.nextElementSibling;
+  if (next && next.classList.contains('maprow')) {           /* 이미 열려 있으면 닫는다 */
+    next.remove(); btn.classList.remove('on'); return;
+  }
+  /* 같은 표에서 열려 있던 다른 지도는 닫는다 */
+  var tb = tr.parentNode;
+  tb.querySelectorAll('tr.maprow').forEach(function (q) { q.remove(); });
+  tb.querySelectorAll('.iconbtn.on').forEach(function (q) { q.classList.remove('on'); });
+  btn.classList.add('on');
+
+  var r = BY[code] || { name: '' };
+  var cols = tr.children.length;
+  var row = document.createElement('tr');
+  row.className = 'maprow';
+  var full = (r.name || '') + ' ' + (dong || '');
+  var mapId = 'inmap_' + Math.random().toString(36).slice(2, 8);
+  var qk = encodeURIComponent(full + ' ' + aptName);
+  row.innerHTML = '<td colspan="' + cols + '"><div class="inmap">' +
+    '<div class="inmap-h"><div class="inmap-t">' + esc(aptName) +
+      '<span>' + esc(full.trim() || r.name) + '</span></div></div>' +
+    '<div class="inmap-c" id="' + mapId + '"><div class="inmap-msg">위치를 찾는 중…</div></div>' +
+    '<div class="inmap-links">' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://map.kakao.com/?q=' + qk + '">카카오맵</a>' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://map.naver.com/p/search/' + qk + '">네이버 지도</a>' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://m.land.naver.com/search/result/' + qk + '">네이버 부동산</a>' +
+      '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://www.google.com/search?q=' + qk + '">웹 검색</a>' +
+    '</div></div></td>';
+  tr.parentNode.insertBefore(row, tr.nextSibling);
+
+  var host = document.getElementById(mapId);
+  var cacheKey = code + '|' + aptName;
+  function draw(pos) {
+    if (!pos) {
+      host.innerHTML = '<div class="inmap-msg"><b>정확한 위치를 찾지 못했습니다.</b><br>' +
+        '아래 링크로 확인해 주세요. 실거래 자료의 단지명이 줄임말인 경우가 있습니다.</div>';
+      return;
+    }
+    host.innerHTML = '';
+    try {
+      var map = new kakao.maps.Map(host, { center: new kakao.maps.LatLng(pos.lat, pos.lng), level: 4 });
+      new kakao.maps.Marker({ map: map, position: new kakao.maps.LatLng(pos.lat, pos.lng) });
+      var ov = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(pos.lat, pos.lng),
+        content: '<div style="background:#16545F;color:#fff;padding:5px 11px;border-radius:8px;' +
+                 'font:700 12.5px/1 Pretendard,sans-serif;white-space:nowrap;transform:translateY(-42px);' +
+                 'box-shadow:0 2px 8px rgba(0,0,0,.2)">' + esc(aptName) + '</div>',
+        yAnchor: 0
+      });
+      ov.setMap(map);
+      setTimeout(function () { map.relayout(); map.setCenter(new kakao.maps.LatLng(pos.lat, pos.lng)); }, 60);
+    } catch (e) {
+      host.innerHTML = '<div class="inmap-msg">지도를 그리지 못했습니다. 아래 링크로 확인해 주세요.</div>';
+    }
+  }
+  if (INMAP[cacheKey] !== undefined) { draw(INMAP[cacheKey]); return; }
+  /* 지번 → 동+단지명 → 동 중심 순으로 시도 */
+  var jib = btn.dataset.aptjibun || '';
+  geoFind([
+    jib ? (r.name + ' ' + (dong || '') + ' ' + jib) : '',
+    (dong ? r.name + ' ' + dong + ' ' + aptName : ''),
+    r.name + ' ' + aptName,
+    (dong ? r.name + ' ' + dong : r.name)
+  ], function (pos) { INMAP[cacheKey] = pos; draw(pos); });
 }
