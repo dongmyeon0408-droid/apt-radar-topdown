@@ -584,8 +584,14 @@ function recTopApts() {
       all.forEach(function (y, i2) {
         window.__APTDIAG.push({
           region: x.r.name, aptName: y.g.apt, areaBucket: bucketOf(y.g.ar),
-          salePrice: Math.round(y.g.med / 1e4), pricePerPyeong: Math.round(y.g.py),
-          neededCash: y.need == null ? null : Math.round(y.need / 1e4),
+          /* v54.1 — 단위 버그 수정. g.med · y.need 는 이미 «만원» 단위라
+             1e4 로 또 나누면 억 단위로 뭉개진다(4.6억이 5 로 찍혔다). */
+          salePrice: Math.round(y.g.med), pricePerPyeong: Math.round(y.g.py),
+          neededCash: y.need == null ? null : Math.round(y.need),
+          loanNeed: y.loanNeed == null ? null : Math.round(y.loanNeed),
+          gapNeed: y.gapNeed == null ? null : Math.round(y.gapNeed),
+          actualLoan: y.loan == null ? null : Math.round(y.loan),
+          bind: y.bind,
           entryMode: y.mode, eligible: !!y.ok,
           topReachablePY: Math.round(referenceTopPy), priceFloor: Math.round(floorPy),
           priceRatioToTop: y.priceRatioToTop == null ? null : +(y.priceRatioToTop).toFixed(3),
@@ -1252,7 +1258,7 @@ function assertCandidates(list, ctx) {
     if (!y) return;
     if (!y.ok) { bad.push({ 항목: '목록에 ok=false 포함', 단지: y.g.apt }); return; }
     if (y.need != null && ctx.cash != null && y.need > ctx.cash + 1)
-      bad.push({ 항목: '필요현금 초과', 단지: y.g.apt, 필요현금: Math.round(y.need / 1e4) + '만', 예산: Math.round(ctx.cash / 1e4) + '만' });
+      bad.push({ 항목: '필요현금 초과', 단지: y.g.apt, 필요현금: Math.round(y.need) + '만', 예산: Math.round(ctx.cash) + '만' });
     if (ctx.floorOn && y.floorPass !== true)
       bad.push({ 항목: 'floorPass=false', 단지: y.g.apt, 평당가: Math.round(y.g.py) + '만',
                  하한: Math.round(ctx.floorPy) + '만', 최상단대비: (100 * (y.priceRatioToTop || 0)).toFixed(0) + '%' });
