@@ -558,54 +558,92 @@ function recTopApts() {
            역순위30%+하한70%  +35.0%p · 1위가 최상단의 79% · 직전상승 +24%   ← 채택
            곡선으로 하락을 감점하는 방식은 +33.8%p 로 오히려 나빴다.
          가격 하한만 걸면 크게 빠진 단지는 평당가가 낮아 자연히 걸러진다. */
-      /* v52.1 — 하한을 «최고가의 70%»로만 잡으면, 임대아파트처럼 유독 비싼 한 건 때문에
-         하한이 비현실적으로 높아져 통과 단지가 5곳 미만이 되고 하한이 통째로 무시됐다.
-         (고양 덕양구: 최상단 3,483만 · 하한 2,438만 · 통과 1곳 → 미적용)
-         그래서 «개수 기준»을 함께 둔다 — 최고가의 70% 또는 평당가 상위 절반 중
-         더 느슨한 쪽을 하한으로 삼고, 최소 5곳은 남긴다. */
+      /* v53.1 — 70% 는 «점수 가중치»가 아니라 HARD FILTER 다.
+         v52.1 에서 «이상치 대응»으로 기준을 okPy[2] 로 낮추고 min(byMax, byCnt) 를 쓴 것이
+         하한 자체를 무력화시켰다. 실제 적용된 하한은 다음과 같았다.
+           덕양구 UI 최상단 3,350만 → 규칙 하한 2,345만인데 실제 1,551만 (위반 10곳)
+           소사구 UI 최상단 2,585만 → 규칙 하한 1,809만인데 실제 1,330만 (위반 5곳)
+           만안구 UI 최상단 3,051만 → 규칙 하한 2,136만인데 실제 1,890만 (위반 3곳)
+         기준은 «UI 에 표시하는 최상단»과 반드시 같아야 한다. 하나의 값만 쓴다. */
       var mix = holdMix(), LAGW = 0.30, PFLOOR = 0.70;
       var okAll = all.filter(function (y) { return y.ok; });
-      var okPy = okAll.map(function (y) { return y.g.py; }).sort(function (a, b) { return b - a; });
-      var floorOn = false, floorPy = 0;
-      if (okPy.length >= 6) {
-        /* 최고가 한 건이 유독 높은 경우가 있어 2~3번째 값을 기준으로 삼는다 */
-        var refPy = okPy.length >= 8 ? okPy[2] : okPy[1];
-        var byMax = refPy * PFLOOR;
-        var byCnt = okPy[Math.max(4, Math.floor(okPy.length * 0.5) - 1)];  /* 상위 절반(최소 5곳) 지점 */
-        floorPy = Math.min(byMax, byCnt);
-        var kept = all.filter(function (y) { return !y.ok || y.g.py >= floorPy; });
-        if (kept.filter(function (y) { return y.ok; }).length >= 5) { all = kept; floorOn = true; }
-      }
-      /* 예산 내 최상단은 목록에서 빠지지 않도록 항상 남긴다 */
-      var topOne = okAll.slice().sort(function (u, v) { return v.g.py - u.g.py; })[0];
-      if (topOne && all.indexOf(topOne) < 0) all = [topOne].concat(all);
-      var pys = all.map(function (y) { return y.g.py; });
-      var scs = all.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
+      /* referenceTop — 예산으로 실제 진입 가능한 단지 중 최고 평당가. UI 표시와 동일한 값. */
+      var referenceTopPy = 0, topOne = null;
+      okAll.forEach(function (y) { if (y.g.py > referenceTopPy) { referenceTopPy = y.g.py; topOne = y; } });
+      var floorPy = referenceTopPy * PFLOOR;
+      /* HARD FILTER — 예산 내이면서 하한 미달인 단지는 후보에서 완전히 제외한다.
+         후보가 부족해도 예외를 두지 않는다(예외가 곧 규칙 위반이었다). */
+      all.forEach(function (y) {
+        y.floorPass = !y.ok ? false : (y.g.py >= floorPy - 1e-9);
+        y.priceRatioToTop = referenceTopPy ? y.g.py / referenceTopPy : null;
+      });
+      var floorOn = referenceTopPy > 0;
+      /* 진단표 — 필터 전 전체를 기록해 둔다. 콘솔에서 aptDiag('지역명') 으로 확인. */
+      window.__APTDIAG = window.__APTDIAG || [];
+      window.__APTDIAG = window.__APTDIAG.filter(function (r) { return r.region !== x.r.name; });
+      all.forEach(function (y, i2) {
+        window.__APTDIAG.push({
+          region: x.r.name, aptName: y.g.apt, areaBucket: bucketOf(y.g.ar),
+          salePrice: Math.round(y.g.med / 1e4), pricePerPyeong: Math.round(y.g.py),
+          neededCash: y.need == null ? null : Math.round(y.need / 1e4),
+          entryMode: y.mode, eligible: !!y.ok,
+          topReachablePY: Math.round(referenceTopPy), priceFloor: Math.round(floorPy),
+          priceRatioToTop: y.priceRatioToTop == null ? null : +(y.priceRatioToTop).toFixed(3),
+          floorPass: y.floorPass,
+          recent5yReturn: y.g.gain5 == null ? null : Math.round(y.g.gain5),
+          jeonseRatio: y.jr == null ? null : Math.round(y.jr),
+          hh: y.g.hh, walk: y.g.walk, byr: y.g.byr,
+          rankBeforeFilter: i2 + 1,
+          excludedReason: !y.ok ? '예산 초과' : (y.floorPass ? '' : '하한 미달')
+        });
+      });
+      /* ══ v54.0 — 점수·순위 모집단을 «eligible» 하나로 못박는다 ══
+         이전에는 필터가 `y.ok ? y.floorPass : true` 라서 예산 밖(ok=false) 후보가
+         배열에 그대로 남았고, 그 뒤의 계산이 전부 그 배열을 모집단으로 삼았다.
+         실측 영향(A/B 6,960케이스 · 비교 가능 5,866건):
+           1위 변경 481건(8.2%) · Top3 변경 799건(13.6%) · useLag 뒤집힘 686건(11.7%)
+         이름 중복으로 인한 판정 오류는 1위 8건뿐이라 identity 문제로는 설명되지 않는다.
+         → pys·scs·nInfo·infoRate·rPy·rSc·hasLag·useLag·rLag·rank·sort 전부 eligible 기준.
+         `all` 은 진단표와 탈락 사유 표시용으로만 남긴다. */
+      var eligible = all.filter(function (y) { return y.ok && y.floorPass; });
+      /* 표시용 원본 통계는 필터 전 값을 따로 보관한다 */
+      var statAll = all.length;
+      var statOk = all.filter(function (y) { return y.ok; }).length;
+      var statFloorCut = statOk - eligible.length;
+      /* 화면에 내보낼 목록은 eligible 이 전부다 (예산 밖·하한 미달은 표시하지 않는다) */
+      all = eligible;
+
+      var pys = eligible.map(function (y) { return y.g.py; });
+      var scs = eligible.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
       /* v53.0 — 단지 정보(세대수·역세권·연식)를 못 가져오면 점수 축이
          «전세가율 하나»로 붕괴한다. 전세가율이 높은 단지는 대개 싼 단지라
          그대로 두면 저가가 1위로 올라온다. 백테스트는 K-apt 정보가 다 있는
          상태(매칭 76%)에서 계산됐으므로, 정보가 부족하면 점수 비중을 낮추고
          가격 비중을 높여 검증 조건에 가깝게 맞춘다. */
-      var nInfo = all.filter(function (y) {
+      var nInfo = eligible.filter(function (y) {
         return y.g.hh != null || y.g.walk != null || y.g.byr != null;
       }).length;
-      var infoRate = all.length ? nInfo / all.length : 0;
+      var infoRate = eligible.length ? nInfo / eligible.length : 0;
       if (infoRate < 0.5) mix = mix * (0.35 + 0.65 * (infoRate / 0.5));
       var rPy = pctRankArr(pys), rSc = pctRankArr(scs);
       /* 5년 전 자료가 있는 단지가 절반 이상일 때만 뒤처짐 축을 쓴다 */
-      var hasLag = all.filter(function (y) { return y.g.gain5 != null; }).length;
-      var useLag = hasLag >= Math.max(5, all.length * 0.5);
+      var hasLag = eligible.filter(function (y) { return y.g.gain5 != null; }).length;
+      var useLag = hasLag >= Math.max(5, eligible.length * 0.5);
       var rLag = null;
       if (useLag) {
-        var medGain = median(all.map(function (y) { return y.g.gain5; }).filter(function (v) { return v != null; }));
-        rLag = pctRankArr(all.map(function (y) { return -(y.g.gain5 == null ? medGain : y.g.gain5); }));
+        var medGain = median(eligible.map(function (y) { return y.g.gain5; }).filter(function (v) { return v != null; }));
+        rLag = pctRankArr(eligible.map(function (y) { return -(y.g.gain5 == null ? medGain : y.g.gain5); }));
       }
-      all.forEach(function (y, i2) {
+      eligible.forEach(function (y, i2) {
         var base = (1 - mix) * rPy[i2] + mix * rSc[i2];
         y.rank = useLag ? (1 - LAGW) * base + LAGW * rLag[i2] : base;
       });
-      all.sort(function (u, v) {
-        if (u.ok !== v.ok) return u.ok ? -1 : 1;          /* 예산 안에 드는 것 먼저 */
+      /* v53.1 — 불변조건 검사. 위반이 있으면 화면에 내보내기 전에 잡는다. */
+      assertCandidates(eligible, {
+        region: x.r.name, cash: c.cash, referenceTopPy: referenceTopPy,
+        floorPy: floorPy, floorOn: floorOn, pool: eligible
+      });
+      eligible.sort(function (u, v) {
         var d = v.rank - u.rank; if (d) return d;
         return v.g.py - u.g.py;
       });
@@ -652,7 +690,8 @@ function recTopApts() {
         if (okL && okG) nBoth++; else if (okG && !okL) nOnlyGap++;
       });
       var hh = hh0 + '<div class="aptheadline"><b>이 지역에서 살 수 있는 최상급 단지</b>' +
-        '<span>예산 내 ' + okList.length + '곳 / 거래 ' + all.length + '곳' +
+        '<span>추천 후보 ' + eligible.length + '곳 / 예산 내 ' + statOk + '곳 / 거래 ' + statAll + '곳' +
+        (statFloorCut > 0 ? ' · <span title="예산으로 갈 수 있는 최상단의 70% 미만이라 제외됐습니다.">하한 미달 ' + statFloorCut + '곳 제외</span>' : '') +
         (nGap ? ' · 전세 끼고 ' + nGap + '곳' : '') +
         (nBoth ? ' · <span title="대출로도 전세로도 살 수 있는 단지입니다. 이런 곳은 진입 방식을 바꿔도 목록에 그대로 남습니다.">둘 다 가능 ' + nBoth + '곳</span>' : '') +
         (nOnlyGap ? ' · <b>전세로만 가능 ' + nOnlyGap + '곳</b>' : '') +
@@ -755,6 +794,10 @@ function recTopApts() {
         '<b>대출 매수</b> 필요현금 = 매매가 − 대출 + 취득세 + 중개보수 + 부대비용 · ' +
         '<b>전세 끼고</b> = (매매가 − 전세가) + 취득세 + 중개보수 + 부대비용 (대출 없음, 비규제지역만)<br>' +
         '최근 6개월 거래 2건 이상 단지만 · 전세가는 같은 평형대 실거래 중위값이라 해당 단지에 전세 매물이 실제로 있는지는 확인이 필요합니다</div>';
+      assertCandidates(show3, {
+        region: x.r.name, cash: c.cash, referenceTopPy: referenceTopPy,
+        floorPy: floorPy, floorOn: floorOn, phase: '렌더 직전'
+      });
       box.innerHTML = hh;
       box.querySelectorAll('[data-rcart]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -1183,4 +1226,55 @@ function verifyBanner(c) {
     '<div class="btb-n">' + msg +
       ' <span class="hint">과거 99,598회 검증 · 투자 FAQ Q20·Q22·Q23</span>' +
     '</div></div>';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   v53.1 — 추천 후보 불변조건 검사
+   ① 예산 내 후보의 필요현금 ≤ 예산
+   ② 예산 내 후보의 평당가 ≥ 예산 내 최고 평당가 × 0.70
+   ③ 목록에 남은 예산 내 후보는 모두 floorPass === true
+   위반 시 콘솔에 진단표를 찍는다. 화면은 막지 않되 문제를 감춘 채 넘어가지 않는다.
+   ══════════════════════════════════════════════════════════════ */
+var ASSERT_ON = true;
+function assertCandidates(list, ctx) {
+  if (!ASSERT_ON || !list || !list.length) return true;
+  var bad = [];
+  /* v54.0 — 모집단 자체에 예산 밖·하한 미달이 섞였는지도 검사한다 */
+  if (ctx && ctx.pool) {
+    ctx.pool.forEach(function (y) {
+      if (!y) return;
+      if (!y.ok) bad.push({ 항목: 'pool에 ok=false 포함', 단지: y.g.apt });
+      if (y.floorPass !== true) bad.push({ 항목: 'pool에 floorPass=false 포함', 단지: y.g.apt,
+        평당가: Math.round(y.g.py) + '만', 하한: Math.round(ctx.floorPy) + '만' });
+    });
+  }
+  list.forEach(function (y) {
+    if (!y) return;
+    if (!y.ok) { bad.push({ 항목: '목록에 ok=false 포함', 단지: y.g.apt }); return; }
+    if (y.need != null && ctx.cash != null && y.need > ctx.cash + 1)
+      bad.push({ 항목: '필요현금 초과', 단지: y.g.apt, 필요현금: Math.round(y.need / 1e4) + '만', 예산: Math.round(ctx.cash / 1e4) + '만' });
+    if (ctx.floorOn && y.floorPass !== true)
+      bad.push({ 항목: 'floorPass=false', 단지: y.g.apt, 평당가: Math.round(y.g.py) + '만',
+                 하한: Math.round(ctx.floorPy) + '만', 최상단대비: (100 * (y.priceRatioToTop || 0)).toFixed(0) + '%' });
+    if (ctx.floorOn && y.g.py < ctx.floorPy - 1)
+      bad.push({ 항목: '하한 미달', 단지: y.g.apt, 평당가: Math.round(y.g.py) + '만',
+                 하한: Math.round(ctx.floorPy) + '만', 최상단대비: (100 * (y.priceRatioToTop || 0)).toFixed(0) + '%' });
+  });
+  if (bad.length) {
+    console.error('[불변조건 위반] ' + (ctx.phase || '정렬 전') + ' · ' + ctx.region +
+      ' · 최상단 ' + Math.round(ctx.referenceTopPy) + '만 · 하한 ' + Math.round(ctx.floorPy) + '만');
+    if (console.table) console.table(bad); else console.error(bad);
+    return false;
+  }
+  return true;
+}
+/** 진단표 — 콘솔에서 aptDiag('고양 덕양구') 로 호출 */
+function aptDiag(regionName) {
+  var out = [];
+  (window.__APTDIAG || []).forEach(function (r) {
+    if (regionName && r.region !== regionName) return;
+    out.push(r);
+  });
+  if (console.table) console.table(out); else console.log(out);
+  return out;
 }
