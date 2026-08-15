@@ -519,7 +519,35 @@ function recTopApts() {
         return enrich(x.r.code, lst).then(function () { }, function () { });
       };
     });
-    return pool(enTasks, 3).then(function () { return { targets: targets, byReg: byReg }; });
+    return pool(enTasks, 3).then(function () {
+      /* ══ v54.4 — enrichment 결과를 fixture 로 내보내기 위해 보존 ══
+         production 이 «실제 추천 계산에 사용한» households·walk·useDate 를
+         candidateKey 기준으로 남긴다. regress2 가 이 값을 그대로 쓰면
+         K-apt 를 다시 호출하지 않고도 동일한 aptScoreRaw 를 얻는다. */
+      window.__ENRICH = window.__ENRICH || {};
+      targets.forEach(function (x) {
+        (byReg[x.r.code] || []).forEach(function (g) {
+          var key = x.r.code + '|' + normName(g.apt);
+          var m = g._match || {}, rw = g._raw || {};
+          window.__ENRICH[key] = {
+            households: g.hh == null ? null : g.hh,
+            walk: g.walk == null ? null : g.walk,
+            byr: g.byr == null ? null : g.byr,
+            station: g.station || null,
+            matchedName: m.matchedName || null,
+            matchMethod: m.matched ? (m.method || null) : 'none',
+            matchScore: m.matchScore == null ? null : m.matchScore,
+            runnerUp: m.runnerUp == null ? null : m.runnerUp,
+            kaptCode: rw.kaptCode || null,
+            rawHouseholds: rw.households == null ? null : rw.households,
+            rawSubwayWay: rw.subwayWay == null ? null : rw.subwayWay,
+            rawUseDate: rw.useDate == null ? null : rw.useDate,
+            source: m.source || 'K-apt /api/apt'
+          };
+        });
+      });
+      return { targets: targets, byReg: byReg };
+    });
   }).then(function (ctx) {
     var targets = ctx.targets, byReg = ctx.byReg;
     targets.forEach(function (x) {

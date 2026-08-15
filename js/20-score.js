@@ -392,6 +392,11 @@ function enrich(code, list) {
         if (sc > bs) { b2 = bs; bs = sc; best = it; } else if (sc > b2) b2 = sc;
       });
       if (best && bs >= .7 && (bs - b2) >= .12) { g.kapt = best.code; }
+      /* v54.4 — 매칭 근거를 진단용으로 남긴다 (계산에는 쓰이지 않는다) */
+      g._match = { matchedName: best ? best.raw : null, matchScore: +bs.toFixed(4),
+                   runnerUp: +b2.toFixed(4), matched: !!g.kapt,
+                   method: (best && best.n === q) ? 'exact' : 'fuzzy(dice)',
+                   source: 'K-apt /api/apt?kind=list' };
     });
     var tasks = list.filter(function (g) { return g.kapt; }).map(function (g) {
       return function () {
@@ -411,6 +416,9 @@ function apply(g, info) {
   var w = String(info.subwayWay || '').match(/\d+/);
   g.walk = w ? +w[0] : null; g.station = info.subwayStation || '';
   if (info.useDate && /^\d{4}/.test(info.useDate)) { g.byr = +info.useDate.slice(0, 4); g.age = new Date().getFullYear() - g.byr; }
+  /* v54.4 — K-apt 원본 응답을 진단용으로 남긴다 */
+  g._raw = { households: info.households, subwayWay: info.subwayWay,
+             subwayStation: info.subwayStation, useDate: info.useDate, kaptCode: g.kapt };
 }
 var SORT7 = { k: 'py', dir: -1 };
 function sortList7(list) {
