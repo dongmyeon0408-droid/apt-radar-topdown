@@ -507,6 +507,7 @@ function recTopApts() {
       var nowPy = med / ar * PY;
       (byReg[g.code] = byReg[g.code] || []).push({ apt: g.apt, med: med, ar: ar, py: nowPy,
         jeon: median(g.j), n: g.s.length, dong: g.dong, byr: g.byr, jibun: g.jibun,
+        tradeByr: g.byr,          /* v54.6 — enrich 가 byr 를 덮어쓰므로 실거래 원본을 따로 보존 */
         pastPy: pPy, gain5: (pPy && nowPy) ? (nowPy / pPy - 1) * 100 : null });
     });
     /* v48.1 — 백테스트는 세대수·역세권을 K-apt 값으로 계산했다.
@@ -547,6 +548,11 @@ function recTopApts() {
             regionName: x.r.name, regionCode: x.r.code,
             isCapital: !!x.r.cap, isRegulated: !!x.r.reg,
             aptName: g.apt, pricePerPyeong: g.py, salePrice: g.med, trades: g.n,
+            /* v54.6 — multi-signal matcher A/B 용 실거래 식별자 */
+            umdNm: g.dong || null, jibun: g.jibun || null,
+            tradeBuildYear: g.tradeByr || null,      /* 실거래 원본 (K-apt 로 덮이기 전) */
+            kaptCandidates: g._cands || null,
+            kaptAddr: rw.addr || null, kaptRoadAddr: rw.roadAddr || null, kaptName: rw.kaptName || null,
             kaptCode: rw.kaptCode || null,
             rawHouseholds: rw.households == null ? null : rw.households,
             rawSubwayWay: rw.subwayWay == null ? null : rw.subwayWay,

@@ -384,12 +384,23 @@ function enrich(code, list) {
         try { localStorage.setItem(LK, JSON.stringify({ t: Date.now(), v: v })); } catch (e) { } return v;
       }, function () { return []; });
   return p.then(function (items) {
-    var idx = items.map(function (it) { return { n: normName(it.name), code: it.kaptCode, raw: it.name }; });
+    /* v54.6 — list 응답의 bjdCode·addr 도 보존한다. 매칭 «판정»은 아직 이름만 쓴다(무변경).
+       multi-signal matcher A/B 시뮬레이션에 필요한 원자료를 남기기 위한 것이다. */
+    var idx = items.map(function (it) {
+      return { n: normName(it.name), code: it.kaptCode, raw: it.name,
+               bjd: it.bjdCode || null, addr: it.addr || null };
+    });
     list.forEach(function (g) {
-      var q = normName(g.apt), best = null, b2 = 0, bs = 0;
+      var q = normName(g.apt), best = null, b2 = 0, bs = 0, cands = [];
       idx.forEach(function (it) {
         var sc = it.n === q ? 1 : dice(q, it.n);
+        cands.push({ raw: it.raw, n: it.n, code: it.code, bjd: it.bjd, addr: it.addr, sc: sc });
         if (sc > bs) { b2 = bs; bs = sc; best = it; } else if (sc > b2) b2 = sc;
+      });
+      /* 상위 5 후보를 남긴다 — A/B 시뮬레이션용 (판정에는 쓰이지 않는다) */
+      cands.sort(function (a2, b3) { return b3.sc - a2.sc; });
+      g._cands = cands.slice(0, 5).map(function (o) {
+        return { name: o.raw, kaptCode: o.code, bjdCode: o.bjd, addr: o.addr, nameScore: +o.sc.toFixed(4) };
       });
       if (best && bs >= .7 && (bs - b2) >= .12) { g.kapt = best.code; }
       /* v54.5 — 매칭 근거와 «실패 사유»를 진단용으로 남긴다 (계산에는 쓰이지 않는다) */
@@ -429,7 +440,8 @@ function apply(g, info) {
   if (info.useDate && /^\d{4}/.test(info.useDate)) { g.byr = +info.useDate.slice(0, 4); g.age = new Date().getFullYear() - g.byr; }
   /* v54.4 — K-apt 원본 응답을 진단용으로 남긴다 */
   g._raw = { households: info.households, subwayWay: info.subwayWay,
-             subwayStation: info.subwayStation, useDate: info.useDate, kaptCode: g.kapt };
+             subwayStation: info.subwayStation, useDate: info.useDate, kaptCode: g.kapt,
+             addr: info.addr || null, roadAddr: info.roadAddr || null, kaptName: info.name || null };
 }
 var SORT7 = { k: 'py', dir: -1 };
 function sortList7(list) {
