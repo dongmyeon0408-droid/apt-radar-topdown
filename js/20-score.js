@@ -443,14 +443,21 @@ function kmTokens(name) {
   var rest = v.replace(/\([^)]*\)/g, '')
     .replace(/\d+\s*동(?![가-힣])/g, '').replace(/\d+(?:-\d+)?\s*단지/g, '').replace(/\d+\s*차/g, '');
   t.nameNumbers = (rest.match(/\d+/g) || []).map(Number);
-  /* 괄호 안 «주공3»·«주공2» 처럼 단지번호가 들어간 경우도 인식한다.
-     순수 숫자 괄호(지번 힌트)는 제외한다. */
-  (v.match(/\(([^)]+)\)/g) || []).forEach(function (p3) {
-    var inner = p3.replace(/[()]/g, '');
-    if (/^\d+[-\d]*$/.test(inner)) return;                  /* 지번 */
-    var mm = inner.match(/[가-힣]+\s*(\d+)$/);
-    if (mm && t.nameNumbers.indexOf(+mm[1]) < 0) t.nameNumbers.push(+mm[1]);
-  });
+  /* ══ v55.1 ══
+     괄호 안 «주공2»·«태영6» 처럼 «타입 표기가 없는» 숫자는 semantic number 로
+     승격하지 않는다. 승인된 diagnostic v6 와 동일한 동작이다.
+
+     승격 허용 — 명시적 타입이 있을 때만
+       2단지  → complexNo
+       2차    → phaseNo
+       106동  → buildingNo
+     승격 금지
+       주공2  → complexNo/nameNumber 로 «추정»
+
+     v55.0 은 괄호 안 숫자를 nameNumbers 에 넣었고, 그 결과
+     한라마을(주공2) 의 «2» 가 한라뜨란채2단지 의 단지번호 2 와
+     같은 타입으로 비교되어 false certainty 를 만들었다.
+     괄호 내용은 kmParenBrand() 가 브랜드 식별자로 따로 쓴다. */
   t.baseName = rest.replace(/\d+/g, '').replace(/[\s\-·,]/g, '');
   return t;
 }
