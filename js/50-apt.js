@@ -343,8 +343,8 @@ function renderRec() {
         (x.maxCap ? '이 지역 상한' : (x.maxMode === 'gap' ? '전세 끼고' : '대출 매수') + (lev ? ' · ' + lev.toFixed(1) + '배' : '')) + '</i></b></div>' +
       '<div><span>10년 상승률</span><b>' + (x.g10 == null ? '—' : fmtPct(x.g10)) + '</b></div></div>';
     h += '<div class="aptbox" data-aptbox="' + x.r.code + '">' +
-      (i < 3 || (GAPTOP && GAPTOP.r.code === x.r.code) ? '' :
-        '<div style="font-size:12.5px;color:var(--slate)">단지 조회는 상위 3개 지역만 실행됩니다. ' +
+      (i < 5 || (GAPTOP && GAPTOP.r.code === x.r.code) ? '' :
+        '<div style="font-size:12.5px;color:var(--slate)">단지 조회는 상위 5개 지역만 실행됩니다. ' +
         '이 지역 단지는 아래 <b>이 지역 단지 보기</b>로 확인하세요.</div>') + '</div>';
     h += '<div class="rowbtns" style="margin-top:14px">' +
       '<button class="btn sm" data-rgo="' + x.r.code + '">이 지역 단지 보기</button>' +
@@ -435,7 +435,8 @@ function renderRec() {
 }
 /** 추천 상위 지역의 대장 단지 2~3곳 */
 function recTopApts() {
-  var c = CFG(), n = Math.min(3, LASTREC.length);
+  /* v48.1 — 백테스트(Q20·Q22)는 지역 상위 5곳을 대상으로 했다. 화면도 5곳으로 맞춘다. */
+  var c = CFG(), n = Math.min(5, LASTREC.length);
   if (!n) return;
   var st = el('recAptStat'), btn = el('recApt');
   btn.disabled = true;
@@ -476,6 +477,19 @@ function recTopApts() {
       (byReg[g.code] = byReg[g.code] || []).push({ apt: g.apt, med: med, ar: ar, py: med / ar * PY,
         jeon: median(g.j), n: g.s.length, dong: g.dong, byr: g.byr, jibun: g.jibun });
     });
+    /* v48.1 — 백테스트는 세대수·역세권을 K-apt 값으로 계산했다.
+       화면도 같은 정보를 실어야 순서가 일치한다. (30~60일 캐시라 두 번째부터는 즉시) */
+    st.textContent = '단지 정보(세대수·역세권)를 불러오는 중…';
+    var enTasks = targets.map(function (x) {
+      return function () {
+        var lst = byReg[x.r.code] || [];
+        if (!lst.length) return Promise.resolve();
+        return enrich(x.r.code, lst).then(function () { }, function () { });
+      };
+    });
+    return pool(enTasks, 3).then(function () { return { targets: targets, byReg: byReg }; });
+  }).then(function (ctx) {
+    var targets = ctx.targets, byReg = ctx.byReg;
     targets.forEach(function (x) {
       var box = document.querySelector('[data-aptbox="' + x.r.code + '"]');
       if (!box) return;
@@ -1005,6 +1019,8 @@ function verifyBanner(c) {
         : (!c.first
         ? '검증된 기본 설정입니다. <b>생애최초에 해당하시면</b> 같은 돈으로 +' + BT_GAIN.loanFirst[i].toFixed(1) + '%포인트까지 올라갑니다.'
         : '검증에서 가장 좋았던 설정입니다.')) +
+      (c.area !== 84 ? ' <b>단, 검증은 84㎡(34평형) 기준입니다</b> — 지금 보시는 ' + c.area +
+        '㎡는 검증 조건과 달라 실제 결과가 다를 수 있습니다(FAQ Q5).' : '') +
       ' <span class="hint">과거 21,570회 검증 · 투자 FAQ Q20·Q22</span>' +
     '</div></div>';
 }
