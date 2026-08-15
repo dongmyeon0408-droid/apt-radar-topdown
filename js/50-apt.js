@@ -968,59 +968,72 @@ function toggleInlineMap(btn, code, aptName, dong) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   v48.0 — 이 설정이 과거에 얼마나 나았는지 실측치로 보여준다
-   출처: 진입 방식 백테스트 21,570회 · 정렬 방식 백테스트 4,044회
-   (투자 FAQ Q20 · Q22)
+   v49.0 — 이 설정이 과거에 얼마나 나았는지 실측치로 보여준다
+   출처: 평형 × 진입 방식 백테스트 99,598회 (투자 FAQ Q20·Q22·Q23)
+   숫자 = 같은 예산으로 아무거나 산 것보다 «더 번 만큼»(%포인트)
    ══════════════════════════════════════════════════════════════ */
-var BT_GAIN = {
-  /* [3년, 5년, 7년, 10년] — 같은 예산 무작위 대비 «더 번 만큼»(%p) */
-  loan:      [11.4, 24.0, 45.5, 79.6],
-  loanFirst: [14.1, 28.9, 51.6, 88.5],
-  auto:      [10.7, 22.5, 42.7, 73.9],
-  autoFirst: [12.9, 26.7, 47.7, 82.0],
-  gap:       [ 6.0, 11.8, 23.6, 35.8]
+var BT = {
+  36:  { loan:[6.8,15.2,32.5,54.5],  first:[7.7,16.0,33.6,57.4],   gap:[0.3,6.9,19.4,39.5],
+         win:[60,77,98,97],  winF:[62,77,98,97],  bench:68.1 },
+  46:  { loan:[10.2,24.6,41.2,90.6], first:[11.9,28.5,45.3,104.4], gap:[5.5,13.5,26.1,53.9],
+         win:[65,83,94,98],  winF:[65,84,94,98],  bench:65.2 },
+  59:  { loan:[13.3,24.9,47.4,76.2], first:[16.2,29.9,54.0,87.4],  gap:[5.5,13.1,27.5,44.2],
+         win:[67,80,92,92],  winF:[70,83,94,92],  bench:60.9 },
+  84:  { loan:[7.9,18.9,38.1,58.4],  first:[10.4,23.5,44.5,70.7],  gap:[2.9,7.5,16.4,21.0],
+         win:[60,73,93,98],  winF:[63,77,95,98],  bench:63.6 },
+  101: { loan:[6.0,10.7,24.9,35.5],  first:[7.8,14.6,30.0,47.4],   gap:[1.9,2.7,9.0,5.8],
+         win:[58,64,88,83],  winF:[62,68,93,93],  bench:69.6 }
 };
-var BT_WIN = {
-  loan:      [71, 84, 96, 99],
-  loanFirst: [75, 86, 98, 99],
-  auto:      [70, 81, 95, 97],
-  autoFirst: [73, 84, 96, 97],
-  gap:       [68, 81, 91, 96]
-};
-function btKey(c) {
-  var gap = (ENTRY === 'gap') || (ENTRY === 'best' && BESTGAP) || (ENTRY === 'auto');
-  if (ENTRY === 'gap') return 'gap';
-  if (gap) return c.first ? 'autoFirst' : 'auto';
-  return c.first ? 'loanFirst' : 'loan';
-}
+/* 평형별 10년 성적 순위 — 화면 안내에 쓴다 */
+var BT_AREA_RANK = [46, 59, 84, 36, 101];
+function btArea(a) { return BT[a] ? a : (a <= 40 ? 36 : a <= 52 ? 46 : a <= 66 ? 59 : a <= 92 ? 84 : 101); }
 function btIndex() { return HOLD === 'short' ? 0 : HOLD === 'long' ? 3 : 1; }
 function btLabel() { return HOLD === 'short' ? '3년' : HOLD === 'long' ? '10년' : '5년'; }
+function btPick(c) {
+  var A = BT[btArea(c.area)], i = btIndex();
+  var useGap = (ENTRY === 'gap') || (ENTRY === 'best' && BESTGAP) || (ENTRY === 'auto');
+  if (ENTRY === 'gap') return { g: A.gap[i], w: null, kind: 'gap', A: A };
+  if (useGap) {   /* 전세가 섞이면 두 값의 중간으로 본다 (보수적) */
+    var base = c.first ? A.first[i] : A.loan[i];
+    return { g: (base + A.gap[i]) / 2, w: null, kind: 'auto', A: A };
+  }
+  return { g: c.first ? A.first[i] : A.loan[i],
+           w: c.first ? A.winF[i] : A.win[i], kind: c.first ? 'first' : 'loan', A: A };
+}
 function verifyBanner(c) {
-  var k = btKey(c), i = btIndex();
-  var g = BT_GAIN[k][i], w = BT_WIN[k][i], yr = btLabel();
-  var how = k === 'gap' ? '전세 끼고'
-          : /First/.test(k) ? (/^auto/.test(k) ? '생애최초 · 전세 포함' : '생애최초 대출')
-          : /^auto/.test(k) ? '대출 + 전세 포함' : '대출 매수';
-  var warn = (k === 'gap') || (/^auto/.test(k) && !BESTGAP);
+  var r = btPick(c), i = btIndex(), yr = btLabel(), a = btArea(c.area), A = r.A;
+  var how = r.kind === 'gap' ? '전세 끼고'
+          : r.kind === 'auto' ? '대출 + 전세 포함'
+          : r.kind === 'first' ? '생애최초 대출' : '대출 매수';
+  var warn = (r.kind === 'gap') || (r.kind === 'auto' && !BESTGAP);
+  var msg;
+  if (r.kind === 'gap') {
+    msg = '<b>전세 끼고만 쓰면 검증에서 가장 나빴습니다</b> — 이 평형에서 +' + A.gap[i].toFixed(1) +
+      '%포인트로, 대출 매수(+' + A.loan[i].toFixed(1) + ')의 절반 수준입니다. 규제지역에 못 들어가기 때문입니다(FAQ Q22).';
+  } else if (r.kind === 'auto' && !BESTGAP) {
+    msg = '<b>«자동»은 검증에서 대출 매수보다 나빴습니다.</b> 당장 돈이 덜 드는 쪽을 고르다 비규제지역으로 밀리기 때문입니다.';
+  } else if (BESTGAP) {
+    msg = '대출만으로는 갈 곳이 거의 없어 <b>전세 끼고까지 열었습니다.</b> 예산이 늘면 대출 매수가 더 낫습니다.';
+  } else if (!c.first) {
+    msg = '검증된 기본 설정입니다. <b>생애최초에 해당하시면</b> 같은 돈으로 +' + A.first[i].toFixed(1) + '%포인트까지 올라갑니다.';
+  } else {
+    msg = '검증에서 가장 좋았던 설정입니다.';
+  }
+  /* 평형 안내 — 이 평형이 몇 번째로 좋았는지 */
+  var rank = BT_AREA_RANK.indexOf(a) + 1;
+  var best = BT_AREA_RANK[0];
+  if (rank >= 4) {
+    msg += ' <b>다만 ' + a + '㎡는 평형 5종 중 ' + rank + '번째</b>였습니다 — 같은 예산이면 ' +
+      best + '㎡가 10년 기준 +' + BT[best].loan[3].toFixed(1) + '%포인트로 가장 좋았습니다(FAQ Q23).';
+  }
   return '<div class="btbanner' + (warn ? ' warn' : '') + '">' +
     '<div class="btb-l"><span class="btb-k">지금 설정</span>' +
-      '<b>' + how + ' · ' + yr + ' 보유</b></div>' +
+      '<b>' + how + ' · ' + a + '㎡ · ' + yr + ' 보유</b></div>' +
     '<div class="btb-r">' +
-      '<div><span>같은 예산 아무거나 산 것보다</span><b>+' + g.toFixed(1) + '%포인트</b></div>' +
-      '<div><span>이긴 비율</span><b>' + w + '%</b></div>' +
+      '<div><span>같은 예산 아무거나 산 것보다</span><b>+' + r.g.toFixed(1) + '%포인트</b></div>' +
+      (r.w != null ? '<div><span>이긴 비율</span><b>' + r.w + '%</b></div>' : '') +
     '</div>' +
-    '<div class="btb-n">' +
-      (k === 'gap'
-        ? '<b>전세 끼고만 쓰면 검증에서 가장 나빴습니다</b>(+19.3%포인트 · 대출 매수는 +40.1). 규제지역에 못 들어가 좋은 동네가 빠지기 때문입니다.'
-        : (/^auto/.test(k) && !BESTGAP)
-        ? '<b>«자동»은 검증에서 대출 매수보다 나빴습니다.</b> 당장 돈이 덜 드는 쪽을 고르다 비규제지역으로 밀리기 때문입니다.'
-        : BESTGAP
-        ? '대출만으로는 갈 곳이 거의 없어 <b>전세 끼고까지 열었습니다.</b> 예산이 늘면 대출 매수가 더 낫습니다.'
-        : (!c.first
-        ? '검증된 기본 설정입니다. <b>생애최초에 해당하시면</b> 같은 돈으로 +' + BT_GAIN.loanFirst[i].toFixed(1) + '%포인트까지 올라갑니다.'
-        : '검증에서 가장 좋았던 설정입니다.')) +
-      (c.area !== 84 ? ' <b>단, 검증은 84㎡(34평형) 기준입니다</b> — 지금 보시는 ' + c.area +
-        '㎡는 검증 조건과 달라 실제 결과가 다를 수 있습니다(FAQ Q5).' : '') +
-      ' <span class="hint">과거 21,570회 검증 · 투자 FAQ Q20·Q22</span>' +
+    '<div class="btb-n">' + msg +
+      ' <span class="hint">과거 99,598회 검증 · 투자 FAQ Q20·Q22·Q23</span>' +
     '</div></div>';
 }
