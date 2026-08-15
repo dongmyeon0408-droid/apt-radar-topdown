@@ -646,6 +646,8 @@ function recTopApts() {
       eligible.forEach(function (y, i2) {
         var base = (1 - mix) * rPy[i2] + mix * rSc[i2];
         y.rank = useLag ? (1 - LAGW) * base + LAGW * rLag[i2] : base;
+        /* 정렬하면 인덱스가 바뀌므로 백분위 값을 원소에 붙여 둔다 (진단용) */
+        y._rPy = rPy[i2]; y._rSc = rSc[i2]; y._rLag = rLag ? rLag[i2] : null; y._base = base;
       });
       /* v53.1 — 불변조건 검사. 위반이 있으면 화면에 내보내기 전에 잡는다. */
       assertCandidates(eligible, {
@@ -656,6 +658,39 @@ function recTopApts() {
         var d = v.rank - u.rank; if (d) return d;
         return v.g.py - u.g.py;
       });
+      /* ══ v54.3 — ranking parity 검증용 export (진단 전용, 계산에 영향 없음) ══
+         정렬이 끝난 뒤의 점수·순위를 그대로 남긴다. */
+      window.__RANKDIAG = window.__RANKDIAG || {};
+      window.__RANKDIAG[x.r.name] = {
+        useLag: useLag, mix: mix, infoRate: infoRate, LAGW: LAGW,
+        referenceTopPy: referenceTopPy, floorPy: floorPy,
+        rows: eligible.map(function (y, i2) {
+          var age0 = y.g.byr ? (new Date().getFullYear() - y.g.byr) : null;
+          var hh0 = y.g.hh || null, wk0 = y.g.walk == null ? null : y.g.walk;
+          var jr0 = (y.g.jeon && y.g.med) ? y.g.jeon / y.g.med * 100 : null;
+          return {
+            candidateKey: x.r.code + '|' + normName(y.g.apt),
+            aptName: y.g.apt, area: y.g.ar == null ? null : +y.g.ar.toFixed(2),
+            pricePerPyeong: y.g.py,
+            priceRatioToTop: y.priceRatioToTop,
+            age: age0,
+            ageScore: age0 == null ? 55 : (age0 >= 35 ? 100 : age0 >= 25 ? 88 : age0 >= 20 ? 55 : age0 >= 10 ? 52 : 30),
+            walk: wk0,
+            walkScore: wk0 == null ? 55 : (wk0 <= 5 ? 100 : wk0 <= 10 ? 62 : wk0 <= 15 ? 52 : 45),
+            households: hh0,
+            householdScore: hh0 == null ? 55 : (hh0 >= 2000 ? 100 : hh0 >= 500 ? 65 : hh0 >= 300 ? 48 : 42),
+            jeonseRatio: jr0,
+            jeonseScore: jr0 == null ? 55 : clamp(20 + (jr0 - 40) / 40 * 80, 10, 100),
+            aptScoreRaw: y.sc,
+            rPy: y._rPy, rSc: y._rSc,
+            gain5: y.g.gain5 == null ? null : y.g.gain5,
+            rLag: y._rLag,
+            baseScore: y._base,
+            finalScore: y.rank,
+            finalRank: i2 + 1
+          };
+        })
+      };
       if (!all.length) {
         box.innerHTML = '<div class="aptwarn">최근 6개월 ' + c.area + '㎡대 거래가 없습니다. 평형을 바꿔보세요.</div>';
         return;
