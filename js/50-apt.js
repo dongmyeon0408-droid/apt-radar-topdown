@@ -168,8 +168,16 @@ function aptScore(g, r) {
   var comp = pAg * .35 + pWk * .35 + pHh * .30;
   var jr = (g.jeon && g.med) ? g.jeon / g.med * 100 : null;
   var pJe = jr == null ? 55 : clamp(20 + (jr - 40) / 40 * 80, 10, 100);
-  /* 단지 6축 중 지역 안에서 변별력이 있는 부분만: 전세 30% + 단지 경쟁력 15% → 정규화 */
-  return (pJe * .30 + comp * .15) / .45;
+  /* v53.0 — 백테스트(bt-*.js)와 계수를 정확히 맞춘다.
+     백테스트:  sc = 0.195*(0.65*전세 + 0.35*55) + 0.15*경쟁력
+                → 전세 46% · 경쟁력 54%
+     그런데 앱은 (전세*0.30 + 경쟁력*0.15)/0.45 로 «전세 67%»를 주고 있었다.
+     전세가율이 높은 단지는 대개 싼 단지라, 이 오류가 저가 단지를 1위로 밀어올렸다. */
+  return 0.195 * (0.65 * pJe + 0.35 * 55) + 0.15 * comp;
+}
+/** 임대·공공 단지인지 — 일반 매매 대상이 아니라 이상치를 만든다 */
+function isRental(nm) {
+  return /임대|국민임대|공공임대|행복주택|영구임대|장기전세|LH\s*\d|SH\s*\d/.test(String(nm || ''));
 }
 function exKeyApt(code, apt) { return code + '|' + apt; }
 /** 전세 끼고 매수 시 필요현금 (비규제 지역만 — 규제지역은 실거주 의무) */
@@ -530,7 +538,11 @@ function recTopApts() {
         return { g: g, need: use, loanNeed: nc2.need, gapNeed: gapNeed, mode: mode,
           loan: nc2.loan, bind: nc2.bind, ok: use <= c.cash,
           jr: g.jeon ? g.jeon / g.med * 100 : null };
-      }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; });      /* v46.0 제외 */
+      }).filter(function (y) {
+        if (EXAPT[exKeyApt(x.r.code, y.g.apt)]) return false;          /* 사용자가 뺀 것 */
+        if (isRental(y.g.apt)) return false;                           /* v53.0 임대 단지 제외 */
+        return true;
+      });
       /* v47.0 — 보유기간에 따라 «동네(평당가)»와 «단지 조건(점수)»의 비중을 정한다.
          v51.0 — 여기에 «뒤처짐»(직전 5년 덜 오른 정도)을 30% 얹는다.
          검증(bt-mom, 77,550회): 미반영 +32.2%p 가 9종 중 꼴찌였고,
@@ -556,7 +568,9 @@ function recTopApts() {
       var okPy = okAll.map(function (y) { return y.g.py; }).sort(function (a, b) { return b - a; });
       var floorOn = false, floorPy = 0;
       if (okPy.length >= 6) {
-        var byMax = okPy[0] * PFLOOR;                                  /* 최고가의 70% */
+        /* 최고가 한 건이 유독 높은 경우가 있어 2~3번째 값을 기준으로 삼는다 */
+        var refPy = okPy.length >= 8 ? okPy[2] : okPy[1];
+        var byMax = refPy * PFLOOR;
         var byCnt = okPy[Math.max(4, Math.floor(okPy.length * 0.5) - 1)];  /* 상위 절반(최소 5곳) 지점 */
         floorPy = Math.min(byMax, byCnt);
         var kept = all.filter(function (y) { return !y.ok || y.g.py >= floorPy; });
@@ -567,6 +581,16 @@ function recTopApts() {
       if (topOne && all.indexOf(topOne) < 0) all = [topOne].concat(all);
       var pys = all.map(function (y) { return y.g.py; });
       var scs = all.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
+      /* v53.0 — 단지 정보(세대수·역세권·연식)를 못 가져오면 점수 축이
+         «전세가율 하나»로 붕괴한다. 전세가율이 높은 단지는 대개 싼 단지라
+         그대로 두면 저가가 1위로 올라온다. 백테스트는 K-apt 정보가 다 있는
+         상태(매칭 76%)에서 계산됐으므로, 정보가 부족하면 점수 비중을 낮추고
+         가격 비중을 높여 검증 조건에 가깝게 맞춘다. */
+      var nInfo = all.filter(function (y) {
+        return y.g.hh != null || y.g.walk != null || y.g.byr != null;
+      }).length;
+      var infoRate = all.length ? nInfo / all.length : 0;
+      if (infoRate < 0.5) mix = mix * (0.35 + 0.65 * (infoRate / 0.5));
       var rPy = pctRankArr(pys), rSc = pctRankArr(scs);
       /* 5년 전 자료가 있는 단지가 절반 이상일 때만 뒤처짐 축을 쓴다 */
       var hasLag = all.filter(function (y) { return y.g.gain5 != null; }).length;
@@ -654,6 +678,10 @@ function recTopApts() {
         }
         var nLag = all.filter(function (y) { return y.g.gain5 != null; }).length;
         hh += '<div class="aptsorthelp"><b>' + hl2.t + ' 기준으로 세웠습니다.</b> ' + hl2.d +
+          (infoRate < 0.5
+            ? '<br><span class="hint">단지 정보(세대수·역세권·연식)를 ' + Math.round(infoRate * 100) +
+              '%만 확보해 <b>가격 비중을 높여</b> 계산했습니다. 정보가 없으면 전세가율만 남아 싼 단지가 위로 올라오기 때문입니다.</span>'
+            : '') +
           (nLag >= Math.max(5, all.length * 0.5)
             ? '<br><b>여기에 «최근 5년간 덜 오른 단지»를 30% 반영했습니다.</b> ' +
               '같은 동네 안에서는 뒤처진 단지가 따라오는 편이었습니다(FAQ Q25).'
@@ -661,8 +689,9 @@ function recTopApts() {
           '<br><b>그리고 예산으로 갈 수 있는 최상단의 70% 아래는 후보에서 뺐습니다.</b> ' +
           '크게 빠진 단지는 «따라올 차례»가 아니라 «빠질 이유»가 있는 경우가 많았습니다.' +
           ' <span class="hint" style="display:block;margin-top:5px">이 순서는 투자 FAQ <b>Q20·Q25</b>에서 검증한 방식 그대로입니다.</span></div>';
-        hh += '<div class="tblwrap"><table style="min-width:960px"><thead><tr><th>순위</th><th>단지</th><th>동네</th><th>평당가</th>' +
-          '<th>5년 상승</th><th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
+        hh += '<div class="tblwrap"><table style="min-width:1010px"><thead><tr><th>순위</th><th>단지</th><th>동네</th><th>평당가</th>' +
+          '<th title="직전 5년 상승률과 연평균 수익률(CAGR)">5년 상승 · 연평균</th>' +
+          '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
           var g = y.g;
           var topShift = (show3[0] && show3[0].isTop) ? 1 : 0;
@@ -673,8 +702,13 @@ function recTopApts() {
             '<td style="font-size:12.5px;color:var(--slate)">' + esc(g.dong || '—') + '</td>' +
             '<td style="font-weight:700">' + n0(g.py) + '만</td>' +
             '<td style="font-size:12.5px;' + (g.gain5 == null ? 'color:var(--slate)' :
-                g.gain5 < 30 ? 'color:var(--good);font-weight:700' : 'color:var(--slate)') + '">' +
-              (g.gain5 == null ? '—' : (g.gain5 >= 0 ? '+' : '') + Math.round(g.gain5) + '%') + '</td>' +
+                (g.gain5 >= 0 && g.gain5 < 30) ? 'color:var(--good);font-weight:700' :
+                g.gain5 < 0 ? 'color:#B24A32' : 'color:var(--slate)') + '">' +
+              (g.gain5 == null ? '—' :
+                (g.gain5 >= 0 ? '+' : '') + Math.round(g.gain5) + '%' +
+                '<span style="display:block;font-size:11px;opacity:.75">연 ' +
+                ((Math.pow(1 + g.gain5 / 100, 1 / 5) - 1) * 100 >= 0 ? '+' : '') +
+                ((Math.pow(1 + g.gain5 / 100, 1 / 5) - 1) * 100).toFixed(1) + '%</span>') + '</td>' +
             '<td>' + won(g.med) + '</td>' +
             '<td>' + (y.mode === 'gap' ? '<span class="b ok">전세 끼고</span>' : '<span class="b no">대출 매수</span>') +
               (y.mode === 'loan' && y.gapNeed != null ? '<div style="font-size:11px;color:var(--slate)">전세 끼면 ' + won(y.gapNeed) + '</div>' :
