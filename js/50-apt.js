@@ -584,6 +584,9 @@ function recTopApts() {
       all.forEach(function (y, i2) {
         window.__APTDIAG.push({
           region: x.r.name, aptName: y.g.apt, areaBucket: bucketOf(y.g.ar),
+          areaExact: y.g.ar == null ? null : +y.g.ar.toFixed(1),   /* v54.2 candidateKey 용 */
+          trades: y.g.n, jeonse: y.g.jeon == null ? null : Math.round(y.g.jeon),
+          dong: y.g.dong || '',
           /* v54.1 — 단위 버그 수정. g.med · y.need 는 이미 «만원» 단위라
              1e4 로 또 나누면 억 단위로 뭉개진다(4.6억이 5 로 찍혔다). */
           salePrice: Math.round(y.g.med), pricePerPyeong: Math.round(y.g.py),
