@@ -392,10 +392,21 @@ function enrich(code, list) {
         if (sc > bs) { b2 = bs; bs = sc; best = it; } else if (sc > b2) b2 = sc;
       });
       if (best && bs >= .7 && (bs - b2) >= .12) { g.kapt = best.code; }
-      /* v54.4 — 매칭 근거를 진단용으로 남긴다 (계산에는 쓰이지 않는다) */
-      g._match = { matchedName: best ? best.raw : null, matchScore: +bs.toFixed(4),
-                   runnerUp: +b2.toFixed(4), matched: !!g.kapt,
-                   method: (best && best.n === q) ? 'exact' : 'fuzzy(dice)',
+      /* v54.5 — 매칭 근거와 «실패 사유»를 진단용으로 남긴다 (계산에는 쓰이지 않는다) */
+      var _why = 'ok';
+      if (!idx.length) _why = 'K-apt 목록 없음';
+      else if (!best) _why = '후보 없음';
+      else if (bs < .7) _why = '유사도 부족 (' + bs.toFixed(3) + ' < 0.70)';
+      else if ((bs - b2) >= .12 === false) _why = '2위와 근접 (격차 ' + (bs - b2).toFixed(3) + ' < 0.12)';
+      g._match = { normQuery: q,
+                   matchedName: best ? best.raw : null,
+                   matchedNorm: best ? best.n : null,
+                   matchScore: +bs.toFixed(4), runnerUp: +b2.toFixed(4),
+                   gap: +(bs - b2).toFixed(4),
+                   matched: !!g.kapt,
+                   method: !g.kapt ? 'none' : ((best && best.n === q) ? 'exact' : 'fuzzy'),
+                   failReason: g.kapt ? null : _why,
+                   kaptListSize: idx.length,
                    source: 'K-apt /api/apt?kind=list' };
     });
     var tasks = list.filter(function (g) { return g.kapt; }).map(function (g) {
