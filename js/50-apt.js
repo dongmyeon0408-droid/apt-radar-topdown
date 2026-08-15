@@ -448,6 +448,9 @@ function recTopApts() {
   var st = el('recAptStat'), btn = el('recApt');
   btn.disabled = true;
   var months = ymList(6), mode = String(c.area);
+  /* v51.0 — 갭 메우기 검증(77,550회) 결과, 같은 지역·평형 안에서
+     «최근 덜 오른 단지»가 이후에 더 올랐다. 직전 5년 상승률을 함께 잰다. */
+  var pastMonths = ymListBack(6, 60);
   var tasks = [];
   var targets = LASTREC.slice(0, n);
   if (GAPTOP && !targets.some(function (q) { return q.r.code === GAPTOP.r.code; })) {
@@ -458,6 +461,10 @@ function recTopApts() {
     months.forEach(function (ym) {
       tasks.push(function () { return getTr(x.r.code, ym, 'sale').then(function (d) { return { code: x.r.code, k: 's', d: d }; }); });
       tasks.push(function () { return getTr(x.r.code, ym, 'rent').then(function (d) { return { code: x.r.code, k: 'j', d: d }; }); });
+    });
+    pastMonths.forEach(function (ym) {
+      tasks.push(function () { return getTr(x.r.code, ym, 'sale').then(function (d) { return { code: x.r.code, k: 'p', d: d }; },
+                                                                       function () { return { code: x.r.code, k: 'p', d: [] }; }); });
     });
   });
   st.textContent = '상위 ' + n + '개 지역의 단지를 불러오는 중…';
@@ -470,19 +477,29 @@ function recTopApts() {
         if (x.k === 's' && t.canceled) return;
         if (x.k === 'j' && !t.jeonse) return;
         var key = x.code + '|' + normName(t.apt);
-        var g = G[key] || (G[key] = { code: x.code, apt: deent(t.apt), s: [], j: [], ar: [], dong: '', byr: null, jibun: '' });
+        var g = G[key] || (G[key] = { code: x.code, apt: deent(t.apt), s: [], j: [], p: [], pa: [], ar: [], dong: '', byr: null, jibun: '' });
         if (!g.dong && t.dong) g.dong = t.dong;
         if (!g.byr && t.buildYear) g.byr = t.buildYear;
         if (!g.jibun && t.jibun) g.jibun = t.jibun;
-        if (x.k === 's') { g.s.push(t.amount); g.ar.push(t.area); } else g.j.push(t.deposit);
+        if (x.k === 's') { g.s.push(t.amount); g.ar.push(t.area); }
+        else if (x.k === 'p') { g.p.push(t.amount); g.pa.push(t.area); }
+        else g.j.push(t.deposit);
       });
     });
     var byReg = {};
     Object.keys(G).forEach(function (k) {
       var g = G[k]; if (g.s.length < 2) return;
       var med = median(g.s), ar = median(g.ar);
-      (byReg[g.code] = byReg[g.code] || []).push({ apt: g.apt, med: med, ar: ar, py: med / ar * PY,
-        jeon: median(g.j), n: g.s.length, dong: g.dong, byr: g.byr, jibun: g.jibun });
+      /* 5년 전 평당가 — 그때 거래가 2건 이상인 단지만 계산한다 */
+      var pPy = null;
+      if (g.p.length >= 2) {
+        var pm = median(g.p), pa = median(g.pa);
+        if (pm && pa) pPy = pm / pa * PY;
+      }
+      var nowPy = med / ar * PY;
+      (byReg[g.code] = byReg[g.code] || []).push({ apt: g.apt, med: med, ar: ar, py: nowPy,
+        jeon: median(g.j), n: g.s.length, dong: g.dong, byr: g.byr, jibun: g.jibun,
+        pastPy: pPy, gain5: (pPy && nowPy) ? (nowPy / pPy - 1) * 100 : null });
     });
     /* v48.1 — 백테스트는 세대수·역세권을 K-apt 값으로 계산했다.
        화면도 같은 정보를 실어야 순서가 일치한다. (30~60일 캐시라 두 번째부터는 즉시) */
@@ -515,12 +532,28 @@ function recTopApts() {
           jr: g.jeon ? g.jeon / g.med * 100 : null };
       }).filter(function (y) { return !EXAPT[exKeyApt(x.r.code, y.g.apt)]; });      /* v46.0 제외 */
       /* v47.0 — 보유기간에 따라 «동네(평당가)»와 «단지 조건(점수)»의 비중을 정한다.
-         두 값을 각각 백분위로 바꿔 가중 합산한다(검증에서 이 방식이 안정적이었다). */
-      var mix = holdMix();
+         v51.0 — 여기에 «뒤처짐»(직전 5년 덜 오른 정도)을 30% 얹는다.
+         검증(bt-mom, 77,550회): 미반영 +32.2%p 가 9종 중 꼴찌였고,
+         직전 5년 기준 30% 반영이 +34.9%p 로 1위 · 승률 94% → 97%.
+         보유기간 전부에서 개선됐다(3년 +1.9 · 5년 +2.1 · 7년 +1.6 · 10년 +6.1%p).
+         지역 단위에서는 과거 상승률이 거꾸로였지만(Q17), 같은 동네 안 단지끼리는
+         «뒤처진 쪽이 따라온다»가 성립한다 — Q2 에서 구분했던 그대로다. */
+      var mix = holdMix(), LAGW = 0.30;
       var pys = all.map(function (y) { return y.g.py; });
       var scs = all.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
       var rPy = pctRankArr(pys), rSc = pctRankArr(scs);
-      all.forEach(function (y, i2) { y.rank = (1 - mix) * rPy[i2] + mix * rSc[i2]; });
+      /* 5년 전 자료가 있는 단지가 절반 이상일 때만 뒤처짐 축을 쓴다 */
+      var hasLag = all.filter(function (y) { return y.g.gain5 != null; }).length;
+      var useLag = hasLag >= Math.max(5, all.length * 0.5);
+      var rLag = null;
+      if (useLag) {
+        var medGain = median(all.map(function (y) { return y.g.gain5; }).filter(function (v) { return v != null; }));
+        rLag = pctRankArr(all.map(function (y) { return -(y.g.gain5 == null ? medGain : y.g.gain5); }));
+      }
+      all.forEach(function (y, i2) {
+        var base = (1 - mix) * rPy[i2] + mix * rSc[i2];
+        y.rank = useLag ? (1 - LAGW) * base + LAGW * rLag[i2] : base;
+      });
       all.sort(function (u, v) {
         if (u.ok !== v.ok) return u.ok ? -1 : 1;          /* 예산 안에 드는 것 먼저 */
         var d = v.rank - u.rank; if (d) return d;
@@ -577,16 +610,24 @@ function recTopApts() {
             '아래 목록은 <b>' + hl2.t + ' 기준</b>으로 세운 순서라 1위가 다를 수 있습니다. ' +
             '<b>길게 보실 거면 «7년 이상»</b>을 고르시면 이 단지가 위로 올라옵니다.</div>';
         }
+        var nLag = all.filter(function (y) { return y.g.gain5 != null; }).length;
         hh += '<div class="aptsorthelp"><b>' + hl2.t + ' 기준으로 세웠습니다.</b> ' + hl2.d +
-          ' <span class="hint" style="display:block;margin-top:5px">이 순서는 투자 FAQ <b>Q20</b>에서 검증한 방식 그대로입니다.</span></div>';
-        hh += '<div class="tblwrap"><table style="min-width:900px"><thead><tr><th>순위</th><th>단지</th><th>동네</th><th>평당가</th>' +
-          '<th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
+          (nLag >= Math.max(5, all.length * 0.5)
+            ? '<br><b>여기에 «최근 5년간 덜 오른 단지»를 30% 반영했습니다.</b> ' +
+              '같은 동네 안에서는 뒤처진 단지가 따라오는 편이었습니다 — 반영 후 승률이 94%에서 <b>97%</b>로 올랐습니다(FAQ Q25).'
+            : '<br><span class="hint">5년 전 거래 자료가 부족해 «뒤처짐»은 반영하지 못했습니다.</span>') +
+          ' <span class="hint" style="display:block;margin-top:5px">이 순서는 투자 FAQ <b>Q20·Q25</b>에서 검증한 방식 그대로입니다.</span></div>';
+        hh += '<div class="tblwrap"><table style="min-width:960px"><thead><tr><th>순위</th><th>단지</th><th>동네</th><th>평당가</th>' +
+          '<th>5년 상승</th><th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
           var g = y.g;
           hh += '<tr' + (y.ok ? ' class="pick"' : '') + '><td class="nm"><span class="b ' + (i === 0 ? 'd1' : 'no') + '">' + (i + 1) + '위</span></td>' +
             '<td class="nm">' + esc(g.apt) + '</td>' +
             '<td style="font-size:12.5px;color:var(--slate)">' + esc(g.dong || '—') + '</td>' +
             '<td style="font-weight:700">' + n0(g.py) + '만</td>' +
+            '<td style="font-size:12.5px;' + (g.gain5 == null ? 'color:var(--slate)' :
+                g.gain5 < 30 ? 'color:var(--good);font-weight:700' : 'color:var(--slate)') + '">' +
+              (g.gain5 == null ? '—' : (g.gain5 >= 0 ? '+' : '') + Math.round(g.gain5) + '%') + '</td>' +
             '<td>' + won(g.med) + '</td>' +
             '<td>' + (y.mode === 'gap' ? '<span class="b ok">전세 끼고</span>' : '<span class="b no">대출 매수</span>') +
               (y.mode === 'loan' && y.gapNeed != null ? '<div style="font-size:11px;color:var(--slate)">전세 끼면 ' + won(y.gapNeed) + '</div>' :
@@ -982,17 +1023,20 @@ function toggleInlineMap(btn, code, aptName, dong) {
 /* best = 지역은 대출 기준 · 단지에서 전세 허용 (bt-lev 전략 B, 77,550회)
    loan = 대출만 (bt-area, 99,598회) · gap = 전세 끼고만 (지역까지 전세 기준)
    first = 생애최초 LTV 70% 적용 */
+/* best = 지역은 대출 기준 · 단지는 전세 허용 · 뒤처짐 30%(직전 5년) (bt-mom, 77,550회)
+   loan = 대출만 · 뒤처짐 미반영 (bt-area, 99,598회)
+   gap  = 전세 끼고만 (지역까지 전세 기준) · first = 생애최초 LTV 70% */
 var BT = {
-  36:  { best:[6.6,15.1,32.2,54.6],  loan:[6.8,15.2,32.5,54.5],  first:[7.7,16.0,33.6,57.4],
-         gap:[0.3,6.9,19.4,39.5],  win:[60,77,98,97],  winF:[62,77,98,97],  bench:68.1 },
-  46:  { best:[10.1,24.8,41.4,90.7], loan:[10.2,24.6,41.2,90.6], first:[11.9,28.5,45.3,104.4],
-         gap:[5.5,13.5,26.1,53.9], win:[65,83,94,99],  winF:[65,84,94,99],  bench:65.2 },
-  59:  { best:[13.5,25.8,48.2,77.0], loan:[13.3,24.9,47.4,76.2], first:[16.2,29.9,54.0,87.4],
-         gap:[5.5,13.1,27.5,44.2], win:[67,80,92,95],  winF:[70,83,94,95],  bench:60.9 },
-  84:  { best:[8.2,19.2,38.3,59.8],  loan:[7.9,18.9,38.1,58.4],  first:[10.4,23.5,44.5,70.7],
-         gap:[2.9,7.5,16.4,21.0],  win:[60,73,93,99],  winF:[63,77,95,99],  bench:63.6 },
-  101: { best:[6.5,11.2,25.8,36.0],  loan:[6.0,10.7,24.9,35.5],  first:[7.8,14.6,30.0,47.4],
-         gap:[1.9,2.7,9.0,5.8],    win:[58,64,88,83],  winF:[62,68,93,93],  bench:69.6 }
+  36:  { best:[8.4,15.5,36.4,58.5],  loan:[6.8,15.2,32.5,54.5],  first:[7.7,16.0,33.6,57.4],
+         gap:[0.3,6.9,19.4,39.5],  win:[63,80,98,97],  winF:[65,80,98,97],  bench:68.1 },
+  46:  { best:[11.5,29.7,43.1,95.1], loan:[10.2,24.6,41.2,90.6], first:[11.9,28.5,45.3,104.4],
+         gap:[5.5,13.5,26.1,53.9], win:[68,86,96,99],  winF:[68,87,96,99],  bench:65.2 },
+  59:  { best:[13.7,28.4,49.9,84.8], loan:[13.3,24.9,47.4,76.2], first:[16.2,29.9,54.0,87.4],
+         gap:[5.5,13.1,27.5,44.2], win:[70,83,95,97],  winF:[73,86,97,97],  bench:60.9 },
+  84:  { best:[9.4,20.4,40.5,66.6],  loan:[7.9,18.9,38.1,58.4],  first:[10.4,23.5,44.5,70.7],
+         gap:[2.9,7.5,16.4,21.0],  win:[63,76,95,99],  winF:[66,80,97,99],  bench:63.6 },
+  101: { best:[6.9,12.4,24.0,43.6],  loan:[6.0,10.7,24.9,35.5],  first:[7.8,14.6,30.0,47.4],
+         gap:[1.9,2.7,9.0,5.8],    win:[61,67,90,86],  winF:[65,71,95,96],  bench:69.6 }
 };
 /* 평형별 10년 성적 순위 — 화면 안내에 쓴다 */
 var BT_AREA_RANK = [46, 59, 84, 36, 101];
@@ -1029,8 +1073,8 @@ function verifyBanner(c) {
   } else if (BESTGAP) {
     msg = '대출로 갈 수 있는 지역이 너무 적어 <b>전세 끼고까지 열었습니다.</b> 예산이 늘면 지역을 대출 기준으로 고르는 쪽이 낫습니다.';
   } else if (/^best/.test(r.kind)) {
-    msg = '지역은 <b>대출 매수 기준</b>으로 정하고, 그 안에서 단지를 고를 때만 <b>전세 끼는 것도 허용</b>합니다. ' +
-      '검증에서 가장 좋았던 방식입니다(대출만 +' + A.loan[i].toFixed(1) + ' → <b>+' + A.best[i].toFixed(1) + '%포인트</b>).' +
+    msg = '지역은 <b>대출 매수 기준</b>으로 정하고, 단지는 <b>전세 허용 + 최근 5년 덜 오른 곳 30% 가점</b>입니다. ' +
+      '검증에서 가장 좋았던 조합입니다(기본 +' + A.loan[i].toFixed(1) + ' → <b>+' + A.best[i].toFixed(1) + '%포인트</b>).' +
       (!c.first ? ' <b>생애최초에 해당하시면</b> +' + (A.best[i] + A.first[i] - A.loan[i]).toFixed(1) + '%포인트까지 올라갑니다.' : '');
   } else if (!c.first) {
     msg = '검증된 기본 설정입니다. <b>생애최초에 해당하시면</b> 같은 돈으로 +' + A.first[i].toFixed(1) + '%포인트까지 올라갑니다.';

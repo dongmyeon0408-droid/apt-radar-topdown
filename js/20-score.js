@@ -93,6 +93,16 @@ function ymList(n) {
   for (var i = 0; i < n; i++) { var y = d.getFullYear(), m = d.getMonth() + 1 - i; while (m <= 0) { m += 12; y--; } o.push(y * 100 + m); }
   return o;
 }
+/** back 개월 전부터 n 개월치 — 과거 시세 비교용 */
+function ymListBack(n, back) {
+  var o = [], d = new Date();
+  for (var i = 0; i < n; i++) {
+    var y = d.getFullYear(), m = d.getMonth() + 1 - back - i;
+    while (m <= 0) { m += 12; y--; }
+    o.push(y * 100 + m);
+  }
+  return o;
+}
 function normName(s) {
   return String(s || '').replace(/\(.*?\)/g, '').replace(/[\s\-·、,]/g, '')
     .replace(/아파트$/, '').replace(/(제?\d+)?단지$/, '').toLowerCase();
