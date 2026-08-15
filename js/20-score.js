@@ -375,6 +375,134 @@ function run5() {
     });
   });
 }
+/* ══════════════════════════════════════════════════════════════
+   v55.0 — K-apt multi-signal identity matcher v6
+   변경 대상은 «실거래 단지 → K-apt 단지 identity matching» 뿐이다.
+   추천 점수 공식·가중치·PFLOOR·percentile·정렬은 건드리지 않는다.
+
+   판정 순서
+     동일 시군구 → 동일 법정동 → strict 지번(main/sub/산)
+     → buildYear/useYear → 브랜드 token → semantic number token → 이름
+   CONFIRMED_MATCH 일 때만 hh·walk·byr 를 K-apt 값으로 덮어쓴다.
+   ══════════════════════════════════════════════════════════════ */
+function kmDongOf(addr) {
+  var t = String(addr || '').trim().split(/\s+/);
+  for (var i = t.length - 1; i >= 0; i--) {
+    if (/[동리가]$/.test(t[i]) && !/시$|구$|도$|군$/.test(t[i])) return t[i];
+  }
+  return null;
+}
+function kmJibunStr(addr) {
+  var m = String(addr || '').match(/[가-힣]+[동리가]\s+(산\s*)?(\d+(?:-\d+)?)/);
+  return m ? ((m[1] ? '산' : '') + m[2]) : null;
+}
+function kmParseJibun(v0) {
+  if (v0 == null || v0 === '') return { ok: false, san: false, main: null, sub: null, raw: null };
+  var v = String(v0).trim(), san = /^산\s*/.test(v);
+  v = v.replace(/^산\s*/, '').replace(/\s/g, '').replace(/-+$/, '');
+  var m = v.match(/^(\d+)(?:-(\d+))?$/);
+  if (!m) return { ok: false, san: san, main: null, sub: null, raw: String(v0) };
+  return { ok: true, san: san, main: +m[1], sub: m[2] == null ? 0 : +m[2], raw: String(v0) };
+}
+function kmJibunCmp(a, b) {
+  var A = kmParseJibun(a), B = kmParseJibun(b);
+  if (!A.ok || !B.ok) return 'unknown';
+  if (A.san !== B.san) return 'different';
+  return (A.main === B.main && A.sub === B.sub) ? 'exact' : 'different';
+}
+function kmJibunHint(name) {
+  var m = String(name || '').match(/\((\d+(?:-\d+)?)\)/);
+  return m ? m[1] : null;
+}
+var KM_BRAND = ['부영','라이프','동아','건영','선경','현대','한라','대우','삼성','한신','우성','럭키',
+  '신동아','삼익','금호','대림','쌍용','동문','청구','유원','태영','두산','롯데','효성','벽산','한양',
+  '극동','미성','성원','풍림','대원','한국','동성','신성','경남','코오롱','포스코','호반','계룡','동원',
+  '우방','진흥','서희','반도','제일','남광','삼호','삼환','한일','고려','신일','대방','중흥','모아','한화',
+  '일신건영','뜨란채','아이파크','자이','래미안','푸르지오','더샵','센트리움','휴먼빌'];
+function kmParenBrand(name) {
+  var out = [];
+  (String(name || '').match(/\(([^)]+)\)/g) || []).forEach(function (p2) {
+    var inner = p2.replace(/[()]/g, '');
+    if (/^\d+[-\d]*$/.test(inner)) return;
+    KM_BRAND.forEach(function (b) { if (inner.indexOf(b) >= 0 && out.indexOf(b) < 0) out.push(b); });
+  });
+  return out;
+}
+function kmAnyBrand(name) {
+  var v = String(name || ''), out = [];
+  KM_BRAND.forEach(function (b) { if (v.indexOf(b) >= 0 && out.indexOf(b) < 0) out.push(b); });
+  return out;
+}
+/** semantic token — 타입이 다르면 비교하지 않는다 (106동 vs 2차) */
+function kmTokens(name) {
+  var v = String(name || '');
+  var t = { buildingNo: null, complexNo: null, phaseNo: null, nameNumbers: [], baseName: null };
+  var b = v.match(/(\d+)\s*동(?![가-힣])/); if (b) t.buildingNo = +b[1];
+  var c = v.match(/(\d+(?:-\d+)?)\s*단지/); if (c) t.complexNo = c[1];
+  var p2 = v.match(/(\d+)\s*차/); if (p2) t.phaseNo = +p2[1];
+  var rest = v.replace(/\([^)]*\)/g, '')
+    .replace(/\d+\s*동(?![가-힣])/g, '').replace(/\d+(?:-\d+)?\s*단지/g, '').replace(/\d+\s*차/g, '');
+  t.nameNumbers = (rest.match(/\d+/g) || []).map(Number);
+  /* 괄호 안 «주공3»·«주공2» 처럼 단지번호가 들어간 경우도 인식한다.
+     순수 숫자 괄호(지번 힌트)는 제외한다. */
+  (v.match(/\(([^)]+)\)/g) || []).forEach(function (p3) {
+    var inner = p3.replace(/[()]/g, '');
+    if (/^\d+[-\d]*$/.test(inner)) return;                  /* 지번 */
+    var mm = inner.match(/[가-힣]+\s*(\d+)$/);
+    if (mm && t.nameNumbers.indexOf(+mm[1]) < 0) t.nameNumbers.push(+mm[1]);
+  });
+  t.baseName = rest.replace(/\d+/g, '').replace(/[\s\-·,]/g, '');
+  return t;
+}
+function kmCmpTokens(a, b) {
+  var match = [], conflict = [];
+  function pair(k, va, vb) {
+    if (va == null || vb == null) return;
+    (String(va) === String(vb) ? match : conflict).push(k + ':' + va + '↔' + vb);
+  }
+  pair('단지', a.complexNo, b.complexNo);
+  pair('차', a.phaseNo, b.phaseNo);
+  pair('동', a.buildingNo, b.buildingNo);
+  /* 단지번호는 «13단지» 로도 «옥빛13» 로도 쓰인다. 같은 의미이므로 교차 비교한다.
+     단, «동»·«차» 와는 여전히 비교하지 않는다(106동 vs 2차). */
+  function complexLike(t) {
+    var v = [];
+    if (t.complexNo != null && String(t.complexNo).indexOf('-') < 0) v.push(+t.complexNo);
+    t.nameNumbers.forEach(function (n) { if (v.indexOf(n) < 0) v.push(n); });
+    return v;
+  }
+  var ca = complexLike(a), cb = complexLike(b);
+  if (ca.length && cb.length) {
+    var inter = ca.filter(function (x) { return cb.indexOf(x) >= 0; });
+    if (inter.length) match.push('단지번호:' + inter.join(','));
+    else conflict.push('단지번호:' + ca.join(',') + '↔' + cb.join(','));
+  }
+  return { match: match, conflict: conflict,
+           tokenMatch: match.length > 0 && conflict.length === 0,
+           tokenConflict: conflict.length > 0 };
+}
+var KM_REGION_PREFIX = ['군포','안양','부천','고양','산본','평촌','일산','덕양','만안','동안','소사','원미',
+  '금정','당동','당정','부곡','대야미','도마교','송정','화정','성사','중동','상동','역곡','괴안','춘의','석수'];
+function kmStrongNorm(s0) {
+  var v = String(s0 || '');
+  v = v.replace(/엘에이치/g, 'lh').replace(/LH/gi, 'lh');
+  v = v.replace(/\(.*?\)/g, '').replace(/[\s\-·、,]/g, '').replace(/아파트/g, '').toLowerCase();
+  for (var i = 0; i < KM_REGION_PREFIX.length; i++) {
+    var pfx = KM_REGION_PREFIX[i];
+    if (v.indexOf(pfx) === 0 && v.length - pfx.length >= 2) { v = v.slice(pfx.length); break; }
+  }
+  return v;
+}
+function kmContain(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.indexOf(b) >= 0 || b.indexOf(a) >= 0) {
+    var sm = Math.min(a.length, b.length), lg = Math.max(a.length, b.length);
+    return 0.6 + 0.4 * (sm / lg);
+  }
+  return 0;
+}
+
 function enrich(code, list) {
   var LK = 'td_kl:' + code, cache = null;
   try { cache = JSON.parse(localStorage.getItem(LK) || 'null'); } catch (e) { }
@@ -383,54 +511,186 @@ function enrich(code, list) {
         var v = (d && d.items) || [];
         try { localStorage.setItem(LK, JSON.stringify({ t: Date.now(), v: v })); } catch (e) { } return v;
       }, function () { return []; });
+
+  function infoOf(kapt) {
+    var CK = 'td_ka:' + kapt, c0 = null;
+    try { c0 = JSON.parse(localStorage.getItem(CK) || 'null'); } catch (e) { }
+    if (c0 && c0.t > Date.now() - 60 * 864e5) return Promise.resolve(c0.v);
+    return jget(API + '/apt?kind=info&kapt=' + kapt).then(function (d) {
+      if (d && d.info) { try { localStorage.setItem(CK, JSON.stringify({ t: Date.now(), v: d.info })); } catch (e) { } return d.info; }
+      return null;
+    }, function () { return null; });
+  }
+
   return p.then(function (items) {
-    /* v54.6 — list 응답의 bjdCode·addr 도 보존한다. 매칭 «판정»은 아직 이름만 쓴다(무변경).
-       multi-signal matcher A/B 시뮬레이션에 필요한 원자료를 남기기 위한 것이다. */
     var idx = items.map(function (it) {
-      return { n: normName(it.name), code: it.kaptCode, raw: it.name,
-               bjd: it.bjdCode || null, addr: it.addr || null };
+      return { name: it.name, kaptCode: it.kaptCode, bjd: it.bjdCode || null,
+               addr: it.addr || null, dong: kmDongOf(it.addr) };
     });
+
+    /* ── 1단계: 같은 법정동 후보를 추리고, 그 후보의 detail 을 받는다 ── */
+    var need = {};
     list.forEach(function (g) {
-      var q = normName(g.apt), best = null, b2 = 0, bs = 0, cands = [];
-      idx.forEach(function (it) {
-        var sc = it.n === q ? 1 : dice(q, it.n);
-        cands.push({ raw: it.raw, n: it.n, code: it.code, bjd: it.bjd, addr: it.addr, sc: sc });
-        if (sc > bs) { b2 = bs; bs = sc; best = it; } else if (sc > b2) b2 = sc;
-      });
-      /* 상위 5 후보를 남긴다 — A/B 시뮬레이션용 (판정에는 쓰이지 않는다) */
-      cands.sort(function (a2, b3) { return b3.sc - a2.sc; });
-      g._cands = cands.slice(0, 5).map(function (o) {
-        return { name: o.raw, kaptCode: o.code, bjdCode: o.bjd, addr: o.addr, nameScore: +o.sc.toFixed(4) };
-      });
-      if (best && bs >= .7 && (bs - b2) >= .12) { g.kapt = best.code; }
-      /* v54.5 — 매칭 근거와 «실패 사유»를 진단용으로 남긴다 (계산에는 쓰이지 않는다) */
-      var _why = 'ok';
-      if (!idx.length) _why = 'K-apt 목록 없음';
-      else if (!best) _why = '후보 없음';
-      else if (bs < .7) _why = '유사도 부족 (' + bs.toFixed(3) + ' < 0.70)';
-      else if ((bs - b2) >= .12 === false) _why = '2위와 근접 (격차 ' + (bs - b2).toFixed(3) + ' < 0.12)';
-      g._match = { normQuery: q,
-                   matchedName: best ? best.raw : null,
-                   matchedNorm: best ? best.n : null,
-                   matchScore: +bs.toFixed(4), runnerUp: +b2.toFixed(4),
-                   gap: +(bs - b2).toFixed(4),
-                   matched: !!g.kapt,
-                   method: !g.kapt ? 'none' : ((best && best.n === q) ? 'exact' : 'fuzzy'),
-                   failReason: g.kapt ? null : _why,
-                   kaptListSize: idx.length,
-                   source: 'K-apt /api/apt?kind=list' };
+      g._dongCands = g.dong ? idx.filter(function (c) { return c.dong === g.dong; }) : [];
+      g._dongCands.forEach(function (c) { need[c.kaptCode] = 1; });
     });
-    var tasks = list.filter(function (g) { return g.kapt; }).map(function (g) {
-      return function () {
-        var CK = 'td_ka:' + g.kapt, c0 = null;
-        try { c0 = JSON.parse(localStorage.getItem(CK) || 'null'); } catch (e) { }
-        if (c0 && c0.t > Date.now() - 60 * 864e5) { apply(g, c0.v); return Promise.resolve(); }
-        return jget(API + '/apt?kind=info&kapt=' + g.kapt).then(function (d) {
-          if (d && d.info) { try { localStorage.setItem(CK, JSON.stringify({ t: Date.now(), v: d.info })); } catch (e) { } apply(g, d.info); }
-        }, function () { });
-      };
+    var codes = Object.keys(need);
+    var INFO = {};
+    var tasks = codes.map(function (kc) {
+      return function () { return infoOf(kc).then(function (inf) { if (inf) INFO[kc] = inf; }); };
     });
-    return pool(tasks, 5);
+
+    return pool(tasks, 5).then(function () {
+      /* ── 2단계: v6 판정 ── */
+      list.forEach(function (g) {
+        var tradeJibun = g.jibun || kmJibunHint(g.apt) || null;
+        var cj = kmParseJibun(tradeJibun);
+        var tradeByr = g.byr || null;                    /* enrich 전이므로 실거래 값 */
+        var qtok = kmTokens(g.apt), qs = kmStrongNorm(g.apt), qn = normName(g.apt);
+
+        var D = { decision: 'NO_KAPT_MATCH', method: 'none', reason: null,
+                  kaptCode: null, matchedName: null,
+                  tradeDong: g.dong || null, kaptDong: null,
+                  tradeJibun: tradeJibun, kaptJibun: null,
+                  tradeBuildYear: tradeByr, useYear: null,
+                  households: null, walk: null,
+                  tradeTokens: qtok, kaptTokens: null,
+                  tokenMatch: null, tokenConflict: null,
+                  sameParcelCount: 0, sameParcelCodes: [], parcelGroupType: null,
+                  poolSize: idx.length, dongPoolSize: g._dongCands.length };
+
+        if (!idx.length) { D.reason = 'K-apt 목록 없음'; g._m6 = D; return; }
+        if (!g.dong) { D.decision = 'DETAIL_MISSING'; D.reason = '실거래 법정동 없음'; g._m6 = D; return; }
+        var inDong = g._dongCands;
+        if (!inDong.length) { D.reason = '같은 동(' + g.dong + ') 후보 0'; g._m6 = D; return; }
+
+        var withInfo = inDong.map(function (c) {
+          var inf = INFO[c.kaptCode] || null;
+          var js = inf ? kmJibunStr(inf.addr) : null;
+          return { c: c, info: inf, jibunRaw: js,
+                   useYear: (inf && inf.useDate && /^\d{4}/.test(inf.useDate)) ? +String(inf.useDate).slice(0, 4) : null,
+                   households: inf ? (inf.households || null) : null };
+        });
+        var noInfo = withInfo.filter(function (x) { return !x.info; }).length;
+
+        function scoreOne(x) {
+          var cs = kmStrongNorm(x.c.name), cn = normName(x.c.name);
+          var nameScore = Math.max(dice(qn, cn), dice(qs, cs), kmContain(qs, cs));
+          var nameExact = (qs === cs) || (qn === cn);
+          var tk = kmCmpTokens(qtok, kmTokens(x.c.name));
+          var jm = kmJibunCmp(tradeJibun, x.jibunRaw);
+          var yd = (tradeByr && x.useYear) ? Math.abs(tradeByr - x.useYear) : null;
+          var v = nameScore + 0.15;
+          if (jm === 'exact') v += 0.30; else if (jm === 'different') v -= 0.25;
+          if (tk.tokenMatch) v += 0.08; else if (tk.tokenConflict) v -= 0.20;
+          if (yd != null) { if (yd === 0) v += 0.05; else if (yd > 2) v -= 0.30; }
+          var v2 = nameScore;
+          if (tk.tokenMatch) v2 += 0.25; else if (tk.tokenConflict) v2 -= 0.35;
+          if (yd === 0) v2 += 0.15; else if (yd != null && yd > 2) v2 -= 0.35;
+          return { x: x, nameScore: nameScore, nameExact: nameExact, tk: tk,
+                   jibunMatch: jm, yearDiff: yd,
+                   conf: Math.max(0, Math.min(1, v)), conf2: Math.max(0, Math.min(1, v2)) };
+        }
+        function put(sc) {
+          D.kaptCode = sc.x.c.kaptCode; D.matchedName = sc.x.c.name;
+          D.kaptDong = sc.x.c.dong; D.kaptJibun = sc.x.jibunRaw;
+          D.useYear = sc.x.useYear; D.households = sc.x.households;
+          D.kaptTokens = kmTokens(sc.x.c.name);
+          D.tokenMatch = sc.tk.match; D.tokenConflict = sc.tk.conflict;
+          if (sc.x.info) { var w = String(sc.x.info.subwayWay || '').match(/\d+/); D.walk = w ? +w[0] : null; }
+        }
+
+        var sameParcel = cj.ok ? withInfo.filter(function (x) { return kmJibunCmp(tradeJibun, x.jibunRaw) === 'exact'; }) : [];
+        D.sameParcelCount = sameParcel.length;
+        D.sameParcelCodes = sameParcel.map(function (x) { return x.c.kaptCode; });
+
+        /* ① unique parcel */
+        if (sameParcel.length === 1) {
+          var s1 = scoreOne(sameParcel[0]); put(s1);
+          if (s1.tk.tokenConflict) { D.decision = 'DEFINITE_MISMATCH'; D.reason = '지번 일치하나 토큰 충돌: ' + s1.tk.conflict.join(','); g._m6 = D; return; }
+          if (s1.yearDiff != null && s1.yearDiff > 2) { D.decision = 'UNRESOLVED_CONFLICT'; D.reason = '지번 일치하나 준공연도 차 ' + s1.yearDiff + '년'; g._m6 = D; return; }
+          D.decision = 'CONFIRMED_MATCH'; D.method = 'jibun-unique'; g._m6 = D; return;
+        }
+
+        /* ② same parcel 복수 — 자동 합산 금지, 토큰으로만 좁힌다 */
+        if (sameParcel.length >= 2) {
+          var hhs = sameParcel.map(function (x) { return x.households; });
+          var dcs = sameParcel.map(function (x) { return x.info ? x.info.dongCnt : null; });
+          var ras = sameParcel.map(function (x) { return x.info ? x.info.roadAddr : null; });
+          function uq(arr) { var o = []; arr.forEach(function (v) { if (o.indexOf(String(v)) < 0) o.push(String(v)); }); return o; }
+          D.parcelGroupType = (uq(hhs).length === 1 && uq(dcs).length === 1 && uq(ras).length === 1)
+            ? 'POSSIBLE_DUPLICATE_KAPT' : 'MULTI_COMPLEX_SAME_PARCEL';
+
+          var cand = sameParcel.slice(), steps = [];
+          if (tradeByr) {
+            var byY = cand.filter(function (x) { return x.useYear != null && Math.abs(x.useYear - tradeByr) <= 1; });
+            if (byY.length && byY.length < cand.length) { cand = byY; steps.push('year'); }
+          }
+          var pb = kmParenBrand(g.apt), tb = pb.length ? pb : kmAnyBrand(g.apt);
+          if (tb.length && cand.length > 1) {
+            var byB = cand.filter(function (x) { return tb.some(function (b) { return String(x.c.name).indexOf(b) >= 0; }); });
+            if (byB.length && byB.length < cand.length) { cand = byB; steps.push('brand'); }
+          }
+          if (cand.length > 1) {
+            var cmp = cand.map(function (x) { return { x: x, r: kmCmpTokens(qtok, kmTokens(x.c.name)) }; });
+            var exact = cmp.filter(function (o) { return o.r.tokenMatch; });
+            if (exact.length === 1) { cand = [exact[0].x]; steps.push('number'); }
+          }
+          var sp = cand.map(scoreOne).sort(function (a2, b2) { return b2.conf2 - a2.conf2; });
+          put(sp[0]);
+          if (cand.length === 1) {
+            D.decision = 'CONFIRMED_MATCH'; D.method = 'parcel+' + (steps.join('+') || 'unique');
+            D.reason = '동일 지번 ' + sameParcel.length + '개 중 ' + steps.join('+') + ' 으로 특정';
+          } else {
+            D.decision = 'AMBIGUOUS_SAME_PARCEL';
+            D.reason = '같은 지번 K-apt ' + sameParcel.length + '개 · 구분 불가 · ' + D.parcelGroupType;
+          }
+          g._m6 = D; return;
+        }
+
+        /* ③ 지번으로 못 가림 */
+        var scored = withInfo.map(scoreOne).sort(function (a2, b2) { return b2.conf - a2.conf || b2.nameScore - a2.nameScore; });
+        var top = scored[0];
+        put(top);
+        if (!cj.ok) { D.decision = 'DETAIL_MISSING'; D.reason = '실거래 지번 없음'; g._m6 = D; return; }
+        if (noInfo > 0 && top.jibunMatch === 'unknown') { D.decision = 'DETAIL_MISSING'; D.reason = '동 내 detail 미확보 ' + noInfo + '건'; g._m6 = D; return; }
+        if (top.tk.tokenConflict) { D.decision = 'DEFINITE_MISMATCH'; D.reason = '토큰 충돌: ' + top.tk.conflict.join(','); g._m6 = D; return; }
+        if (top.nameExact && top.yearDiff != null && top.yearDiff <= 1) {
+          D.decision = 'PROBABLE_MATCH'; D.method = 'name-exact+dong';
+          D.reason = 'parcel discrepancy (이름 exact · 동 일치 · 연식 ±' + top.yearDiff + ')'; g._m6 = D; return;
+        }
+        if (top.nameExact && top.yearDiff == null) {
+          D.decision = 'PROBABLE_MATCH'; D.method = 'name-exact+dong';
+          D.reason = 'parcel discrepancy (이름 exact · 동 일치 · 연식 미상)'; g._m6 = D; return;
+        }
+        if (top.yearDiff != null && top.yearDiff > 2 && top.nameScore < 0.60) {
+          D.decision = 'DEFINITE_MISMATCH'; D.reason = '이름·지번·연식 모두 불일치'; g._m6 = D; return;
+        }
+        if (top.nameScore < 0.45) { D.decision = 'DEFINITE_MISMATCH'; D.reason = '이름 불일치 + 지번 불일치'; g._m6 = D; return; }
+        D.decision = 'UNRESOLVED_CONFLICT';
+        D.reason = '신호 충돌 · nameScore ' + top.nameScore.toFixed(2) + ' · 지번 ' + top.jibunMatch;
+        g._m6 = D;
+      });
+
+      /* ── 3단계: CONFIRMED_MATCH 만 enrichment ── */
+      list.forEach(function (g) {
+        var D = g._m6;
+        if (!D) return;
+        g._match = { matchedName: D.matchedName, matchScore: null, runnerUp: null,
+                     matched: D.decision === 'CONFIRMED_MATCH', method: D.method,
+                     decision: D.decision, failReason: D.reason,
+                     kaptListSize: D.poolSize, source: 'K-apt multi-signal v6' };
+        if (D.decision !== 'CONFIRMED_MATCH') {
+          /* hh·walk 는 그대로 null → aptScore 에서 중립값 55 · byr 는 실거래 값 유지 */
+          g._raw = { kaptCode: null, decision: D.decision, reason: D.reason };
+          return;
+        }
+        g.kapt = D.kaptCode;
+        var inf = INFO[D.kaptCode];
+        if (inf) apply(g, inf);
+      });
+      return list;
+    });
   });
 }
 function apply(g, info) {
@@ -438,10 +698,11 @@ function apply(g, info) {
   var w = String(info.subwayWay || '').match(/\d+/);
   g.walk = w ? +w[0] : null; g.station = info.subwayStation || '';
   if (info.useDate && /^\d{4}/.test(info.useDate)) { g.byr = +info.useDate.slice(0, 4); g.age = new Date().getFullYear() - g.byr; }
-  /* v54.4 — K-apt 원본 응답을 진단용으로 남긴다 */
+  /* K-apt 원본 응답을 진단용으로 남긴다 */
   g._raw = { households: info.households, subwayWay: info.subwayWay,
              subwayStation: info.subwayStation, useDate: info.useDate, kaptCode: g.kapt,
-             addr: info.addr || null, roadAddr: info.roadAddr || null, kaptName: info.name || null };
+             addr: info.addr || null, roadAddr: info.roadAddr || null, kaptName: info.name || null,
+             decision: 'CONFIRMED_MATCH' };
 }
 var SORT7 = { k: 'py', dir: -1 };
 function sortList7(list) {

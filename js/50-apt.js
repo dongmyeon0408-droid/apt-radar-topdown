@@ -529,8 +529,24 @@ function recTopApts() {
       targets.forEach(function (x) {
         (byReg[x.r.code] || []).forEach(function (g) {
           var key = x.r.code + '|' + normName(g.apt);
-          var m = g._match || {}, rw = g._raw || {};
+          var m = g._match || {}, rw = g._raw || {}, d6 = g._m6 || {};
           window.__ENRICH[key] = {
+            /* v55.0 — v6 identity 진단 (production 적용 전후 비교용) */
+            matchDecision: d6.decision || null,
+            matchMethodV6: d6.method || null,
+            matchReason: d6.reason || null,
+            tradeDong: d6.tradeDong || null, kaptDong: d6.kaptDong || null,
+            tradeJibun: d6.tradeJibun || null, kaptJibun: d6.kaptJibun || null,
+            tradeBuildYear: d6.tradeBuildYear == null ? null : d6.tradeBuildYear,
+            kaptUseYear: d6.useYear == null ? null : d6.useYear,
+            kaptHouseholds: d6.households == null ? null : d6.households,
+            kaptWalk: d6.walk == null ? null : d6.walk,
+            tradeTokens: d6.tradeTokens || null, kaptTokens: d6.kaptTokens || null,
+            tokenMatch: d6.tokenMatch || null, tokenConflict: d6.tokenConflict || null,
+            sameParcelCount: d6.sameParcelCount == null ? null : d6.sameParcelCount,
+            sameParcelCodes: d6.sameParcelCodes || null,
+            parcelGroupType: d6.parcelGroupType || null,
+            dongPoolSize: d6.dongPoolSize == null ? null : d6.dongPoolSize,
             households: g.hh == null ? null : g.hh,
             walk: g.walk == null ? null : g.walk,
             byr: g.byr == null ? null : g.byr,
