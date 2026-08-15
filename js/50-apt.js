@@ -546,14 +546,25 @@ function recTopApts() {
            역순위30%+하한70%  +35.0%p · 1위가 최상단의 79% · 직전상승 +24%   ← 채택
            곡선으로 하락을 감점하는 방식은 +33.8%p 로 오히려 나빴다.
          가격 하한만 걸면 크게 빠진 단지는 평당가가 낮아 자연히 걸러진다. */
+      /* v52.1 — 하한을 «최고가의 70%»로만 잡으면, 임대아파트처럼 유독 비싼 한 건 때문에
+         하한이 비현실적으로 높아져 통과 단지가 5곳 미만이 되고 하한이 통째로 무시됐다.
+         (고양 덕양구: 최상단 3,483만 · 하한 2,438만 · 통과 1곳 → 미적용)
+         그래서 «개수 기준»을 함께 둔다 — 최고가의 70% 또는 평당가 상위 절반 중
+         더 느슨한 쪽을 하한으로 삼고, 최소 5곳은 남긴다. */
       var mix = holdMix(), LAGW = 0.30, PFLOOR = 0.70;
-      /* 예산 내 최고 평당가의 70% 미만은 후보에서 뺀다 (후보가 5곳 밑으로 줄면 적용하지 않음) */
-      var okPy = all.filter(function (y) { return y.ok; }).map(function (y) { return y.g.py; });
-      var topPy = okPy.length ? Math.max.apply(null, okPy) : 0;
-      if (topPy > 0) {
-        var kept = all.filter(function (y) { return !y.ok || y.g.py >= topPy * PFLOOR; });
-        if (kept.filter(function (y) { return y.ok; }).length >= 5) all = kept;
+      var okAll = all.filter(function (y) { return y.ok; });
+      var okPy = okAll.map(function (y) { return y.g.py; }).sort(function (a, b) { return b - a; });
+      var floorOn = false, floorPy = 0;
+      if (okPy.length >= 6) {
+        var byMax = okPy[0] * PFLOOR;                                  /* 최고가의 70% */
+        var byCnt = okPy[Math.max(4, Math.floor(okPy.length * 0.5) - 1)];  /* 상위 절반(최소 5곳) 지점 */
+        floorPy = Math.min(byMax, byCnt);
+        var kept = all.filter(function (y) { return !y.ok || y.g.py >= floorPy; });
+        if (kept.filter(function (y) { return y.ok; }).length >= 5) { all = kept; floorOn = true; }
       }
+      /* 예산 내 최상단은 목록에서 빠지지 않도록 항상 남긴다 */
+      var topOne = okAll.slice().sort(function (u, v) { return v.g.py - u.g.py; })[0];
+      if (topOne && all.indexOf(topOne) < 0) all = [topOne].concat(all);
       var pys = all.map(function (y) { return y.g.py; });
       var scs = all.map(function (y) { y.sc = aptScore(y.g, x.r); return y.sc; });
       var rPy = pctRankArr(pys), rSc = pctRankArr(scs);
@@ -584,7 +595,9 @@ function recTopApts() {
       var okList = all.filter(function (y) { return y.ok; });
       var onlyOk = el('recAptOk').checked;
       var hh0 = '';
-      var show3 = (onlyOk ? okList : all).slice(0, 3);
+      /* 최상단이 맨 앞에 오면 그만큼 한 줄 더 보여준다 (검증된 순위 3곳 확보) */
+      var baseList = (onlyOk ? okList : all);
+      var show3 = baseList.slice(0, (baseList[0] && baseList[0].isTop) ? 4 : 3);
       var flagship = all[0];
 
       /* v47.3 — «살 수 있는 최고 매물»은 이름 그대로 예산 내 가장 비싼 매물이어야 한다.
@@ -602,9 +615,23 @@ function recTopApts() {
           '<div><span>−20% 시 손실</span><b style="color:#B24A32">−' + won(best1.g.med * 0.2) + '</b></div></div>';
       } else hh0 = '';
       var nGap = okList.filter(function (y) { return y.mode === 'gap'; }).length;
+      /* v52.1 — 대출로도 되고 전세로도 되는 단지가 몇 곳인지 알려준다.
+         둘 다 가능하면 진입 방식을 바꿔도 목록이 같은 것이 정상이다. */
+      var nBoth = 0, nOnlyGap = 0;
+      all.forEach(function (y) {
+        if (!y.ok) return;
+        var lp = y.g.med, ln2 = needCash(lp, x.r, c);
+        var gn = (!x.r.reg && y.g.jeon && y.g.jeon < lp)
+          ? (lp - y.g.jeon) + acqTax(lp, c.area, (c.own === 0 ? 0 : Math.max(1, c.taxOwn)), x.r.reg) + broker(lp) + c.etc
+          : null;
+        var okL = ln2.need <= c.cash, okG = gn != null && gn <= c.cash;
+        if (okL && okG) nBoth++; else if (okG && !okL) nOnlyGap++;
+      });
       var hh = hh0 + '<div class="aptheadline"><b>이 지역에서 살 수 있는 최상급 단지</b>' +
         '<span>예산 내 ' + okList.length + '곳 / 거래 ' + all.length + '곳' +
         (nGap ? ' · 전세 끼고 ' + nGap + '곳' : '') +
+        (nBoth ? ' · <span title="대출로도 전세로도 살 수 있는 단지입니다. 이런 곳은 진입 방식을 바꿔도 목록에 그대로 남습니다.">둘 다 가능 ' + nBoth + '곳</span>' : '') +
+        (nOnlyGap ? ' · <b>전세로만 가능 ' + nOnlyGap + '곳</b>' : '') +
         (x.r.reg ? ' · 규제지역이라 전세 끼고 매수 불가' : '') + '</span></div>';
 
       if (onlyOk && !okList.length) {
@@ -638,7 +665,10 @@ function recTopApts() {
           '<th>5년 상승</th><th>매매</th><th>진입 방식</th><th>필요현금</th><th>전세 · 전세가율</th><th>거래</th><th></th></tr></thead><tbody>';
         show3.forEach(function (y, i) {
           var g = y.g;
-          hh += '<tr' + (y.ok ? ' class="pick"' : '') + '><td class="nm"><span class="b ' + (i === 0 ? 'd1' : 'no') + '">' + (i + 1) + '위</span></td>' +
+          var topShift = (show3[0] && show3[0].isTop) ? 1 : 0;
+          hh += '<tr' + (y.ok ? ' class="pick"' : '') + '><td class="nm">' +
+            (y.isTop ? '<span class="b topb">최상단</span>'
+                     : '<span class="b ' + (i === topShift ? 'd1' : 'no') + '">' + (i + 1 - topShift) + '위</span>') + '</td>' +
             '<td class="nm">' + esc(g.apt) + '</td>' +
             '<td style="font-size:12.5px;color:var(--slate)">' + esc(g.dong || '—') + '</td>' +
             '<td style="font-weight:700">' + n0(g.py) + '만</td>' +

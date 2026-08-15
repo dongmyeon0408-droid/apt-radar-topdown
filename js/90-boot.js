@@ -318,11 +318,38 @@ function init() {
   el('imgRecFull').addEventListener('click', imgRecFull);
   el('recApt').addEventListener('click', recTopApts);
   el('recAptOk').addEventListener('change', function () { if (el('recAptStat').textContent) recTopApts(); });
+  /* v52.1 — 조건을 바꾸면 «다시 찾기»가 눈에 띄게 한다.
+     지역만 다시 그리면 단지 목록이 옛 조건 그대로 남아 서로 어긋나기 때문이다. */
+  function markDirty() {
+    var b = el('recRedo'); if (!b) return;
+    b.classList.add('on');
+    var n = el('recRedoNote');
+    if (n) n.innerHTML = '<b style="color:var(--ember)">조건이 바뀌었습니다.</b> 위 버튼을 눌러 지역과 단지를 다시 계산하세요.';
+  }
+  function clearDirty() {
+    var b = el('recRedo'); if (b) b.classList.remove('on');
+    var n = el('recRedoNote');
+    if (n) n.textContent = '조건을 바꾸면 이 버튼을 눌러 주세요 — 지역과 단지를 함께 다시 계산합니다.';
+  }
+  el('recRedo').addEventListener('click', function () {
+    clearDirty();
+    renderRec();
+    var loaded = false;
+    document.querySelectorAll('[data-aptbox]').forEach(function (q) { if (q.querySelector('table')) loaded = true; });
+    if (loaded) recTopApts();
+    var w = el('recWrap');
+    if (w && w.scrollIntoView) w.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  ['recOk', 'recAptOk'].forEach(function (id) {
+    var q = el(id); if (q) q.addEventListener('change', markDirty);
+  });
+
   el('recEntry').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     ENTRY = b.dataset.v;
     el('recEntry').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     renderRec();
+    markDirty();
   });
   /* v47.0 — 보유기간 선택 (이것 하나로 단지 정렬이 정해진다) */
   el('recHold').addEventListener('click', function (e) {
@@ -346,6 +373,7 @@ function init() {
     RECSORT = b.dataset.v;
     el('recSort').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     renderRec();
+    markDirty();
   });
   fillSel(el('btA'), allRegions(), '41135');
   fillSel(el('btB'), allRegions(), '41173');
