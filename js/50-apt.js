@@ -297,26 +297,17 @@ function renderRec() {
     '반면 <b>상위 그룹과 하위 그룹의 차이는 컸습니다</b>(상위 10% +35% vs 하위 10% +17%). ' +
     '<b>아래 5곳을 순위표가 아니라 "같은 등급의 후보 묶음"으로 보시고</b>, ' +
     '그중 실제로 갈 수 있고 살고 싶은 곳을 고르세요.</span></div>';
-  /* 무주택 판정 배너 — Q7 기준(평당 3,200만 / 2,350만) v40.0 */
+  /* 무주택 예산 안내 배너 — v56.0
+     provenance가 미해결인 Q7 threshold 기반 사용자 분류를 제거했다.
+     근거: fixtures/q7/q7-ui-exposure-decision-amendment-freeze.json */
   if (c.own === 0 && byRank) {
     var pyTop = pyPrice(last(byRank.r.s));
-    var vb, vi, vt;
-    if (pyTop >= 3200) {
-      vb = ''; vi = '지금';
-      vt = '예산으로 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>까지 갈 수 있습니다. ' +
-        '과거 검증에서 <b>평당 3,200만 이상</b>에 들어갈 수 있으면 지금 사는 쪽이 10번 중 7번 나았습니다. ' +
-        '더 모으는 동안 오르는 폭이 저축보다 컸습니다.';
-    } else if (pyTop < 2350) {
-      vb = ' warn'; vi = '모으기';
-      vt = '예산으로 갈 수 있는 최상단이 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>입니다. ' +
-        '과거 검증에서 <b>평당 2,350만 아래</b>에서 급하게 사는 것보다 <b>1년 더 모아 한 급 올리는 쪽</b>이 나았습니다. ' +
-        '단, 2년을 넘기면 이득이 줄었습니다 — <b>기다린다면 1년</b>입니다.';
-    } else {
-      vb = ' warn'; vi = '경계';
-      vt = '예산으로 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>까지 갈 수 있습니다. ' +
-        '<b>평당 2,350~3,200만</b>은 지금 사는 것과 더 모으는 것의 결과가 비슷했던 구간입니다. ' +
-        '저축 여력이 크면 1년 더, 아니면 지금 &mdash; <b>투자 FAQ Q7</b>에서 기준을 확인하세요.';
-    }
+    var afford = (byRank.need <= c.cash);
+    var vb = afford ? '' : ' warn', vi = afford ? '예산 내' : '예산 초과', vt;
+    vt = (afford
+      ? '현재 예산으로 <b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>까지 접근 가능합니다. '
+      : '<b>' + esc(byRank.r.name) + '(평당 ' + n0(pyTop) + '만)</b>은 현재 예산을 넘습니다. ') +
+      '<b>투자 FAQ Q7</b>에서 관련 설명을 확인하세요.';
     h += '<div class="verdictbar' + vb + '"><span class="vi">' + vi + '</span><span class="vt">' + vt + '</span></div>';
   }
   /* 1주택 갈아타기 안내 — Q16 */
